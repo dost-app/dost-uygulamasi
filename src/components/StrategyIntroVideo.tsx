@@ -1,4 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+
+const CONTROLS_HIDE_DELAY_MS = 4000; // 4 saniye sonra kontroller kaybolur (YouTube gibi)
 
 interface Props {
   storyId: number;
@@ -12,7 +14,26 @@ export default function StrategyIntroVideo({ storyId, onComplete, onSkip }: Prop
   const [duration, setDuration] = useState(0);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [controlsVisible, setControlsVisible] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const resetHideTimer = useCallback(() => {
+    setControlsVisible(true);
+    if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+    hideTimeoutRef.current = setTimeout(() => setControlsVisible(false), CONTROLS_HIDE_DELAY_MS);
+  }, []);
+
+  useEffect(() => {
+    resetHideTimer();
+    return () => {
+      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+    };
+  }, [resetHideTimer]);
+
+  const handleActivity = useCallback(() => {
+    resetHideTimer();
+  }, [resetHideTimer]);
 
   // Check for skip intro flag
   const hasSkipFlag = () => {
@@ -151,24 +172,85 @@ export default function StrategyIntroVideo({ storyId, onComplete, onSkip }: Prop
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-  // Prevent closing on outside click if mandatory
+  const showOverlays = controlsVisible || !isPlaying;
+
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (isMandatory && e.target === e.currentTarget) {
-      // Don't close if mandatory
-      return;
-    }
-    if (canSkip && e.target === e.currentTarget) {
-      handleSkip();
-    }
+    handleActivity();
+    if (isMandatory && e.target === e.currentTarget) return;
+    if (canSkip && e.target === e.currentTarget) handleSkip();
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 bg-black flex flex-col"
+    <div
+      className="fixed inset-0 z-50 bg-black"
+      onMouseMove={handleActivity}
+      onTouchStart={handleActivity}
       onClick={handleBackdropClick}
     >
-      {/* Header - Fixed at top */}
-      <div className="absolute top-0 left-0 right-0 z-10 bg-black/80 backdrop-blur-sm p-4 flex items-center justify-between">
+      {/* Video: tam ekran, %100 viewport - header/footer yok */}
+      <div className="absolute inset-0 w-full h-full">
+        {videoError ? (
+          <div className="flex items-center justify-center h-full text-white p-4">
+            <div className="text-center">
+              <p className="text-red-400 mb-2">{videoError}</p>
+              <button
+                onClick={() => {
+                  setVideoError(null);
+                  setIsLoading(true);
+                  if (videoRef.current) videoRef.current.load();
+                }}
+                className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg"
+              >
+                Tekrar Dene
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <video
+              ref={videoRef}
+              className="absolute inset-0 w-full h-full object-cover"
+              src={`${import.meta.env.BASE_URL}videos/dost-okuma-stratejisi.mp4`}
+              controls={false}
+              preload="metadata"
+              playsInline
+            >
+              Tarayıcınız video oynatmayı desteklemiyor.
+            </video>
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/70">
+                <div className="text-white text-center">
+                  <p className="mb-2">Video yükleniyor...</p>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto" />
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Ortadaki play butonu: duraklatıldığında her zaman görünsün */}
+      {!isPlaying && !videoError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 pointer-events-none">
+          <div className="pointer-events-auto">
+            <button
+              onClick={(e) => { e.stopPropagation(); handlePlayPause(); }}
+              className="bg-purple-500 hover:bg-purple-600 text-white rounded-full p-6 shadow-lg transition-all hover:scale-110"
+            >
+              <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Üst bar (başlık + geç) - 3–5 sn sonra kaybolur */}
+      <div
+        className={`absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent p-4 flex items-center justify-between transition-opacity duration-300 ${
+          showOverlays ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+      >
         <div className="text-center flex-1">
           <h1 className="text-2xl font-bold text-white mb-1">DOST</h1>
           <h2 className="text-lg font-semibold text-gray-200">
@@ -182,7 +264,7 @@ export default function StrategyIntroVideo({ storyId, onComplete, onSkip }: Prop
         </div>
         {canSkip && (
           <button
-            onClick={handleSkip}
+            onClick={(e) => { e.stopPropagation(); handleSkip(); }}
             className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors text-sm ml-4"
           >
             Tanıtımı Geç
@@ -190,79 +272,15 @@ export default function StrategyIntroVideo({ storyId, onComplete, onSkip }: Prop
         )}
       </div>
 
-      {/* Video Container - Full screen */}
-      <div className="flex-1 flex items-center justify-center pt-20 pb-24">
-        <div className="relative w-full h-full flex items-center justify-center">
-          {videoError ? (
-            <div className="flex items-center justify-center h-full text-white p-4">
-              <div className="text-center">
-                <p className="text-red-400 mb-2">{videoError}</p>
-                <button
-                  onClick={() => {
-                    setVideoError(null);
-                    setIsLoading(true);
-                    if (videoRef.current) {
-                      videoRef.current.load();
-                    }
-                  }}
-                  className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg"
-                >
-                  Tekrar Dene
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <video
-                ref={videoRef}
-                className="w-full h-full object-cover"
-                src={`${import.meta.env.BASE_URL}videos/dost-okuma-stratejisi.mp4`}
-                controls={false}
-                preload="metadata"
-                playsInline
-              >
-                Tarayıcınız video oynatmayı desteklemiyor.
-              </video>
-              {isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                  <div className="text-white text-center">
-                    <p className="mb-2">Video yükleniyor...</p>
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-
-          {/* Custom Controls Overlay */}
-          {!isPlaying && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-              <button
-                onClick={handlePlayPause}
-                className="bg-purple-500 hover:bg-purple-600 text-white rounded-full p-6 shadow-lg transition-all hover:scale-110"
-              >
-                <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          {/* Progress Bar */}
-          <div className="absolute bottom-0 left-0 right-0 h-2 bg-gray-800 bg-opacity-50">
-            <div
-              className="h-full bg-purple-500 transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Controls - Fixed at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/80 backdrop-blur-sm p-4">
+      {/* Alt bar (oynat/duraklat, süre, progress) - 3–5 sn sonra kaybolur */}
+      <div
+        className={`absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity duration-300 ${
+          showOverlays ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+      >
         <div className="flex items-center justify-center gap-4 mb-2">
           <button
-            onClick={handlePlayPause}
+            onClick={(e) => { e.stopPropagation(); handlePlayPause(); }}
             className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
           >
             {isPlaying ? '⏸ Duraklat' : '▶ Oynat'}
@@ -271,12 +289,16 @@ export default function StrategyIntroVideo({ storyId, onComplete, onSkip }: Prop
             {formatTime(currentTime)} / {formatTime(duration)}
           </span>
         </div>
+        <div className="h-2 bg-gray-800/50 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-purple-500 transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
         {isMandatory && (
-          <div className="text-center">
-            <p className="text-xs text-gray-300">
-              Video bittiğinde otomatik olarak devam edeceksiniz.
-            </p>
-          </div>
+          <p className="text-xs text-gray-300 text-center mt-2">
+            Video bittiğinde otomatik olarak devam edeceksiniz.
+          </p>
         )}
       </div>
     </div>
