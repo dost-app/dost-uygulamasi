@@ -145,7 +145,7 @@ export default function StoryIntro({ stories }: Props) {
       <div>
         <h2 className="text-3xl font-bold mb-4">{story.title}</h2>
         <div className="flex flex-wrap gap-2 text-sm mb-4">
-          <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full">Düzeyli Okuma</span>
+          <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full">Dijital Okuma Asistanı</span>
         </div>
         <p className="text-sm text-gray-600 mb-4">Yazar: DOST AI • Yayın: Yapay Zeka Kitaplığı</p>
 

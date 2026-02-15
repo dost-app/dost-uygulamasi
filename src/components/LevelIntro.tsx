@@ -166,7 +166,7 @@ export default function LevelIntro() {
           <span className="bg-purple-200 text-purple-700 px-3 py-1 rounded-full">
             Seviye {levelNumber}
           </span>
-          <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full">Düzeyli Okuma</span>
+          <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full">Dijital Okuma Asistanı</span>
         </div>
         <p className="text-base text-gray-700 mb-4">{levelDescription}</p>
         <p className="text-sm text-gray-600 mb-4">Yazar: DOST AI • Yayın: Yapay Zeka Kitaplığı</p>
