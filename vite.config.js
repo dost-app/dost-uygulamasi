@@ -46,5 +46,5 @@ export default defineConfig({
             }
         }
     },
-    base: '/dost-uygulamasi/',
+    base: '/',
 });
