@@ -17,7 +17,7 @@ import { getAssetUrl } from '../../lib/image-utils';
 export default function L3Step1() {
   const [searchParams] = useSearchParams();
   const student = useSelector((state: RootState) => state.user.student);
-  const { sessionId, onStepCompleted } = useStepContext();
+  const { sessionId, onStepCompleted, setFooterVisible } = useStepContext();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [introAudioPlaying, setIntroAudioPlaying] = useState(true);
   const [started, setStarted] = useState(false);
@@ -516,6 +516,7 @@ export default function L3Step1() {
   };
 
   const startFlow = async () => {
+    setFooterVisible(true);
     // Stop intro audio if still playing
     const el = audioRef.current;
     if (el && introAudioPlaying) {

@@ -466,6 +466,13 @@ export default function LevelRouter() {
   // In prod mode, disable next button if step is not completed
   const canProceed = appMode === 'dev' || stepCompleted || isCheckingCompletion;
 
+  // "Başla" adımlarında footer başta gizli; adım içinde Başla'ya basınca setFooterVisible(true) ile açılır
+  const stepsWithStartButton: [number, number][] = [
+    [1, 1], [1, 2], [1, 3], [1, 4], // L1
+    [2, 1], [3, 1], [3, 2], [4, 1], [4, 2], [4, 3], [5, 1],
+  ];
+  const initialFooterVisible = !stepsWithStartButton.some(([l, s]) => l === level && s === step);
+
   return (
     <StepProvider
       sessionId={sessionId}
@@ -473,6 +480,7 @@ export default function LevelRouter() {
       level={level}
       step={step}
       onStepCompleted={handleStepCompleted}
+      initialFooterVisible={initialFooterVisible}
     >
     <StepLayout
       currentStep={step}
@@ -480,8 +488,7 @@ export default function LevelRouter() {
       onPrev={onPrev}
       onNext={onNext}
       hidePrev
-      hideNext={step === totalSteps} // Hide Next button on last step (Tamamla button will be shown instead)
-      hideFooter={level === 2 && step === 3 ? true : false} // Hide footer for Level 2 Step 3 (auto-navigation), show for Step 4
+      hideNext={step === totalSteps}
       disableNext={!canProceed}
       stepCompleted={stepCompleted}
       onStepCompleted={handleStepCompleted}

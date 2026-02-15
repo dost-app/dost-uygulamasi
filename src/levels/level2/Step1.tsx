@@ -32,7 +32,7 @@ export default function Level2Step1() {
   const currentStudent = useSelector((state: RootState) => state.user.student);
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { sessionId, onStepCompleted, storyId } = useStepContext();
+  const { sessionId, onStepCompleted, storyId, setFooterVisible } = useStepContext();
   
   const [story, setStory] = useState<{ id: number; title: string; image?: string } | null>(null);
   const [storyText, setStoryText] = useState<string>('');
@@ -246,6 +246,7 @@ export default function Level2Step1() {
   };
 
   const handleStart = async () => {
+    setFooterVisible(true);
     // Reset all states for clean restart
     setTimeUp(false);
     setBeeped60(false);

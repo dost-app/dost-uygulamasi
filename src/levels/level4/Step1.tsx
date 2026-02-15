@@ -27,7 +27,7 @@ export default function L4Step1() {
   const [completedSections, setCompletedSections] = useState<Set<number>>(new Set());
   const [testAudioActive, setTestAudioActive] = useState(false);
   const [apiResponseText, setApiResponseText] = useState<string>('');
-  const { sessionId, onStepCompleted, storyId } = useStepContext();
+  const { sessionId, onStepCompleted, storyId, setFooterVisible } = useStepContext();
   
   // Apply playback rate to audio element
   useAudioPlaybackRate(audioRef);
@@ -391,6 +391,7 @@ export default function L4Step1() {
   };
 
   const startFlow = async () => {
+    setFooterVisible(true);
     // Stop intro audio if still playing
     const el = audioRef.current;
     if (el && introAudioPlaying) {
@@ -567,6 +568,7 @@ export default function L4Step1() {
                         storyId={storyId}
                         level={4}
                         step={1}
+                        disabled={isProcessingResponse}
                       />
                     </div>
                   </>

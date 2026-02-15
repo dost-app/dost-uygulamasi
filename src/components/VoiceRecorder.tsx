@@ -355,6 +355,7 @@ export default function VoiceRecorder({
   }, []);
 
   const displayTime = recordingTimeLeft !== null ? `${recordingTimeLeft}s` : '';
+  const isButtonDisabled = isProcessing || disabled || hasSubmittedRef.current;
 
   return (
     <div className={`voice-recorder p-0 ${compact ? 'compact' : ''}`}>
@@ -370,7 +371,9 @@ export default function VoiceRecorder({
         <button
           className={`record-button ${isRecording ? 'recording' : ''} ${testAudioActive ? 'test-mode' : ''}`}
           onClick={isRecording ? stopRecording : startRecording}
-          disabled={isProcessing || disabled || hasSubmittedRef.current}
+          disabled={isButtonDisabled}
+          title={isButtonDisabled && (disabled || isProcessing) ? 'DOST cevabını değerlendiriyor, lütfen bekleyin.' : undefined}
+          aria-label={isButtonDisabled && (disabled || isProcessing) ? 'Değerlendirme aşamasında, buton geçici olarak kapalı' : undefined}
         >
           {isRecording ? (
             <>

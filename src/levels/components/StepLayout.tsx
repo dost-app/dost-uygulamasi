@@ -1,6 +1,7 @@
 // React 19: no default import required
-import { useRef } from 'react';
+import { useContext } from 'react';
 import { playSoundEffect } from '../../lib/soundEffects';
+import { StepContext } from '../../contexts/StepContext';
 
 interface Props {
   currentStep: number;
@@ -42,6 +43,9 @@ export default function StepLayout({
     await playSoundEffect('pop');
     onNext();
   };
+
+  const stepContext = useContext(StepContext);
+  const showFooter = !hideFooter && (stepContext?.footerVisible !== false);
 
   return (
     <div className="min-h-screen bg-[#f9f9fb] flex flex-col relative top-[-24px]">
@@ -120,16 +124,25 @@ export default function StepLayout({
         )}
       </div>
 
-      {/* Footer Nav - Tamamla Button (only on last step) */}
-      {!hideFooter && currentStep >= totalSteps && (
-        <div className="flex items-center justify-center gap-6 px-6 py-6 bg-gray-50">
+      {/* Footer Nav - "Başla" adımlarında footerVisible true olunca görünür */}
+      {showFooter && (
+        <div className="flex items-center justify-center gap-6 px-6 py-3 bg-gray-50 border-t border-gray-200">
           <button
             onClick={handleNext}
             disabled={disableNext && !stepCompleted}
-            className="flex flex-col items-center bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-2xl px-8 py-4 shadow-lg transform hover:scale-105 transition-all duration-200 active:scale-95"
+            className="flex flex-row items-center gap-2 bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-xl px-6 py-2.5 shadow-lg transform hover:scale-105 transition-all duration-200 active:scale-95"
           >
-            <div className="text-4xl mb-2">🏆</div>
-            <div className="text-lg font-bold">TAMAMLA</div>
+            {currentStep >= totalSteps ? (
+              <>
+                <span className="text-xl">🏆</span>
+                <span className="text-base font-bold">Seviyeyi Tamamla</span>
+              </>
+            ) : (
+              <>
+                <span className="text-base font-bold">Sonraki Adıma Geç</span>
+                <span className="text-lg">→</span>
+              </>
+            )}
           </button>
         </div>
       )}

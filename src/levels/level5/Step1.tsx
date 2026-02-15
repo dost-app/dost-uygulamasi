@@ -41,7 +41,7 @@ export default function L5Step1() {
   const [testAudioActive, setTestAudioActive] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false); // Duplicate submit prevention
   const audioQueueRef = useRef<AbortController | null>(null); // Audio queue control
-  const { onStepCompleted, storyId, sessionId } = useStepContext();
+  const { onStepCompleted, storyId, sessionId, setFooterVisible } = useStepContext();
   const { checkForNewBadges, newBadges, clearNewBadges } = useBadges();
   
   // Apply playback rate to audio element
@@ -351,6 +351,7 @@ export default function L5Step1() {
   }, [storyId, playAudioFile]);
 
   const startFlow = async () => {
+    setFooterVisible(true);
     if (loadingQuestions) {
       console.warn('Cannot start flow: questions are still loading');
       return;

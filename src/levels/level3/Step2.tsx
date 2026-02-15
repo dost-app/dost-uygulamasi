@@ -25,7 +25,7 @@ export default function L3Step2() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const student = useSelector((state: RootState) => state.user.student);
-  const { sessionId, storyId, onStepCompleted } = useStepContext();
+  const { sessionId, storyId, onStepCompleted, setFooterVisible } = useStepContext();
 
   // Story image dosyası dinamik olarak belirlenir (prod ve lokal için çalışır)
   const storyImage = getStoryImageUrl(`/images/story${storyId}.png`);
@@ -216,6 +216,7 @@ export default function L3Step2() {
   };
 
   const startCountdown = async () => {
+    setFooterVisible(true);
     // Stop intro audio if still playing
     if (audioRef.current && isAudioPlaying && phase === 'intro') {
       audioRef.current.pause();

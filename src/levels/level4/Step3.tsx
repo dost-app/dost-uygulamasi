@@ -14,7 +14,7 @@ export default function L4Step3() {
   const [answers, setAnswers] = useState<number[]>([]);
   const [feedback, setFeedback] = useState<string>('');
   const [testAudioActive, setTestAudioActive] = useState(false);
-  const { onStepCompleted, storyId } = useStepContext();
+  const { onStepCompleted, storyId, setFooterVisible } = useStepContext();
   
   // Apply playback rate to audio element
   useAudioPlaybackRate(audioRef);
@@ -83,6 +83,7 @@ export default function L4Step3() {
   };
 
   const startFlow = async () => {
+    setFooterVisible(true);
     setStarted(true);
     await playAudio(getAssetUrl('audios/level4/level4-step3-intro.mp3'));
   };

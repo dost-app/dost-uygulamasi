@@ -23,7 +23,7 @@ export default function Step4() {
   const [responseAudioFinished, setResponseAudioFinished] = useState(false);
   const [paragraphs, setParagraphs] = useState<Paragraph[]>([]);
 
-  const { sessionId, onStepCompleted, storyId: contextStoryId } = useStepContext();
+  const { sessionId, onStepCompleted, storyId: contextStoryId, setFooterVisible } = useStepContext();
   
   // Apply playback rate to audio element
   useAudioPlaybackRate(audioRef);
@@ -260,7 +260,7 @@ export default function Step4() {
           {/* Show Başla button only after intro audio finishes */}
           {introPlayed && (
             <button
-              onClick={() => setStarted(true)}
+              onClick={() => { setStarted(true); setFooterVisible(true); }}
               className="mt-6 bg-purple-600 text-white px-8 py-4 rounded-full shadow-lg hover:bg-purple-700 transition text-xl font-bold"
             >
               Başla
