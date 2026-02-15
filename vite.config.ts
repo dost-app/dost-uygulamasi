@@ -20,7 +20,7 @@ try {
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/dost-uygulamasi/',
+  base: '/',
   define: {
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(version),
     'import.meta.env.VITE_GIT_COMMIT': JSON.stringify(gitCommit),
