@@ -333,16 +333,26 @@ export default function Step2() {
       ) : (
         <div className="w-full max-w-6xl mx-auto px-4">
           {story && (
+            <>
+              {/* Başlık her zaman görünür (tablet için kaydırmadan) */}
+              <h2 className="text-xl md:text-2xl font-bold text-purple-800 text-center mb-4 pb-2 border-b border-purple-200">
+                {story.title}
+              </h2>
             <div className="flex flex-col lg:flex-row items-center gap-8">
               <div className="lg:w-1/2 w-full">
                 <div className="relative">
                   <img src={getStoryImageUrl(story.image)} alt={story.title} className="w-full max-w-md mx-auto rounded-xl shadow-lg" />
                 </div>
-                <h2 className="mt-4 text-2xl font-bold text-purple-800 text-center">{story.title}</h2>
+                <p className="mt-2 text-center text-gray-600 font-medium">{story.title}</p>
               </div>
 
             <div className="lg:w-1/2 w-full">
               <div className="bg-white rounded-xl shadow-lg p-6">
+                {/* Görev: Başlığı inceleyerek tahmin - seslendirilebilir yönerge */}
+                <div className="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-400 mb-6">
+                  <h3 className="text-sm font-bold text-amber-900 mb-1">Görev</h3>
+                  <p className="text-amber-800">Başlığı inceleyerek metnin ne hakkında olabileceğini tahmin et.</p>
+                </div>
                 {showIntroText && !analysisText && !isAnalyzing && (
                   <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200 mb-6">
                     <h3 className="font-bold text-yellow-800 mb-2">🤖 DOST'un Notu:</h3>
@@ -410,6 +420,7 @@ export default function Step2() {
               </div>
             </div>
             </div>
+            </>
           )}
         </div>
       )}

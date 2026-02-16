@@ -436,7 +436,7 @@ export default function Step3() {
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="bg-white rounded-xl shadow-lg border border-purple-200 p-6 max-w-2xl text-center">
             <h2 className="text-2xl font-semibold text-purple-800 mb-2">
-              3. Adım: Metnin İlk Cümlelerini İnceleme
+              3. Adım: Metindeki cümleleri inceleme ve tahminde bulunma
             </h2>
             <p className="text-gray-700">
               {introText}
@@ -464,10 +464,11 @@ export default function Step3() {
       ) : (
         // Main step content
         <>
-          <h2 className="text-2xl font-bold text-purple-800 mb-4">3. Adım: Metnin İlk Cümlelerini İnceleme</h2>
+          <h2 className="text-2xl font-bold text-purple-800 mb-4">3. Adım: Metindeki cümleleri inceleme ve tahminde bulunma</h2>
 
           <div className="mb-4">
             <img src={getStoryImageUrl(story.image)} alt={story.title} className="w-full max-w-xs mx-auto rounded-xl shadow" />
+            <p className="mt-2 text-center text-lg font-semibold text-purple-800">{story.title}</p>
           </div>
 
           <div className="bg-white rounded-xl shadow p-6">

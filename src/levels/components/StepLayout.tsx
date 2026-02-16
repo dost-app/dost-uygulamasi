@@ -137,6 +137,11 @@ export default function StepLayout({
                 <span className="text-xl">🏆</span>
                 <span className="text-base font-bold">Seviyeyi Tamamla</span>
               </>
+            ) : currentStep === totalSteps - 1 ? (
+              <>
+                <span className="text-base font-bold">Sonraki seviyeye geç</span>
+                <span className="text-lg">→</span>
+              </>
             ) : (
               <>
                 <span className="text-base font-bold">Sonraki Adıma Geç</span>

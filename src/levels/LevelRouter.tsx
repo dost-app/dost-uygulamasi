@@ -51,7 +51,7 @@ const LEVEL_STEPS_COUNT: Record<number, number> = {
 const LEVEL1_TITLES = [
   '1. Adım: Metnin görselini inceleme ve tahminde bulunma',
   '2. Adım: Metnin başlığını inceleme ve tahminde bulunma',
-  '3. Adım: Metnin içindeki cümlelerden bazılarını okuma ve tahminde bulunma',
+  '3. Adım: Metindeki cümleleri inceleme ve tahminde bulunma',
   '4. Adım: Okuma amacı belirleme',
 ];
 

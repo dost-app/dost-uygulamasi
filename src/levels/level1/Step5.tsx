@@ -45,7 +45,7 @@ export default function Step5() {
         <h3 className="text-3xl font-extrabold text-purple-800 mb-2">Tebrikler!</h3>
         <p className="text-lg text-gray-700 mb-1">1. Seviye başarıyla tamamlandı.</p>
         <p className="text-base text-gray-600 max-w-2xl">{completionText}</p>
-        <div className="mt-6 flex gap-3">
+        <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center items-center">
           <button 
             onClick={async () => {
               if (!student) {
@@ -110,8 +110,8 @@ export default function Step5() {
               } catch (err: any) {
                 console.error('❌ Error completing level 1:', err);
                 alert(`Hata oluştu: ${err.message || 'Bilinmeyen hata'}. Lütfen tekrar deneyin.`);
-                // Navigate anyway
-                navigate('/');
+                // Hata olsa bile 2. seviyeye yönlendir (ana sayfaya atmamak için)
+                navigate(`/level/2/intro?storyId=${finalStoryId}`);
               } finally {
                 setIsCompleting(false);
               }
@@ -123,7 +123,7 @@ export default function Step5() {
           </button>
           <button 
             onClick={() => navigate('/')} 
-            className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-bold"
+            className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-5 py-2 rounded-lg font-medium text-sm"
           >
             Ana Sayfaya Dön
           </button>
