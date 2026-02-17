@@ -488,7 +488,7 @@ export default function LevelRouter() {
       onPrev={onPrev}
       onNext={onNext}
       hidePrev
-      hideNext={step === totalSteps}
+      hideNext={level === 1 && step === totalSteps}
       disableNext={!canProceed}
       stepCompleted={stepCompleted}
       onStepCompleted={handleStepCompleted}

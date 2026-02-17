@@ -390,7 +390,7 @@ export default function Step2() {
                 {/* Only show microphone after audio is finished (mascotState === 'listening') */}
                 {analysisText && !childrenVoiceResponse && mascotState === 'listening' && (
                   <div className="text-center">
-                    <p className="mb-4 text-xl font-bold text-green-700 animate-pulse">Hadi sıra sende! Mikrofona konuş</p>
+                    <p className="mb-4 text-xl font-bold text-green-700 animate-pulse">Hadi sıra sende! Mikrofona basarak konuş ve kaydı durdurarak gönder.</p>
                     <VoiceRecorder
                       recordingDurationMs={getRecordingDurationSync()}
                       autoSubmit={true}

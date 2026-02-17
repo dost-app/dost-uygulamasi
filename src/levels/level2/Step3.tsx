@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { setSelectedGoal, setIsLoading } from '../../store/level2Slice';
 import { insertReadingGoal } from '../../lib/supabase';
 import type { RootState, AppDispatch } from '../../store/store';
 import { useStepContext } from '../../contexts/StepContext';
+import { getAssetUrl } from '../../lib/image-utils';
+import { useAudioPlaybackRate } from '../../hooks/useAudioPlaybackRate';
 
 export default function Level2Step3() {
   const dispatch = useDispatch<AppDispatch>();
@@ -19,6 +21,10 @@ export default function Level2Step3() {
   const [selectedPercentage, setSelectedPercentage] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Apply playback rate to audio element
+  useAudioPlaybackRate(audioRef);
 
   if (!analysisResult) {
     return (
@@ -69,10 +75,30 @@ export default function Level2Step3() {
       // Save to Redux
       dispatch(setSelectedGoal({ goal: wpm, percentage }));
 
-      // Show feedback (static text - no API audio)
-      const feedback = `Harika! Şimdi seninle çalıştıktan sonra 1 dakikada ${wpm} sözcük okumaya çalışacaksın. Sana güveniyorum. Yapabilirsin! 💪\n\nOkuma hedefi olarak bir sonraki okumanda bir dakikada ${wpm} sözcük okumayı seçtin. Bir sonraki okumandan sonra hedefine ulaşıp ulaşamadığına yönelik geri bildirim vereceğim.`;
+      // Show feedback with updated message
+      const feedback = `Harika! Çalışmamız sonra ulaşmak istediğin hedefin: Dakikada ${wpm} sözcük okumak.\nSana güveniyorum, bunu yapabilirsin. Hedefine ulaşabilirsen çalışmamız sonunda bir ödül kazanacaksın. Üçüncü okumanı tamamladığında, hedefine ulaşıp ulaşamadığınla ilgili sana geri bildirim vereceğim.`;
       setFeedbackText(feedback);
       setShowFeedback(true);
+      
+      // Play audio message if available (audios/level2/seviye-2-adim-3-hedef-mesaj.mp3)
+      if (audioRef.current) {
+        try {
+          const audioUrl = getAssetUrl(`audios/level2/seviye-2-adim-3-hedef-mesaj-${wpm}.mp3`);
+          audioRef.current.src = audioUrl;
+          await audioRef.current.play().catch(() => {
+            // Fallback: try generic audio file
+            const fallbackUrl = getAssetUrl('audios/level2/seviye-2-adim-3-hedef-mesaj.mp3');
+            if (audioRef.current) {
+              audioRef.current.src = fallbackUrl;
+              audioRef.current.play().catch(() => {
+                // Audio file not found, continue without audio
+              });
+            }
+          });
+        } catch (err) {
+          console.error('Error playing feedback audio:', err);
+        }
+      }
 
       // Mark step as completed
       if (onStepCompleted) {
@@ -92,6 +118,7 @@ export default function Level2Step3() {
 
   return (
     <div className="w-full mx-auto px-4">
+      <audio ref={audioRef} preload="auto" />
       <div className="flex flex-col gap-8">
         <h2 className="text-3xl font-bold text-purple-800 text-center">3. Adım: Okuma hedefi belirleme</h2>
 

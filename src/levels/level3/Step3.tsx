@@ -127,7 +127,9 @@ export default function L3Step3() {
         {analysisText && (
           <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 max-w-3xl mx-auto">
             <h4 className="font-bold text-blue-900 mb-2 text-xl">🗣️ DOST'un Mesajı</h4>
-            <p className="text-gray-800 text-lg">{analysisText}</p>
+            <p className="text-gray-800 text-lg">
+              {analysisText.replace(/\bulamadın\b/gi, 'ulaşamadın')}
+            </p>
           </div>
         )}
 

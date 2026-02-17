@@ -13,6 +13,7 @@ import { useAudioPlaybackRate } from '../../hooks/useAudioPlaybackRate';
 import { getPlaybackRate } from '../../components/SidebarSettings';
 import { TestTube } from 'lucide-react';
 import { getAssetUrl } from '../../lib/image-utils';
+import siraSendeAudioL3 from '../../assets/audios/level3/seviye-3-adim-1-sira-sende.mp3';
 
 export default function L3Step1() {
   const [searchParams] = useSearchParams();
@@ -218,7 +219,7 @@ export default function L3Step1() {
 
       try {
         setIsPlayingSiraSende(true);
-        el.src = getAssetUrl('audios/sira-sende-mikrofon.mp3');
+        el.src = siraSendeAudioL3;
         (el as any).playsInline = true;
         el.muted = false;
         // Apply playback rate
@@ -556,12 +557,13 @@ export default function L3Step1() {
         <h2 className="text-2xl font-bold text-purple-800">1. Adım: Model okuma ve İkinci okuma</h2>
         {!started && (
           <>
-            <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mb-4">
-              <p className="text-gray-700 text-left leading-relaxed">
-                {instruction}
-              </p>
-            </div>
-            <div className="flex flex-col items-center gap-3">
+            <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-4 items-start mb-4">
+              <div className="bg-white rounded-lg shadow-md p-4 md:p-5">
+                <p className="text-gray-700 text-left leading-relaxed text-sm md:text-base">
+                  {instruction}
+                </p>
+              </div>
+              <div className="flex flex-col items-center justify-center gap-3 md:justify-start">
               {testAudioActive && (
                 <div className="px-4 py-2 bg-yellow-100 border border-yellow-300 rounded-lg text-sm text-yellow-800 flex items-center gap-2">
                   <TestTube className="w-4 h-4" />
@@ -577,12 +579,13 @@ export default function L3Step1() {
               ) : (
                 <button 
                   onClick={startFlow} 
-                  className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold"
+                  className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold shrink-0"
                   disabled={paragraphs.length === 0}
                 >
                   Başla
                 </button>
               )}
+              </div>
             </div>
           </>
         )}

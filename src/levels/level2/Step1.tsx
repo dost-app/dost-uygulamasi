@@ -66,6 +66,7 @@ export default function Level2Step1() {
   const [totalSeconds, setTotalSeconds] = useState(360);
   const [timeLeft, setTimeLeft] = useState(360);
   const [selectedWordIndex, setSelectedWordIndex] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null); // 3,2,1 countdown
   
   // Keep ref in sync with state
   useEffect(() => {
@@ -262,6 +263,37 @@ export default function Level2Step1() {
       setIntroAudioPlaying(false);
     }
     
+    // Start 3,2,1 countdown
+    setStarted(true);
+    setCountdown(3);
+    
+    // Countdown: 3, 2, 1
+    const countdownInterval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev === null || prev <= 1) {
+          clearInterval(countdownInterval);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    // After countdown (3 seconds), play Tinnn sound and start reading
+    setTimeout(async () => {
+      // Play Tinnn sound (beep)
+      try {
+        await playBeep();
+      } catch (err) {
+        console.error('Error playing beep:', err);
+      }
+      
+      // Now start the actual reading flow
+      await startReadingFlow();
+    }, 3000);
+  };
+  
+  const startReadingFlow = async () => {
+    
     // Test audio aktifse, mikrofon açma - direkt hazır sesi kullan
     if (testAudioActive) {
       console.log('🧪 Test modu aktif - hazır ses kullanılacak');
@@ -341,14 +373,7 @@ export default function Level2Step1() {
       }
     }
     
-    // Play beep first (sadece gerçek kayıt için)
-    try {
-      await playBeep();
-    } catch (err) {
-      console.error('Error playing beep:', err);
-    }
-
-    setStarted(true);
+    // Beep zaten countdown sonunda çalıyor, burada tekrar çalmaya gerek yok
     setReading(true);
     setCountdownStartTime(Date.now());
     setRecordingStartTime(new Date().toISOString());
@@ -549,11 +574,20 @@ export default function Level2Step1() {
     );
   };
 
-  const introText = 'Şimdi ikinci seviyeye geçiyoruz. Bu seviyede metni ilk kez okuyacaksın ben de senin okuma hızını belirleyeceğim. Bunun için seni bir görev bekliyor. Az sonra ekranda çıkacak olan başla butonuna basarsanız metin karşına çıkacak sen de beklemeden tüm metni güzel okuma kurallarına uygun bir şekilde oku.';
+  const introText = 'Şimdi ikinci seviyeye geçiyoruz. Bu bölümde metni ilk kez okuyacaksın, ben de ne kadar hızlı okuduğunu ölçeceğim. Hazır olduğunda ekrandaki \'Başla\' butonuna bas. Metin açılır açılmaz, hiç beklemeden ve güzel okuma kurallarına dikkat ederek hepsini oku.';
 
   return (
     <div className="w-full mx-auto px-4">
       <audio ref={audioRef} preload="auto" />
+      
+      {/* Countdown screen (3,2,1) */}
+      {started && countdown !== null && !reading && !result && (
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="text-9xl font-bold text-purple-600 animate-pulse">
+            {countdown}
+          </div>
+        </div>
+      )}
       
       {/* Start screen */}
       {!started && !reading && !result && (

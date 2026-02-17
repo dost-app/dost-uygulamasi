@@ -25,6 +25,7 @@ export default function L3Step2() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const student = useSelector((state: RootState) => state.user.student);
+  const selectedGoalFromRedux = useSelector((state: RootState) => state.level2.selectedGoal);
   const { sessionId, storyId, onStepCompleted, setFooterVisible } = useStepContext();
 
   // Story image dosyası dinamik olarak belirlenir (prod ve lokal için çalışır)
@@ -34,7 +35,7 @@ export default function L3Step2() {
   const fullText = useMemo(() => paragraphs.map(p => paragraphToPlain(p)).join(' '), [paragraphs]);
   const totalWords = useMemo(() => countWords(fullText), [fullText]);
 
-  const [targetWPM, setTargetWPM] = useState<number>(80);
+  const [targetWPM, setTargetWPM] = useState<number>(() => selectedGoalFromRedux ?? 80);
   const [goalLoaded, setGoalLoaded] = useState(false);
   const [readingDurationSeconds, setReadingDurationSeconds] = useState<number>(360); // 6 dk default, ayarlardan düzenlenebilir
   const [phase, setPhase] = useState<'intro'|'countdown'|'reading'|'analyzing'|'done'>('intro');
@@ -96,8 +97,13 @@ export default function L3Step2() {
     };
   }, []);
 
-  // Load target WPM from Supabase (from Level 2 reading goal)
+  // Load target WPM: önce Redux (L2 Step3'te seçilen hedef), yoksa Supabase
   useEffect(() => {
+    if (selectedGoalFromRedux != null) {
+      setTargetWPM(selectedGoalFromRedux);
+      setGoalLoaded(true);
+      return;
+    }
     if (!student) {
       setGoalLoaded(true);
       return;
@@ -105,7 +111,8 @@ export default function L3Step2() {
     
     const loadTargetWPM = async () => {
       try {
-        const goal = await getLatestReadingGoal(student.id, storyId, 2);
+        const sid = typeof storyId === 'string' ? parseInt(storyId, 10) : storyId;
+        const goal = await getLatestReadingGoal(student.id, sid, 2);
         if (goal != null) {
           setTargetWPM(goal);
         }
@@ -117,7 +124,7 @@ export default function L3Step2() {
     };
 
     loadTargetWPM();
-  }, [student?.id, storyId]);
+  }, [student?.id, storyId, selectedGoalFromRedux]);
 
   // Load reading duration from settings (default 360 s = 6 min)
   useEffect(() => {
@@ -267,10 +274,12 @@ export default function L3Step2() {
           // API yanıtını Level3Step2AnalysisResult formatına dönüştür
           const apiResponse = rawResponse as any;
           
+          const testWpmCorrect = apiResponse.metrics?.wpmCorrect ?? wpm;
+          const testReached = apiResponse.reachedTarget ?? (testWpmCorrect >= targetWPM);
           const testResult: Level3Step2AnalysisResult = {
             speedSummary: apiResponse.speedSummary || '',
             hedefOkuma: targetWPM,
-            reachedTarget: apiResponse.reachedTarget || false,
+            reachedTarget: testReached,
             analysisText: apiResponse.analysisText || '',
             metrics: {
               durationSec: apiResponse.metrics?.durationSec || elapsedSec,
@@ -280,7 +289,7 @@ export default function L3Step2() {
               matchedWordCount: apiResponse.metrics?.matchedWordCount || 0,
               accuracyPercent: apiResponse.metrics?.accuracyPercent || 0,
               wpmSpoken: apiResponse.metrics?.wpmSpoken || wpm,
-              wpmCorrect: apiResponse.metrics?.wpmCorrect || 0,
+              wpmCorrect: testWpmCorrect,
             },
             coachText: apiResponse.coachText || '',
             audioBase64: apiResponse.audioBase64,
@@ -495,11 +504,13 @@ export default function L3Step2() {
 
       // API yanıtını Level3Step2AnalysisResult formatına dönüştür
       const apiResponse = rawResponse as any;
+      const wpmCorrect = apiResponse.metrics?.wpmCorrect ?? wpm;
+      const reachedTarget = apiResponse.reachedTarget ?? (wpmCorrect >= targetWPM);
       
       const result: Level3Step2AnalysisResult = {
         speedSummary: apiResponse.speedSummary || '',
         hedefOkuma: targetWPM,
-        reachedTarget: apiResponse.reachedTarget || false,
+        reachedTarget,
         analysisText: apiResponse.analysisText || '',
         metrics: {
           durationSec: apiResponse.metrics?.durationSec || elapsedSec,
@@ -509,7 +520,7 @@ export default function L3Step2() {
           matchedWordCount: apiResponse.metrics?.matchedWordCount || 0,
           accuracyPercent: apiResponse.metrics?.accuracyPercent || 0,
           wpmSpoken: apiResponse.metrics?.wpmSpoken || wpm,
-          wpmCorrect: apiResponse.metrics?.wpmCorrect || 0,
+          wpmCorrect,
         },
         coachText: apiResponse.coachText || '',
         audioBase64: apiResponse.audioBase64,

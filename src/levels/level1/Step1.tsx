@@ -194,6 +194,13 @@ export default function Step1() {
       if (response?.audioBase64) {
         try {
           await playAudioFromBase64(response.audioBase64);
+          // Analiz sesinden sonra görev metnini seslendir (varsa: audios/level1/seviye-1-adim-1-gorev.mp3)
+          const taskAudioUrl = getAssetUrl('audios/level1/seviye-1-adim-1-gorev.mp3');
+          if (audioRef.current) {
+            audioRef.current.src = taskAudioUrl;
+            audioRef.current.playbackRate = getPlaybackRate();
+            await audioRef.current.play().catch(() => {}); // Dosya yoksa sessizce atla
+          }
         } catch {
           setMascotState('listening');
         }
@@ -413,14 +420,15 @@ export default function Step1() {
                         <p className="text-blue-700">{imageAnalysisText}</p>
                       </div>
 
-                      {/* Only show task and microphone after audio is finished (mascotState === 'listening') */}
+                      {/* Görev kutusu: Her zaman görünür (seslendirme için) */}
+                      <div className="bg-amber-50 rounded-lg border-l-4 border-amber-400 p-4 mt-6">
+                        <h3 className="text-sm font-bold text-amber-900 mb-1">Görev</h3>
+                        <p className="text-amber-800">Görseli inceleyerek metnin ne hakkında olabileceğini tahmin et.</p>
+                      </div>
+
+                      {/* Only show microphone after audio is finished (mascotState === 'listening') */}
                       {mascotState === 'listening' && (
                         <>
-                          <div className="bg-blue-50 rounded-lg border-l-4 border-blue-400 p-4 mt-6">
-                            <p className="text-blue-800 font-medium">Görev:</p>
-                            <p className="text-blue-700">Görseli inceleyerek hikayenin ne hakkında olabileceğini tahmin et. Neler gözlemliyorsun?</p>
-                          </div>
-
                           <div className="mt-6 text-center">
                             <p className="mb-4 text-2xl font-bold text-green-700 animate-pulse">Hadi sıra sende!</p>
                             <p className="text-lg text-green-600">Mikrofona tıklayarak cevabını ver</p>
