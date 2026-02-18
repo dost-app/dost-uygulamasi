@@ -11,7 +11,7 @@ const LEVEL_DESCRIPTIONS: Record<number, string> = {
   1: 'Metnin görselini, başlığını ve içeriğini inceleyerek okuma öncesi hazırlık yapacağız.',
   2: 'Metni ilk kez okuyup okuma hızını belirleyeceğiz ve okuma hedefi oluşturacağız.',
   3: 'Model okuma yapıp metni tekrar okuyacağız ve okuma hızını geliştireceğiz.',
-  4: 'Şema üzerinden beyin fırtınası yapıp özet çıkaracağız ve okuduğunu anlama sorularını cevaplayacağız.',
+  4: 'Şemalar üzerinden özet çıkaracağız ve okuduğunu anlama sorularını cevaplayacağız.',
   5: 'Okuduğunu anlama sorularını cevaplayıp hedefe bağlı ödül alacağız ve çalışmayı sonlandıracağız.',
 };
 
@@ -19,7 +19,7 @@ const LEVEL_TITLES: Record<number, string> = {
   1: '1. Seviye: Okuma Öncesi Hazırlık',
   2: '2. Seviye: İlk Okuma ve Hız Belirleme',
   3: '3. Seviye: Model Okuma ve Hız Geliştirme',
-  4: '4. Seviye: Şema ve Özetleme',
+  4: '4. Seviye: Şemalar Üzerinden Metni Özetleme',
   5: '5. Seviye: Okuduğunu Anlama ve Sonlandırma',
 };
 

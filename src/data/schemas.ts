@@ -13,7 +13,7 @@ export type Schema = {
 export const SCHEMAS: Record<number, Schema> = {
   1: {
     storyId: 1,
-    title: 'Kırıntıların Kahramanları Metni Şematik Düzenlemesi',
+    title: 'Kırıntıların Kahramanları Metni Dolu Şema',
     sections: [
       {
         id: 1,
@@ -68,7 +68,7 @@ export const SCHEMAS: Record<number, Schema> = {
   },
   2: {
     storyId: 2,
-    title: 'Avucumun İçindeki Akıllı Kutu Metni Şematik Düzenlemesi',
+    title: 'Avucumun İçindeki Akıllı Kutu Metni Dolu Şema',
     sections: [
       {
         id: 1,
@@ -131,7 +131,7 @@ export const SCHEMAS: Record<number, Schema> = {
   },
   3: {
     storyId: 3,
-    title: 'Çöl Şekerlemesi Şematik Düzenlemesi',
+    title: 'Çöl Şekerlemesi Metni Dolu Şema',
     sections: [
       {
         id: 1,
@@ -182,7 +182,7 @@ export const SCHEMAS: Record<number, Schema> = {
   },
   4: {
     storyId: 4,
-    title: 'Turizmin İncisi Şematik Düzenlemesi',
+    title: 'Turizmin İncisi Metni Dolu Şema',
     sections: [
       {
         id: 1,
@@ -237,7 +237,7 @@ export const SCHEMAS: Record<number, Schema> = {
   },
   5: {
     storyId: 5,
-    title: 'Çöl Gemisi Metni Şematik Düzenlemesi',
+    title: 'Çöl Gemisi Metni Dolu Şema',
     sections: [
       {
         id: 1,

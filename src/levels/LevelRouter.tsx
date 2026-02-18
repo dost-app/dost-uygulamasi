@@ -68,8 +68,8 @@ const LEVEL3_TITLES = [
 ];
 
 const LEVEL4_TITLES = [
-  '1. Adım: Dolu Şema Üzerinden Beyin Fırtınası ve Yorum',
-  '2. Adım: Özetleme',
+  '1. Adım: Dolu Şemaya Bakarak Metnin Özetini Dinleme',
+  '2. Adım: Boş Şemaya Bakarak Metni Özetleme',
   'Tamamlama',
 ];
 

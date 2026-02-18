@@ -332,7 +332,7 @@ const DEFAULT_TEST_TEXTS: Record<string, string> = {
   '4_3_4': 'Seviye 3\'ü tamamladım. Akdeniz bölgesi metnini model okumaya göre tekrarladım.',
   '5_3_4': 'Seviye 3\'ü tamamladım. Çöl gemisi metnini akıcı ve doğru okudum.',
   
-  // Level 4 - Şema ve Özetleme
+  // Level 4 - Şemalar Üzerinden Metni Özetleme
   '1_4_1': 'Karınca kolonisinin yapısı: Kraliçe yumanrtalar. İşçiler yiyecek toplar, yuva yapar, larvaları besler. Erkekler sadece çiftleşir.',
   '1_4_2': 'Karıncalar toplu yaşayan, organize, çalışkan hayvanlardır. Görevler bellidir. Herkes işini yapar.',
   

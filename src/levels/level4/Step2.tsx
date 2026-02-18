@@ -10,11 +10,16 @@ import { submitSchemaSummary, getResumeResponseStep2 } from '../../lib/level4-ap
 import type { RootState } from '../../store/store';
 import { getRecordingDurationSync } from '../../components/SidebarSettings';
 import { TestTube } from 'lucide-react';
+import { getAssetUrl } from '../../lib/image-utils';
+
+const L4_STEP2_INTRO =
+  'Dördüncü seviyenin ikinci aşamasına geçiyoruz. Şimdi sıra sende gördüğün içi boş şema başlıklarına bakarak bu metni özetlemeni istiyorum. Özetlemeye başlamak için Mikrofona basarak konuş ve kaydı durdurarak gönder.';
 
 export default function L4Step2() {
   const student = useSelector((state: RootState) => state.user.student);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [started, setStarted] = useState(false);
+  const [introAudioPlaying, setIntroAudioPlaying] = useState(false);
   const [currentSection, setCurrentSection] = useState(0);
   const [isPlayingPromptAudio, setIsPlayingPromptAudio] = useState(false);
   const [isWaitingForRecording, setIsWaitingForRecording] = useState(false);
@@ -99,6 +104,7 @@ export default function L4Step2() {
       el.src = '';
       
       const section = schema.sections[currentSection];
+      const titleWithoutNumber = section.title.replace(/^\d+\.\s*/, '').trim();
       // Step 2 ses dosyaları: /audios/level4/adim2/schema-{storyId}-{sectionId}-prompt.mp3
       const audioPath = `/audios/level4/adim2/schema-${storyId}-${section.id}-prompt.mp3`;
       
@@ -236,10 +242,41 @@ export default function L4Step2() {
   }, [started, currentSection, schema, storyId]);
 
   const startFlow = async () => {
-    setFooterVisible(true);
-    setStarted(true);
-    setCurrentSection(0);
-    setCompletedSections(new Set());
+    const el = audioRef.current;
+    if (!el) {
+      setFooterVisible(true);
+      setStarted(true);
+      setCurrentSection(0);
+      setCompletedSections(new Set());
+      return;
+    }
+    setIntroAudioPlaying(true);
+    el.src = getAssetUrl('audios/level4/seviye-4-adim-2-intro.mp3');
+    el.playbackRate = getPlaybackRate();
+    (el as any).playsInline = true;
+    el.muted = false;
+    const onEnded = () => {
+      setIntroAudioPlaying(false);
+      setFooterVisible(true);
+      setStarted(true);
+      setCurrentSection(0);
+      setCompletedSections(new Set());
+    };
+    el.onended = onEnded;
+    el.onerror = () => {
+      setIntroAudioPlaying(false);
+      setFooterVisible(true);
+      setStarted(true);
+      setCurrentSection(0);
+      setCompletedSections(new Set());
+    };
+    el.play().catch(() => {
+      setIntroAudioPlaying(false);
+      setFooterVisible(true);
+      setStarted(true);
+      setCurrentSection(0);
+      setCompletedSections(new Set());
+    });
   };
 
   const handleVoiceSubmit = async (audioBlob: Blob) => {
@@ -421,22 +458,31 @@ export default function L4Step2() {
     <div className="w-full max-w-5xl mx-auto">
       <audio ref={audioRef} preload="auto" />
       <div className="flex flex-col items-center justify-center gap-4 mb-6">
-        <h2 className="text-2xl font-bold text-purple-800">2. Adım: Özetleme</h2>
+        <h2 className="text-2xl font-bold text-purple-800">2. Adım: Boş Şemaya Bakarak Metni Özetleme</h2>
         {!started && (
-          <div className="flex flex-col items-center gap-3">
+          <div className="flex flex-col items-center gap-4 w-full max-w-2xl">
+            <div className="bg-white rounded-lg shadow-md p-5 text-left">
+              <p className="text-gray-700 leading-relaxed">{L4_STEP2_INTRO}</p>
+            </div>
             {testAudioActive && (
               <div className="px-4 py-2 bg-yellow-100 border border-yellow-300 rounded-lg text-sm text-yellow-800 flex items-center gap-2">
                 <TestTube className="w-4 h-4" />
                 <span>🧪 Test modu: Hazır ses kullanılacak</span>
               </div>
             )}
-            
-            <button 
-              onClick={startFlow} 
-              className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold"
-            >
-              Başla
-            </button>
+            {introAudioPlaying ? (
+              <div className="flex flex-col items-center gap-2">
+                <div className="animate-spin rounded-full h-8 w-8 border-4 border-purple-500 border-t-transparent" />
+                <p className="text-gray-600">Ses çalınıyor...</p>
+              </div>
+            ) : (
+              <button
+                onClick={startFlow}
+                className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold"
+              >
+                Başla
+              </button>
+            )}
           </div>
         )}
       </div>

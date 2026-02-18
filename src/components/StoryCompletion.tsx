@@ -25,8 +25,8 @@ const LEVEL_TITLES: Record<number, string[]> = {
     '3. Adım: Okuma hızı ve Performans geribildirimi',
   ],
   4: [
-    '1. Adım: Dolu Şema Üzerinden Beyin Fırtınası ve Yorum',
-    '2. Adım: Özetleme',
+    '1. Adım: Dolu Şemaya Bakarak Metnin Özetini Dinleme',
+    '2. Adım: Boş Şemaya Bakarak Metni Özetleme',
   ],
   5: [
     '1. Adım: Okuduğunu anlama soruları',

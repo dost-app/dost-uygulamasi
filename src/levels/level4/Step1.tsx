@@ -63,7 +63,7 @@ export default function L4Step1() {
     };
   }, []);
 
-  const instruction = 'Şimdi dördüncü seviyeye geçiyoruz. Bu seviyede okuma öncesinde metni gözden geçirirken yaptığımız tahminlerimiz ve belirlediğimiz okuma amacımız doğru muymuş? Bunları düşünerek şemada yer alan bilgileri numara sırasına göre oku.';
+  const instruction = 'Şimdi dördüncü seviyeye geçiyoruz. Sırada bu metni özetleme var. Metinde geçen önemli bilgi birimlerini söyleyerek metni önce ben özetleyeceğim sonra da aynı şekilde sen özetleyeceksin. Özetleme yaparken önemli bilgi birimlerine ve metnin içeriğinin akış sırasına çok dikkat etmen gerekiyor. Bunu kolayca yapabilmen için senin için oluşturduğum şemayı ekrandan takip etmen gerekiyor. Şimdi ben özetlemeye başlıyorum. Lütfen sen de ilgili yerlere bakarak takip etmeye başla.';
 
   useEffect(() => {
     // Play intro audio on component mount
@@ -134,7 +134,25 @@ export default function L4Step1() {
     };
   }, []);
 
-  // Play section audio when currentSection changes
+  // Bölüm geçiş sesi: "Şimdi diğer bölüme geçiyorum. Dikkatle takip et."
+  const playTransitionAudio = (): Promise<void> => {
+    return new Promise((resolve) => {
+      const el = audioRef.current;
+      if (!el) {
+        resolve();
+        return;
+      }
+      el.src = getAssetUrl('audios/level4/gecis-diger-bolume.mp3');
+      el.playbackRate = getPlaybackRate();
+      (el as any).playsInline = true;
+      el.muted = false;
+      el.onended = () => resolve();
+      el.onerror = () => resolve();
+      el.play().catch(() => resolve());
+    });
+  };
+
+  // Play section audio when currentSection changes (önce geçiş sesi, sonra bölüm sesi)
   useEffect(() => {
     if (!started || !schema || currentSection >= schema.sections.length) return;
 
@@ -143,57 +161,50 @@ export default function L4Step1() {
       if (!el) return;
 
       const section = schema.sections[currentSection];
-      // Step 1 ses dosyaları: /audios/level4/adim1/schema-{storyId}-{sectionId}.mp3
       const audioPaths = [
-        `/audios/level4/adim1/schema-${storyId}-${section.id}.mp3`
+        getAssetUrl(`audios/level4/adim1/schema-${storyId}-${section.id}.mp3`)
       ];
-      
-      console.log(`🎵 Playing section ${currentSection + 1} audio, trying:`, audioPaths);
-      setIsPlayingSectionAudio(true);
 
-      // Try first path, fallback to second
-      const tryPlayAudio = async (pathIndex: number) => {
-        if (pathIndex >= audioPaths.length) {
-          console.warn(`⚠️ No audio found for section ${currentSection + 1}, skipping...`);
-          setIsPlayingSectionAudio(false);
-          playSiraSendeAudio();
-          return;
-        }
+      const playSectionFile = () => {
+        console.log(`🎵 Playing section ${currentSection + 1} audio`);
+        setIsPlayingSectionAudio(true);
 
-        el.src = audioPaths[pathIndex];
-        el.playbackRate = getPlaybackRate();
-        (el as any).playsInline = true;
-        el.muted = false;
+        const tryPlayAudio = (pathIndex: number) => {
+          if (pathIndex >= audioPaths.length) {
+            setIsPlayingSectionAudio(false);
+            playSiraSendeAudio();
+            return;
+          }
+          el.src = audioPaths[pathIndex];
+          el.playbackRate = getPlaybackRate();
+          (el as any).playsInline = true;
+          el.muted = false;
 
-        const handleEnded = () => {
-          console.log(`✅ Section ${currentSection + 1} audio finished`);
-          setIsPlayingSectionAudio(false);
-          playSiraSendeAudio();
+          const handleEnded = () => {
+            setIsPlayingSectionAudio(false);
+            playSiraSendeAudio();
+          };
+          const handleError = () => {
+            el.removeEventListener('ended', handleEnded);
+            el.removeEventListener('error', handleError);
+            tryPlayAudio(pathIndex + 1);
+          };
+
+          el.addEventListener('ended', handleEnded, { once: true });
+          el.addEventListener('error', handleError, { once: true });
+          el.play().catch(() => {
+            el.removeEventListener('ended', handleEnded);
+            el.removeEventListener('error', handleError);
+            tryPlayAudio(pathIndex + 1);
+          });
         };
-
-        const handleError = (e: Event) => {
-          console.warn(`⚠️ Section ${currentSection + 1} audio error for ${audioPaths[pathIndex]}, trying next...`);
-          el.removeEventListener('ended', handleEnded);
-          el.removeEventListener('error', handleError);
-          // Try next path
-          tryPlayAudio(pathIndex + 1);
-        };
-
-        el.addEventListener('ended', handleEnded, { once: true });
-        el.addEventListener('error', handleError, { once: true });
-
-        try {
-          await el.play();
-          console.log(`✅ Playing: ${audioPaths[pathIndex]}`);
-        } catch (err) {
-          console.warn(`⚠️ Play error for ${audioPaths[pathIndex]}:`, err);
-          el.removeEventListener('ended', handleEnded);
-          el.removeEventListener('error', handleError);
-          tryPlayAudio(pathIndex + 1);
-        }
+        tryPlayAudio(0);
       };
 
-      tryPlayAudio(0);
+      if (currentSection > 0) {
+        await playTransitionAudio();
+      }
+      playSectionFile();
     };
 
     playSectionAudio();
@@ -418,7 +429,7 @@ export default function L4Step1() {
     <div className="w-full max-w-5xl mx-auto">
       <audio ref={audioRef} preload="auto" />
       <div className="flex flex-col items-center justify-center gap-4 mb-6">
-        <h2 className="text-2xl font-bold text-purple-800">1. Adım: Dolu Şema Üzerinden Beyin Fırtınası ve Yorum</h2>
+        <h2 className="text-2xl font-bold text-purple-800">1. Adım: Dolu Şemaya Bakarak Metnin Özetini Dinleme</h2>
         {!started && (
           <>
             <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mb-4">
@@ -483,9 +494,9 @@ export default function L4Step1() {
                     key={section.id}
                     className={`p-4 rounded-lg border-2 transition-all ${
                       isCurrent && isPlayingSectionAudio
-                        ? 'border-purple-500 bg-purple-50 scale-105 shadow-lg'
+                        ? 'border-purple-500 bg-purple-50 scale-[1.02] shadow-lg ring-4 ring-purple-300 ring-opacity-80 animate-pulse'
                         : isCurrent
-                        ? 'border-purple-500 bg-purple-50 scale-105'
+                        ? 'border-purple-500 bg-purple-50 scale-[1.02] ring-2 ring-purple-300'
                         : isCompleted
                         ? 'border-green-500 bg-green-50'
                         : isFuture
@@ -499,7 +510,7 @@ export default function L4Step1() {
                         <span className="text-green-600 text-xl">✓</span>
                       )}
                       {isCurrent && isPlayingSectionAudio && (
-                        <span className="text-purple-600 animate-pulse">🔊</span>
+                        <span className="text-purple-600 animate-pulse" aria-hidden>🔊</span>
                       )}
                     </div>
                     <ul className="space-y-2 text-sm text-gray-700">
