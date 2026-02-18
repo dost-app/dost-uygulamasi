@@ -209,7 +209,7 @@ export default function StrategyIntroVideo({ storyId, onComplete, onSkip }: Prop
           <>
             <video
               ref={videoRef}
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-contain bg-black"
               src={`${import.meta.env.BASE_URL}videos/dost-okuma-stratejisi.mp4`}
               controls={false}
               preload="metadata"
@@ -251,17 +251,7 @@ export default function StrategyIntroVideo({ storyId, onComplete, onSkip }: Prop
           showOverlays ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
-        <div className="text-center flex-1">
-          <h1 className="text-2xl font-bold text-white mb-1">DOST</h1>
-          <h2 className="text-lg font-semibold text-gray-200">
-            Strateji Tanıtımı ve Güzel Okuma Kuralları
-          </h2>
-          {isMandatory && (
-            <p className="text-xs text-yellow-400 mt-1">
-              ⚠️ Bu oturum için strateji tanıtımı zorunludur. Video bitene kadar kapanmaz.
-            </p>
-          )}
-        </div>
+        <div className="flex-1" />
         {canSkip && (
           <button
             onClick={(e) => { e.stopPropagation(); handleSkip(); }}

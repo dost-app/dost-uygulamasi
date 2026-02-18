@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "predeploy": "npm run build",
-  "deploy": "gh-pages -d dist",
+  "deploy": "gh-pages -d dist -r https://github.com/dost-app/dost-app.github.io.git",
     "lint": "eslint .",
     "preview": "vite preview",
     "api:mock": "node mock-api-server.js",
