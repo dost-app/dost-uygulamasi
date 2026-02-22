@@ -194,13 +194,6 @@ export default function Step1() {
       if (response?.audioBase64) {
         try {
           await playAudioFromBase64(response.audioBase64);
-          // Analiz sesinden sonra görev metnini seslendir (varsa: audios/level1/seviye-1-adim-1-gorev.mp3)
-          const taskAudioUrl = getAssetUrl('audios/level1/seviye-1-adim-1-gorev.mp3');
-          if (audioRef.current) {
-            audioRef.current.src = taskAudioUrl;
-            audioRef.current.playbackRate = getPlaybackRate();
-            await audioRef.current.play().catch(() => {}); // Dosya yoksa sessizce atla
-          }
         } catch {
           setMascotState('listening');
         }
@@ -223,25 +216,18 @@ export default function Step1() {
     const tryMime = async (mime: string) => {
       const src = base64.trim().startsWith('data:') ? base64.trim() : `data:${mime};base64,${base64.trim()}`;
       audioRef.current!.src = src;
-      // Apply playback rate before playing
       audioRef.current!.playbackRate = getPlaybackRate();
       setMascotState('speaking');
 
-      // Reset progress
       setAudioProgress(0);
       setAudioDuration(0);
 
-      // Update duration when metadata is loaded
       const onLoadedMetadata = () => {
-        setAudioDuration(audioRef.current?.duration || 0);
+        setAudioDuration(audioRef.current?.duration ?? 0);
       };
-
-      // Update progress during playback
       const onTimeUpdate = () => {
-        setAudioProgress(audioRef.current?.currentTime || 0);
+        setAudioProgress(audioRef.current?.currentTime ?? 0);
       };
-
-      // Clean up and set to listening when done
       const onEnded = () => {
         setMascotState('listening');
         setAudioProgress(0);
@@ -257,6 +243,7 @@ export default function Step1() {
 
       await audioRef.current!.play();
     };
+
     try {
       await tryMime('audio/mpeg');
     } catch {
