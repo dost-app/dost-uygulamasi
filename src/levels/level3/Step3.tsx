@@ -7,6 +7,7 @@ import { getPlaybackRate } from '../../components/SidebarSettings';
 import { useAudioPlaybackRate } from '../../hooks/useAudioPlaybackRate';
 import { useBadges } from '../../hooks/useBadges';
 import BadgeAnimation from '../../components/BadgeAnimation';
+import { generateVoice } from '../../lib/level3-api';
 
 export default function L3Step3() {
   const [searchParams] = useSearchParams();
@@ -24,19 +25,33 @@ export default function L3Step3() {
   // Apply playback rate to audio element
   useAudioPlaybackRate(audioRef);
 
-  // API'den gelen ses dosyasını çal
+  // Ses çal: önce API'den gelen audioBase64, yoksa analysisText'ten TTS ile dinamik üret
   useEffect(() => {
     if (!step2Analysis || hasPlayedAudio) return;
 
     const playAnalysisAudio = async () => {
       try {
-        // API'den gelen audioBase64'ü çal
-        if (step2Analysis.audioBase64 && audioRef.current) {
-          const src = step2Analysis.audioBase64.trim().startsWith('data:') 
-            ? step2Analysis.audioBase64.trim() 
-            : `data:audio/mpeg;base64,${step2Analysis.audioBase64.trim()}`;
-          
-          audioRef.current.src = src;
+        let audioSrc: string | null = null;
+
+        if (step2Analysis.audioBase64) {
+          const raw = step2Analysis.audioBase64.trim();
+          audioSrc = raw.startsWith('data:') ? raw : `data:audio/mpeg;base64,${raw}`;
+        } else if (step2Analysis.analysisText) {
+          // audioBase64 yoksa, analysisText'i TTS API ile seslendirme üret
+          console.log('🔊 audioBase64 yok, TTS API ile dinamik ses üretiliyor...');
+          try {
+            const ttsResponse = await generateVoice({ text: step2Analysis.analysisText });
+            if (ttsResponse.audioBase64) {
+              const raw = ttsResponse.audioBase64.trim();
+              audioSrc = raw.startsWith('data:') ? raw : `data:audio/mpeg;base64,${raw}`;
+            }
+          } catch (ttsErr) {
+            console.error('TTS ses üretme hatası:', ttsErr);
+          }
+        }
+
+        if (audioSrc && audioRef.current) {
+          audioRef.current.src = audioSrc;
           audioRef.current.playbackRate = getPlaybackRate();
           (audioRef.current as any).playsInline = true;
           audioRef.current.muted = false;
@@ -44,7 +59,6 @@ export default function L3Step3() {
           await audioRef.current.play();
           setHasPlayedAudio(true);
 
-          // Check for badges after audio finishes
           if (student?.id) {
             const earnedBadges = await checkForNewBadges(
               storyIdNum,
@@ -59,6 +73,8 @@ export default function L3Step3() {
             );
             console.log(`🏆 Earned ${earnedBadges.length} badges in Level 3 Step 3`);
           }
+        } else {
+          setHasPlayedAudio(true);
         }
       } catch (err) {
         console.error('Error playing analysis audio:', err);

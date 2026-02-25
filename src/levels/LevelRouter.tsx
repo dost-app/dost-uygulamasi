@@ -226,13 +226,13 @@ export default function LevelRouter() {
             // Also restore base WPM as part of analysis result if not present
             if (data.base_wpm) {
               dispatch(setAnalysisResult({
+                overallScore: 0,
                 readingSpeed: {
                   wordsPerMinute: data.base_wpm,
-                  accuracy: 0,
-                  fluency: 0,
+                  correctWordsPerMinute: data.base_wpm,
                 },
-                comprehension: { score: 0, feedback: '' },
-                feedback: '',
+                wordCount: { original: 0, spoken: 0, correct: 0 },
+                qualityRules: {},
               }));
             }
           }

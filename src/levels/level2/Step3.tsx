@@ -42,7 +42,7 @@ export default function Level2Step3() {
     );
   }
 
-  const baseWpm = Math.round(analysisResult.readingSpeed?.wordsPerMinute || 0);
+  const baseWpm = Math.round(analysisResult.readingSpeed?.correctWordsPerMinute || 0);
   
   const goals = [
     { percentage: 5, wpm: Math.ceil(baseWpm * 1.05), label: '%5 Artış' },
@@ -70,6 +70,21 @@ export default function Level2Step3() {
 
       if (result.error) {
         console.error('Supabase error:', result.error);
+      }
+
+      // Persist goal locally as backup (for Level 3)
+      try {
+        const key = `reading_goal_${student.id}_${storyId}`;
+        const payload = {
+          wpm,
+          percentage,
+          baseWpm,
+          updatedAt: Date.now(),
+        };
+        localStorage.setItem(key, JSON.stringify(payload));
+        console.log('💾 Okuma hedefi localStorage\'a kaydedildi:', key, payload);
+      } catch (e) {
+        console.warn('localStorage\'a okuma hedefi yazılamadı:', e);
       }
 
       // Save to Redux
@@ -123,7 +138,7 @@ export default function Level2Step3() {
         <h2 className="text-3xl font-bold text-purple-800 text-center">3. Adım: Okuma hedefi belirleme</h2>
 
         <div className="bg-gradient-to-r from-purple-100 to-purple-50 border-2 border-purple-300 rounded-xl p-6 text-center max-w-2xl mx-auto">
-          <h3 className="text-xl font-bold text-purple-900 mb-2">📊 Şu anki Okuma Hızın</h3>
+          <h3 className="text-xl font-bold text-purple-900 mb-2">📊 Şu anki Doğru Okuma Hızın</h3>
           <p className="text-4xl font-bold text-purple-600 mb-4">{baseWpm} sözcük/dakika</p>
           <p className="text-gray-700">Şimdi bu okuma hedeflerinden birini seç ve gelecek okumalarında bu hedefi yakalamaya çalış!</p>
         </div>

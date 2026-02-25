@@ -97,25 +97,62 @@ export default function L3Step2() {
     };
   }, []);
 
-  // Load target WPM: önce Redux (L2 Step3'te seçilen hedef), yoksa Supabase
+  // Load target WPM: başlangıçta Redux (varsa), sonrasında her zaman Supabase'den güncelle
   useEffect(() => {
-    if (selectedGoalFromRedux != null) {
-      setTargetWPM(selectedGoalFromRedux);
-      setGoalLoaded(true);
-      return;
-    }
+    console.log('student', student);
     if (!student) {
-      setGoalLoaded(true);
+      // student henüz yok, Supabase çağrısını ertele
       return;
     }
     
     const loadTargetWPM = async () => {
       try {
         const sid = typeof storyId === 'string' ? parseInt(storyId, 10) : storyId;
+        console.log('📡 Supabase\'den okuma hedefi çekiliyor:', {
+          studentId: student.id,
+          storyId: sid,
+          level: 2,
+        });
+
         const goal = await getLatestReadingGoal(student.id, sid, 2);
+
         if (goal != null) {
+          console.log('📊 Okuma hedefi Supabase\'den yüklendi:', goal);
           setTargetWPM(goal);
+          return;
         }
+
+        // Fallback 1: localStorage (Level 2 Step 3'te kaydedilen hedef)
+        try {
+          const localKey = `reading_goal_${student.id}_${sid}`;
+          const raw = localStorage.getItem(localKey);
+          if (raw) {
+            const parsed = JSON.parse(raw) as { wpm: number; percentage: number; baseWpm: number };
+            if (parsed?.wpm) {
+              console.log('📊 Okuma hedefi localStorage\'tan yüklendi:', parsed.wpm, parsed);
+              setTargetWPM(parsed.wpm);
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('localStorage\'tan okuma hedefi okunamadı:', e);
+        }
+
+        // Fallback 2: Redux
+        if (selectedGoalFromRedux != null) {
+          console.warn(
+            '⚠️ Supabase/localStorage\'da okuma hedefi bulunamadı, Redux hedefi kullanılıyor:',
+            selectedGoalFromRedux
+          );
+          setTargetWPM(selectedGoalFromRedux);
+          return;
+        }
+
+        // Final fallback: default 80
+        console.warn(
+          '⚠️ Supabase, localStorage ve Redux\'ta okuma hedefi bulunamadı. Default 80 kullanılıyor.'
+        );
+        setTargetWPM(80);
       } catch (err) {
         console.error('Error loading reading goal:', err);
       } finally {
@@ -224,6 +261,7 @@ export default function L3Step2() {
 
   const startCountdown = async () => {
     setFooterVisible(true);
+    console.log('📊 L3Step2 okuma hedefi (targetWPM):', targetWPM);
     // Stop intro audio if still playing
     if (audioRef.current && isAudioPlaying && phase === 'intro') {
       audioRef.current.pause();
@@ -275,7 +313,10 @@ export default function L3Step2() {
           const apiResponse = rawResponse as any;
           
           const testWpmCorrect = apiResponse.metrics?.wpmCorrect ?? wpm;
-          const testReached = apiResponse.reachedTarget ?? (testWpmCorrect >= targetWPM);
+          const testReached = testWpmCorrect >= targetWPM;
+          
+          console.log('📊 [Test] hedefOkuma - Supabase/Redux targetWPM:', targetWPM, '| API hedefOkuma (KULLANILMIYOR):', apiResponse.hedefOkuma);
+          
           const testResult: Level3Step2AnalysisResult = {
             speedSummary: apiResponse.speedSummary || '',
             hedefOkuma: targetWPM,
@@ -482,6 +523,7 @@ export default function L3Step2() {
         mimeType: finalMime,
         duration: elapsedMs,
         targetWPM,
+        selectedGoalFromRedux,
       });
 
       // Send to n8n with metadata
@@ -505,7 +547,9 @@ export default function L3Step2() {
       // API yanıtını Level3Step2AnalysisResult formatına dönüştür
       const apiResponse = rawResponse as any;
       const wpmCorrect = apiResponse.metrics?.wpmCorrect ?? wpm;
-      const reachedTarget = apiResponse.reachedTarget ?? (wpmCorrect >= targetWPM);
+      const reachedTarget = wpmCorrect >= targetWPM;
+      
+      console.log('📊 hedefOkuma - Supabase/Redux targetWPM:', targetWPM, '| API hedefOkuma (KULLANILMIYOR):', apiResponse.hedefOkuma);
       
       const result: Level3Step2AnalysisResult = {
         speedSummary: apiResponse.speedSummary || '',

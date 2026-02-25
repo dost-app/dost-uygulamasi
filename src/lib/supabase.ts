@@ -1007,7 +1007,6 @@ export async function getLatestReadingGoal(
     .select('*')
     .eq('student_id', studentId)
     .eq('story_id', storyId)
-    .eq('level', level)
     .order('timestamp', { ascending: false })
     .limit(1)
     .maybeSingle();

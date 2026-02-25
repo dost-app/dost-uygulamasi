@@ -1,8 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import type { RootState } from '../../store/store';
 import { useStepContext } from '../../contexts/StepContext';
+import { getParagraphs, paragraphToPlain } from '../../data/stories';
+import { convertErrorsToTurkish } from '../../lib/turkish-utils';
 
 const QUALITY_METRIC_LABELS: Record<string, string> = {
   speechRate: 'Okuma Hızı',
@@ -17,6 +19,20 @@ export default function Level2Step2() {
   const { onStepCompleted, storyId } = useStepContext();
 
   console.log('Step2: analysisResult from Redux:', analysisResult);
+
+  const originalText = useMemo(() => {
+    const paragraphs = getParagraphs(storyId);
+    return paragraphs.map(p => paragraphToPlain(p)).join(' ');
+  }, [storyId]);
+
+  const turkishErrors = useMemo(() => {
+    if (!analysisResult?.pronunciation?.errors) return [];
+    return convertErrorsToTurkish(
+      analysisResult.pronunciation.errors,
+      originalText,
+      analysisResult.transcript,
+    );
+  }, [analysisResult?.pronunciation?.errors, originalText, analysisResult?.transcript]);
 
   // Mark step as completed when analysis result is available
   useEffect(() => {
@@ -105,20 +121,20 @@ export default function Level2Step2() {
             <div className="md:col-span-2 lg:col-span-2 p-4 bg-red-50 rounded-lg border border-red-200">
               <h4 className="font-bold text-red-900 mb-2">Okuma Doğruluğu</h4>
               <p className="text-gray-700 mb-3">Doğruluk: <span className="font-bold text-red-600">{analysisResult.pronunciation.accuracy}%</span></p>
-              {analysisResult.pronunciation.errors.length > 0 && (
+              {turkishErrors.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Doğru Sözcükler */}
                   <div>
                     <h5 className="text-sm font-bold text-green-800 mb-2">Doğru Sözcükler</h5>
                     <div className="space-y-1 max-h-48 overflow-y-auto">
-                      {analysisResult.pronunciation.errors
-                        .filter((error: any) => error.expected && !error.actual)
-                        .map((error: any, idx: number) => (
+                      {turkishErrors
+                        .filter((error) => error.expected && !error.actual)
+                        .map((error, idx) => (
                           <div key={idx} className="bg-white p-2 rounded text-sm border border-green-200">
                             <span className="text-green-700 font-medium">{error.expected}</span>
                           </div>
                         ))}
-                      {analysisResult.pronunciation.errors.filter((e: any) => e.expected && !e.actual).length === 0 && (
+                      {turkishErrors.filter((e) => e.expected && !e.actual).length === 0 && (
                         <p className="text-xs text-gray-500 italic">Doğru okunan sözcük bulunmuyor</p>
                       )}
                     </div>
@@ -127,36 +143,18 @@ export default function Level2Step2() {
                   <div>
                     <h5 className="text-sm font-bold text-red-800 mb-2">Hatalı Sözcükler</h5>
                     <div className="space-y-1 max-h-48 overflow-y-auto">
-                      {analysisResult.pronunciation.errors
-                        .filter((error: any) => error.expected && error.actual)
-                        .map((error: any, idx: number) => {
-                          // Türkçe karakterleri normalize et (basit yaklaşım)
-                          const normalizeText = (text: string) => {
-                            return text
-                              .replace(/[ıİ]/g, 'i')
-                              .replace(/[ğĞ]/g, 'g')
-                              .replace(/[üÜ]/g, 'u')
-                              .replace(/[şŞ]/g, 's')
-                              .replace(/[öÖ]/g, 'o')
-                              .replace(/[çÇ]/g, 'c');
-                          };
-                          const expectedNormalized = normalizeText(error.expected || '');
-                          const actualNormalized = normalizeText(error.actual || '');
-                          // Eğer normalize edilmiş hali aynıysa, orijinali göster
-                          const displayExpected = expectedNormalized === actualNormalized ? error.expected : error.expected;
-                          const displayActual = expectedNormalized === actualNormalized ? error.actual : error.actual;
-                          
-                          return (
-                            <div key={idx} className="bg-white p-2 rounded text-sm border border-red-200">
-                              <p>
-                                <span className="text-red-600 font-bold">{displayExpected}</span>
-                                {' → '}
-                                <span className="text-red-500 font-medium">{displayActual}</span>
-                              </p>
-                            </div>
-                          );
-                        })}
-                      {analysisResult.pronunciation.errors.filter((e: any) => e.expected && e.actual).length === 0 && (
+                      {turkishErrors
+                        .filter((error) => error.expected && error.actual)
+                        .map((error, idx) => (
+                          <div key={idx} className="bg-white p-2 rounded text-sm border border-red-200">
+                            <p>
+                              <span className="text-red-600 font-bold">{error.expected}</span>
+                              {' → '}
+                              <span className="text-red-500 font-medium">{error.actual}</span>
+                            </p>
+                          </div>
+                        ))}
+                      {turkishErrors.filter((e) => e.expected && e.actual).length === 0 && (
                         <p className="text-xs text-gray-500 italic">Hatalı okunan sözcük bulunmuyor</p>
                       )}
                     </div>
@@ -192,14 +190,14 @@ export default function Level2Step2() {
                   const transcript = analysisResult.transcript || '';
                   const words = transcript.split(/\s+/);
                   const errorWords = new Set(
-                    (analysisResult.pronunciation?.errors || [])
-                      .filter((e: any) => e.actual)
-                      .map((e: any) => e.actual.toLowerCase())
+                    turkishErrors
+                      .filter((e) => e.actual)
+                      .map((e) => e.actual.toLowerCase())
                   );
                   const correctWords = new Set(
-                    (analysisResult.pronunciation?.errors || [])
-                      .filter((e: any) => e.expected && !e.actual)
-                      .map((e: any) => e.expected.toLowerCase())
+                    turkishErrors
+                      .filter((e) => e.expected && !e.actual)
+                      .map((e) => e.expected.toLowerCase())
                   );
                   
                   return (
