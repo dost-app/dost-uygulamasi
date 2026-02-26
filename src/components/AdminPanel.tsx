@@ -767,6 +767,8 @@ function StudentReadOnlyDetail({
   const [readingGoals, setReadingGoals] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedStoryFilter, setSelectedStoryFilter] = useState<'all' | string>('all');
+  const [timeFilter, setTimeFilter] = useState<'all' | '7d' | '30d'>('all');
 
   useEffect(() => {
     const load = async () => {
@@ -802,6 +804,84 @@ function StudentReadOnlyDetail({
         totalPoints: progressList.reduce((acc: number, p: any) => acc + (p.points || 0), 0),
       }
     : null;
+
+  const completionRate = stats
+    ? Math.round((stats.completed / Math.max(stats.total, 1)) * 100)
+    : 0;
+
+  const latestGoal = readingGoals.length ? readingGoals[0] : null;
+
+  const latestGoalLog = latestGoal
+    ? readingLogs.find(
+        (r: any) =>
+          r.story_id === latestGoal.story_id &&
+          r.level === latestGoal.level
+      )
+    : null;
+
+  const latestGoalStatus = latestGoal && latestGoalLog
+    ? {
+        storyId: latestGoal.story_id,
+        level: latestGoal.level,
+        goalWpm: latestGoal.selected_wpm,
+        actualWpm: latestGoalLog.wpm,
+        achieved: latestGoalLog.wpm >= latestGoal.selected_wpm,
+        diff: latestGoalLog.wpm - latestGoal.selected_wpm,
+      }
+    : null;
+
+  const latestLogByStoryLevel: Record<string, any> = {};
+  readingLogs.forEach((r: any) => {
+    const key = `${r.story_id}-${r.level}`;
+    if (!latestLogByStoryLevel[key]) {
+      latestLogByStoryLevel[key] = r;
+    }
+  });
+
+  const applyTimeFilter = (dateStr?: string | null) => {
+    if (timeFilter === 'all') return true;
+    if (!dateStr) return false;
+    const ts = new Date(dateStr).getTime();
+    if (Number.isNaN(ts)) return false;
+    const now = Date.now();
+    const diffDays = (now - ts) / (1000 * 60 * 60 * 24);
+    if (timeFilter === '7d') return diffDays <= 7;
+    if (timeFilter === '30d') return diffDays <= 30;
+    return true;
+  };
+
+  const applyStoryFilter = (storyId?: number | null) => {
+    if (selectedStoryFilter === 'all') return true;
+    if (storyId == null) return false;
+    return String(storyId) === selectedStoryFilter;
+  };
+
+  const filteredActivityLogs = activityLogs.filter(
+    (log: any) => applyTimeFilter(log.timestamp) && applyStoryFilter(log.story_id)
+  );
+  const filteredReadingGoals = readingGoals.filter(
+    (g: any) => applyTimeFilter(g.timestamp) && applyStoryFilter(g.story_id)
+  );
+  const filteredReadingLogs = readingLogs.filter(
+    (r: any) => applyTimeFilter(r.timestamp) && applyStoryFilter(r.story_id)
+  );
+  const filteredSessions = sessions.filter(
+    (s: any) => applyTimeFilter(s.started_at) && applyStoryFilter(s.story_id)
+  );
+
+  const getActivityTypeStyle = (type: string) => {
+    const t = (type || '').toLowerCase();
+    if (t.includes('error') || t.includes('fail') || t.includes('exception')) {
+      return 'bg-red-100 text-red-700';
+    }
+    if (t.includes('complete') || t.includes('finish') || t.includes('success')) {
+      return 'bg-green-100 text-green-700';
+    }
+    if (t.includes('start') || t.includes('begin')) {
+      return 'bg-blue-100 text-blue-700';
+    }
+    return 'bg-purple-100 text-purple-700';
+  };
 
   const isStoryUnlocked = (storyId: number) => {
     if (storyId === 1) return true;
@@ -839,10 +919,19 @@ function StudentReadOnlyDetail({
       </div>
 
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <p className="text-sm text-gray-500">Hikaye ilerlemesi</p>
-            <p className="text-xl font-semibold text-gray-900">{stats.completed} / {stats.total} tamamlandı</p>
+            <p className="text-xl font-semibold text-gray-900">
+              {stats.completed} / {stats.total} tamamlandı
+            </p>
+            <div className="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-purple-500"
+                style={{ width: `${completionRate}%` }}
+              />
+            </div>
+            <p className="mt-1 text-xs text-gray-500">%{completionRate} tamamlandı</p>
           </div>
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <p className="text-sm text-gray-500">Toplam puan</p>
@@ -852,8 +941,81 @@ function StudentReadOnlyDetail({
             <p className="text-sm text-gray-500">Oturum sayısı (son 30)</p>
             <p className="text-xl font-semibold text-gray-900">{sessions.length}</p>
           </div>
+          {latestGoalStatus && (
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <p className="text-sm text-gray-500">Son okuma hedefi durumu</p>
+              <p className="mt-1 text-sm text-gray-700">
+                Hikaye {latestGoalStatus.storyId} · Seviye {latestGoalStatus.level}
+              </p>
+              <p className="mt-1 text-sm">
+                <span className="text-gray-500">Hedef:</span>{' '}
+                <span className="font-semibold">{latestGoalStatus.goalWpm} sözcük/dk</span>
+                <span className="ml-2 text-gray-500">Gerçek:</span>{' '}
+                <span className="font-semibold">{latestGoalStatus.actualWpm} sözcük/dk</span>
+              </p>
+              <p
+                className={`mt-1 text-sm font-semibold ${
+                  latestGoalStatus.achieved ? 'text-green-600' : 'text-orange-600'
+                }`}
+              >
+                {latestGoalStatus.achieved
+                  ? `Hedefe ulaştı (+${latestGoalStatus.diff} sözcük/dk)`
+                  : `Hedefin ${Math.abs(latestGoalStatus.diff)} sözcük/dk ${
+                      latestGoalStatus.diff < 0 ? 'altında' : 'üstünde'
+                    }`}
+              </p>
+            </div>
+          )}
         </div>
       )}
+
+      <div className="bg-white rounded-lg shadow px-4 py-3 flex flex-wrap items-center gap-4 border border-purple-100">
+        <div>
+          <p className="text-xs font-semibold text-purple-700 uppercase tracking-wide">
+            Filtreler
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-600">Hikaye:</span>
+          <select
+            value={selectedStoryFilter}
+            onChange={(e) => setSelectedStoryFilter(e.target.value)}
+            className="border border-gray-300 rounded-md px-2 py-1 text-sm"
+          >
+            <option value="all">Tüm hikayeler</option>
+            {stories.map((story) => (
+              <option key={story.id} value={String(story.id)}>
+                {story.title}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-600">Zaman:</span>
+          <select
+            value={timeFilter}
+            onChange={(e) => setTimeFilter(e.target.value as 'all' | '7d' | '30d')}
+            className="border border-gray-300 rounded-md px-2 py-1 text-sm"
+          >
+            <option value="all">Tümü</option>
+            <option value="7d">Son 7 gün</option>
+            <option value="30d">Son 30 gün</option>
+          </select>
+        </div>
+        <div className="ml-auto text-xs text-gray-500">
+          {selectedStoryFilter === 'all'
+            ? 'Tüm hikayeler'
+            : `Hikaye: ${
+                stories.find((s) => String(s.id) === selectedStoryFilter)?.title || selectedStoryFilter
+              }`}{' '}
+          ·{' '}
+          {timeFilter === 'all'
+            ? 'Tüm zaman'
+            : timeFilter === '7d'
+            ? 'Son 7 gün'
+            : 'Son 30 gün'}
+        </div>
+      </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
@@ -880,7 +1042,15 @@ function StudentReadOnlyDetail({
                   <tr key={story.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">{story.title}</td>
                     <td className="px-4 py-3 text-sm">
-                      {unlocked ? <span className="text-green-600 font-medium">Açık</span> : <span className="text-gray-500">Kilitli</span>}
+                      {unlocked ? (
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700">
+                          Açık
+                        </span>
+                      ) : (
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                          Kilitli
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-sm">{progress ? progress.current_level : '–'}</td>
                     <td className="px-4 py-3 text-sm">{progress ? progress.current_step : '–'}</td>
@@ -889,7 +1059,17 @@ function StudentReadOnlyDetail({
                       {progress?.completed_levels?.length ? progress.completed_levels.join(', ') : '–'}
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      {progress?.is_completed ? <span className="text-green-600 font-medium">Tamamlandı</span> : (progress ? 'Devam ediyor' : '–')}
+                      {progress?.is_completed ? (
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700">
+                          Tamamlandı
+                        </span>
+                      ) : progress ? (
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700">
+                          Devam ediyor
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 text-xs">–</span>
+                      )}
                     </td>
                   </tr>
                 );
@@ -905,17 +1085,32 @@ function StudentReadOnlyDetail({
             <h2 className="text-lg font-semibold text-gray-800">Son aktiviteler (en yeni 80)</h2>
           </div>
           <div className="max-h-64 overflow-y-auto">
-            {activityLogs.length === 0 ? (
+            {filteredActivityLogs.length === 0 ? (
               <p className="p-4 text-gray-500 text-sm">Aktivite kaydı yok.</p>
             ) : (
               <ul className="divide-y divide-gray-100">
-                {activityLogs.slice(0, 30).map((log: any) => (
-                  <li key={log.id} className="px-6 py-2 text-sm text-gray-700">
-                    <span className="font-medium text-gray-900">{log.activity_type}</span>
-                    {log.story_id != null && ` · Hikaye ${log.story_id}`}
-                    {log.level_id != null && ` · Seviye ${log.level_id}`}
-                    {log.step_number != null && ` · Adım ${log.step_number}`}
-                    <span className="text-gray-500 ml-2">{new Date(log.timestamp).toLocaleString('tr-TR')}</span>
+                {filteredActivityLogs.slice(0, 30).map((log: any) => (
+                  <li
+                    key={log.id}
+                    className="px-6 py-2 text-sm text-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1"
+                  >
+                    <div>
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mr-2 ${getActivityTypeStyle(
+                          log.activity_type
+                        )}`}
+                      >
+                        {log.activity_type}
+                      </span>
+                      <span className="text-gray-600 text-xs sm:text-sm">
+                        {log.story_id != null && `Hikaye ${log.story_id}`}
+                        {log.level_id != null && ` · Seviye ${log.level_id}`}
+                        {log.step_number != null && ` · Adım ${log.step_number}`}
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      {new Date(log.timestamp).toLocaleString('tr-TR')}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -928,16 +1123,54 @@ function StudentReadOnlyDetail({
             <h2 className="text-lg font-semibold text-gray-800">Okuma hedefleri (son 30)</h2>
           </div>
           <div className="max-h-64 overflow-y-auto">
-            {readingGoals.length === 0 ? (
+            {filteredReadingGoals.length === 0 ? (
               <p className="p-4 text-gray-500 text-sm">Okuma hedefi kaydı yok.</p>
             ) : (
               <ul className="divide-y divide-gray-100">
-                {readingGoals.slice(0, 20).map((g: any) => (
+                {filteredReadingGoals.slice(0, 20).map((g: any) => {
+                  const key = `${g.story_id}-${g.level}`;
+                  const goalLog = latestLogByStoryLevel[key];
+                  const achieved = goalLog && goalLog.wpm >= g.selected_wpm;
+                  return (
                   <li key={g.id} className="px-6 py-2 text-sm text-gray-700">
-                    Hikaye {g.story_id} · Seviye {g.level} · Hedef: {g.selected_wpm} sözcük/dk
-                    <span className="text-gray-500 ml-2">{new Date(g.timestamp).toLocaleString('tr-TR')}</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                      <div>
+                        <p className="font-medium text-gray-800">
+                          Hikaye {g.story_id} · Seviye {g.level}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          Hedef: <span className="font-semibold">{g.selected_wpm} sözcük/dk</span>
+                          {g.base_wpm != null && (
+                            <>
+                              {' '}(
+                              Temel: <span className="font-semibold">{g.base_wpm} sözcük/dk</span>
+                              {g.increase_percentage != null && (
+                                <>
+                                  {', '}+{g.increase_percentage}%
+                                </>
+                              )}
+                              )
+                            </>
+                          )}
+                        </p>
+                        {goalLog && (
+                          <p
+                            className={`mt-0.5 text-xs font-semibold ${
+                              achieved ? 'text-green-600' : 'text-orange-600'
+                            }`}
+                          >
+                            Son okuma: {goalLog.wpm} sözcük/dk (
+                            {achieved ? 'Hedefe ulaştı' : 'Hedefin altında'})
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {new Date(g.timestamp).toLocaleString('tr-TR')}
+                      </span>
+                    </div>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             )}
           </div>
@@ -949,7 +1182,7 @@ function StudentReadOnlyDetail({
           <h2 className="text-lg font-semibold text-gray-800">Okuma logları (WPM / doğru sözcük – son 50)</h2>
         </div>
         <div className="max-h-64 overflow-y-auto overflow-x-auto">
-          {readingLogs.length === 0 ? (
+          {filteredReadingLogs.length === 0 ? (
             <p className="p-4 text-gray-500 text-sm">Okuma logu yok.</p>
           ) : (
             <table className="min-w-full divide-y divide-gray-100">
@@ -963,7 +1196,7 @@ function StudentReadOnlyDetail({
                 </tr>
               </thead>
               <tbody>
-                {readingLogs.slice(0, 25).map((r: any) => (
+                {filteredReadingLogs.slice(0, 25).map((r: any) => (
                   <tr key={r.id} className="border-b border-gray-100">
                     <td className="px-4 py-2 text-sm">{r.story_id}</td>
                     <td className="px-4 py-2 text-sm">{r.level}</td>
@@ -983,7 +1216,7 @@ function StudentReadOnlyDetail({
           <h2 className="text-lg font-semibold text-gray-800">Oturumlar (son 30)</h2>
         </div>
         <div className="max-h-48 overflow-y-auto overflow-x-auto">
-          {sessions.length === 0 ? (
+          {filteredSessions.length === 0 ? (
             <p className="p-4 text-gray-500 text-sm">Oturum kaydı yok.</p>
           ) : (
             <table className="min-w-full divide-y divide-gray-100">
@@ -996,7 +1229,7 @@ function StudentReadOnlyDetail({
                 </tr>
               </thead>
               <tbody>
-                {sessions.slice(0, 15).map((s: any) => (
+                {filteredSessions.slice(0, 15).map((s: any) => (
                   <tr key={s.id} className="border-b border-gray-100">
                     <td className="px-4 py-2 text-sm">{s.story_id}</td>
                     <td className="px-4 py-2 text-sm text-gray-700">{s.started_at ? new Date(s.started_at).toLocaleString('tr-TR') : '–'}</td>
@@ -1211,7 +1444,7 @@ function StoriesTab() {
         onClick={() => {
           setShowForm(!showForm);
           setEditingId(null);
-          setFormData({ id: '', title: '', description: '', image: '', level: '1', locked: false });
+          setFormData({ id: '', title: '', description: '', image: '', locked: false });
           setError('');
         }}
         className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
