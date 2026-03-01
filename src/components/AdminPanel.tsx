@@ -636,13 +636,36 @@ function StudentsTab({ students }: { students: any[] }) {
   );
 }
 
-/** Öğretmen listesi → öğrenci listesi → öğrenci read-only detay (hikayeler, seviye/adım, puan, süre, cevaplar, hatalar vb.) */
+const NO_SCHOOL_LABEL = 'Okul belirtilmemiş';
+
+/** Okula göre gruplanmış öğretmen/öğrenci listesi + okul/öğretmen/öğrenci filtreleri */
 function ViewStudentTab({ teachers, loading }: { teachers: any[]; loading: boolean }) {
   const [expandedTeacherId, setExpandedTeacherId] = useState<string | null>(null);
   const [teacherStudents, setTeacherStudents] = useState<Record<string, any[]>>({});
   const [loadingStudents, setLoadingStudents] = useState<string | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   const [selectedTeacher, setSelectedTeacher] = useState<any | null>(null);
+  const [filterSchool, setFilterSchool] = useState<string>('all');
+  const [filterTeacher, setFilterTeacher] = useState<string>('all');
+  const [filterStudentSearch, setFilterStudentSearch] = useState('');
+
+  const schoolNames = Array.from(
+    new Set(teachers.map((t: any) => (t.school_name && String(t.school_name).trim()) || NO_SCHOOL_LABEL))
+  ).sort((a, b) => (a === NO_SCHOOL_LABEL ? 1 : b === NO_SCHOOL_LABEL ? -1 : a.localeCompare(b)));
+
+  const teachersBySchool = schoolNames.reduce<Record<string, any[]>>((acc, school) => {
+    acc[school] = teachers.filter(
+      (t: any) => ((t.school_name && String(t.school_name).trim()) || NO_SCHOOL_LABEL) === school
+    );
+    return acc;
+  }, {});
+
+  const teachersFilteredBySchool =
+    filterSchool === 'all'
+      ? teachers
+      : teachers.filter(
+          (t: any) => ((t.school_name && String(t.school_name).trim()) || NO_SCHOOL_LABEL) === filterSchool
+        );
 
   const handleToggleTeacher = async (teacherId: string) => {
     if (expandedTeacherId === teacherId) {
@@ -668,6 +691,26 @@ function ViewStudentTab({ teachers, loading }: { teachers: any[]; loading: boole
     setSelectedTeacher(teacher);
   };
 
+  const studentMatchesSearch = (student: any) => {
+    if (!filterStudentSearch.trim()) return true;
+    const q = filterStudentSearch.trim().toLowerCase();
+    const full = `${(student.first_name || '')} ${(student.last_name || '')}`.toLowerCase();
+    return full.includes(q);
+  };
+
+  useEffect(() => {
+    if (filterTeacher === 'all') return;
+    const t = teachers.find((x: any) => x.id === filterTeacher);
+    if (!t) return;
+    if (expandedTeacherId !== filterTeacher) setExpandedTeacherId(filterTeacher);
+    if (teacherStudents[filterTeacher]) return;
+    setLoadingStudents(filterTeacher);
+    getTeacherStudents(filterTeacher).then(({ data, error }) => {
+      if (!error) setTeacherStudents(prev => ({ ...prev, [filterTeacher]: data || [] }));
+      setLoadingStudents(null);
+    });
+  }, [filterTeacher, teachers]);
+
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-8 text-center text-gray-600">
@@ -691,60 +734,149 @@ function ViewStudentTab({ teachers, loading }: { teachers: any[]; loading: boole
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-800 text-sm">
         <strong>Salt okunur görünüm.</strong> Öğretmeni seçip öğrencisine tıklayarak o öğrencinin tüm ilerleme verilerini (hikayeler, seviye/adım, puan, süre, aktiviteler) görüntüleyebilirsiniz. Hiçbir veri düzenlenemez.
       </div>
+
+      {/* Filtreler */}
+      <div className="bg-white rounded-lg shadow border border-gray-200 p-4">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Filtrele</h3>
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="min-w-[180px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Okul</label>
+            <select
+              value={filterSchool}
+              onChange={(e) => setFilterSchool(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 bg-white"
+            >
+              <option value="all">Tümü</option>
+              {schoolNames.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+          <div className="min-w-[200px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Öğretmen</label>
+            <select
+              value={filterTeacher}
+              onChange={(e) => {
+                setFilterTeacher(e.target.value);
+                if (e.target.value !== 'all') setExpandedTeacherId(e.target.value);
+              }}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 bg-white"
+            >
+              <option value="all">Tümü</option>
+              {teachersFilteredBySchool.map((t: any) => (
+                <option key={t.id} value={t.id}>
+                  {t.first_name} {t.last_name}
+                  {(t.school_name && t.school_name.trim()) ? ` (${t.school_name})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="min-w-[200px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Öğrenci ara</label>
+            <input
+              type="text"
+              value={filterStudentSearch}
+              onChange={(e) => setFilterStudentSearch(e.target.value)}
+              placeholder="Ad veya soyad ile ara..."
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-400"
+            />
+          </div>
+          {(filterSchool !== 'all' || filterTeacher !== 'all' || filterStudentSearch.trim()) && (
+            <button
+              type="button"
+              onClick={() => {
+                setFilterSchool('all');
+                setFilterTeacher('all');
+                setFilterStudentSearch('');
+                setExpandedTeacherId(null);
+              }}
+              className="text-sm text-purple-600 hover:text-purple-800 font-medium"
+            >
+              Filtreleri temizle
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">Öğretmenler</h2>
-          <p className="text-sm text-gray-600 mt-1">Bir öğretmene tıklayın, öğrencilerini görün. Öğrenciye tıklayınca detay sayfası açılır.</p>
+          <h2 className="text-xl font-semibold text-gray-800">Okullara göre öğretmenler ve öğrenciler</h2>
+          <p className="text-sm text-gray-600 mt-1">Okul → Öğretmen → Öğrenci. Öğrenciye tıklayınca detay sayfası açılır.</p>
         </div>
-        <ul className="divide-y divide-gray-200">
-          {teachers.length === 0 ? (
-            <li className="px-6 py-8 text-center text-gray-500">Öğretmen bulunamadı.</li>
-          ) : (
-            teachers.map((teacher) => (
-              <li key={teacher.id}>
-                <button
-                  type="button"
-                  onClick={() => handleToggleTeacher(teacher.id)}
-                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
-                >
-                  <span className="font-medium text-gray-900">
-                    {teacher.first_name} {teacher.last_name}
-                    {teacher.school_name && (
-                      <span className="text-gray-500 font-normal ml-2">({teacher.school_name})</span>
-                    )}
-                  </span>
-                  <span className="text-gray-400">
-                    {expandedTeacherId === teacher.id ? '▼' : '▶'}
-                  </span>
-                </button>
-                {expandedTeacherId === teacher.id && (
-                  <div className="bg-gray-50 px-6 pb-4">
-                    {loadingStudents === teacher.id ? (
-                      <p className="py-3 text-gray-500 text-sm">Öğrenciler yükleniyor...</p>
-                    ) : (
-                      <ul className="space-y-1">
-                        {(teacherStudents[teacher.id] || []).map((student: any) => (
-                          <li key={student.id}>
-                            <button
-                              type="button"
-                              onClick={() => handleSelectStudent(student, teacher)}
-                              className="w-full text-left px-4 py-3 rounded-lg bg-white border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors text-gray-800 font-medium"
-                            >
-                              {student.first_name} {student.last_name}
-                            </button>
-                          </li>
-                        ))}
-                        {(teacherStudents[teacher.id] || []).length === 0 && !loadingStudents && (
-                          <p className="py-2 text-gray-500 text-sm">Bu öğretmene kayıtlı öğrenci yok.</p>
-                        )}
-                      </ul>
-                    )}
+
+        {teachers.length === 0 ? (
+          <div className="px-6 py-8 text-center text-gray-500">Öğretmen bulunamadı.</div>
+        ) : (
+          <div className="divide-y divide-gray-200">
+            {schoolNames
+              .filter((school) => filterSchool === 'all' || filterSchool === school)
+              .map((school) => {
+              const schoolTeachers = teachersBySchool[school] || [];
+              const visibleTeachers =
+                filterTeacher !== 'all'
+                  ? schoolTeachers.filter((t: any) => t.id === filterTeacher)
+                  : schoolTeachers;
+              if (visibleTeachers.length === 0) return null;
+
+              return (
+                <div key={school} className="bg-white">
+                  <div className="px-6 py-3 bg-slate-100 border-b border-slate-200">
+                    <h3 className="text-base font-semibold text-slate-800">🏫 {school}</h3>
                   </div>
-                )}
-              </li>
-            ))
-          )}
-        </ul>
+                  <ul className="divide-y divide-gray-100">
+                    {visibleTeachers.map((teacher: any) => (
+                      <li key={teacher.id}>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleTeacher(teacher.id)}
+                          className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+                        >
+                          <span className="font-medium text-gray-900">
+                            {teacher.first_name} {teacher.last_name}
+                          </span>
+                          <span className="text-gray-400">
+                            {expandedTeacherId === teacher.id ? '▼' : '▶'}
+                          </span>
+                        </button>
+                        {expandedTeacherId === teacher.id && (
+                          <div className="bg-gray-50 px-6 pb-4">
+                            {loadingStudents === teacher.id ? (
+                              <p className="py-3 text-gray-500 text-sm">Öğrenciler yükleniyor...</p>
+                            ) : (
+                              <ul className="space-y-1">
+                                {(teacherStudents[teacher.id] || [])
+                                  .filter((s: any) => studentMatchesSearch(s))
+                                  .map((student: any) => (
+                                    <li key={student.id}>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleSelectStudent(student, teacher)}
+                                        className="w-full text-left px-4 py-3 rounded-lg bg-white border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors text-gray-800 font-medium"
+                                      >
+                                        {student.first_name} {student.last_name}
+                                      </button>
+                                    </li>
+                                  ))}
+                                {(teacherStudents[teacher.id] || []).filter((s: any) => studentMatchesSearch(s)).length === 0 &&
+                                  !loadingStudents && (
+                                    <p className="py-2 text-gray-500 text-sm">
+                                      {filterStudentSearch.trim()
+                                        ? 'Bu öğretmende arama kriterine uyan öğrenci yok.'
+                                        : 'Bu öğretmene kayıtlı öğrenci yok.'}
+                                    </p>
+                                  )}
+                              </ul>
+                            )}
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -952,6 +1084,17 @@ function StudentReadOnlyDetail({
             Öğretmen: {teacher?.first_name} {teacher?.last_name}
             {teacher?.school_name && ` (${teacher.school_name})`}
           </p>
+          {student.created_at && (
+            <p className="text-sm text-gray-500 mt-0.5">
+              Kayıt tarihi: {new Date(student.created_at).toLocaleDateString('tr-TR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+          )}
         </div>
       </div>
 
