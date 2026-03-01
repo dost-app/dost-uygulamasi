@@ -12,7 +12,7 @@ import { getPlaybackRate } from '../../components/SidebarSettings';
 import { useAudioPlaybackRate } from '../../hooks/useAudioPlaybackRate';
 import { TestTube } from 'lucide-react';
 import { getTestAudioBlob } from '../../components/TestAudioManager';
-import { getStoryById } from '../../lib/supabase';
+import { getStoryById, logVoiceInteraction } from '../../lib/supabase';
 import { getStoryImageUrl, getAssetUrl } from '../../lib/image-utils';
 import { getLevel2Step1ReadingSeconds } from '../../components/SidebarSettings';
 
@@ -530,6 +530,26 @@ export default function Level2Step1() {
       }
 
       setAnalysis(response);
+
+      // Öğrencinin okuma performansını kaydet (transcript + metrikler)
+      // Not: Gerçek API yanıtı response.output içinde geliyor (TypeScript tipi farklı tanımlanmış)
+      if (currentStudent) {
+        const out = (response as any)?.output;
+        const analysisData = out?.analysis || {};
+        logVoiceInteraction(sessionId, currentStudent.id, storyId, 2, 1, {
+          endpoint: '/dost/level2/step1',
+          studentTranscript: out?.transcript ?? null,
+          apiResponseSummary: out ? {
+            wordsPerMinute: analysisData.wordsPerMinute ?? null,
+            correctWordsPerMinute: analysisData.correctWordsPerMinute ?? null,
+            pronunciationAccuracy: analysisData.pronunciationAccuracy ?? null,
+            originalWordCount: analysisData.originalWordCount ?? null,
+            spokenWordCount: analysisData.spokenWordCount ?? null,
+            correctWordCount: analysisData.correctWordCount ?? null,
+            errors: analysisData.errors ?? [],
+          } : null,
+        }).catch(console.error);
+      }
 
       // Mark step as completed
       if (onStepCompleted) {

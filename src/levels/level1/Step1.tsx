@@ -12,7 +12,7 @@ import { useStepContext } from '../../contexts/StepContext';
 import siraSendeAudio from '../../assets/audios/sira-sende-mikrofon.mp3';
 import { useAudioPlaybackRate, applyPlaybackRate } from '../../hooks/useAudioPlaybackRate';
 import { getPlaybackRate } from '../../components/SidebarSettings';
-import { getStoryById } from '../../lib/supabase';
+import { getStoryById, logVoiceInteraction, uploadStudentAudio } from '../../lib/supabase';
 import { getStoryImageUrl, getAssetUrl } from '../../lib/image-utils';
 
 export default function Step1() {
@@ -272,6 +272,16 @@ export default function Step1() {
 
       const responseText = response.respodKidVoice || response.message || response.text || response.response || 'Çok güzel gözlemler! Karıncaları gerçekten iyi incelemişsin.';
       setChildrenVoiceResponse(responseText);
+
+      // Öğrencinin sesini ve API yanıtını kaydet
+      if (currentStudent) {
+        const audioUrl = await uploadStudentAudio(audioBlob, currentStudent.id, storyId, 1, 1).catch(() => null);
+        logVoiceInteraction(sessionId, currentStudent.id, storyId, 1, 1, {
+          endpoint: '/dost/level1 (gorsel_tahmini)',
+          apiResponseText: responseText,
+          audioStorageUrl: audioUrl,
+        }).catch(console.error);
+      }
 
       if (response.audioBase64) {
         try {

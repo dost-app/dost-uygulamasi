@@ -6,6 +6,7 @@ import { getPlaybackRate } from '../../components/SidebarSettings';
 import { useAudioPlaybackRate } from '../../hooks/useAudioPlaybackRate';
 import { getAppMode } from '../../lib/api';
 import { submitSchemaSectionReading, getResumeResponse } from '../../lib/level4-api';
+import { logVoiceInteraction, uploadStudentAudio } from '../../lib/supabase';
 import type { RootState } from '../../store/store';
 import VoiceRecorder from '../../components/VoiceRecorder';
 import { getRecordingDurationSync } from '../../components/SidebarSettings';
@@ -328,6 +329,17 @@ export default function L4Step1() {
       // Show textAudio if available
       if (response.textAudio) {
         setApiResponseText(response.textAudio);
+      }
+
+      // Öğrencinin şema okuma denemesini ve sesini kaydet
+      if (student) {
+        const audioUrl = await uploadStudentAudio(audioBase64, student.id, storyId, 4, 1).catch(() => null);
+        logVoiceInteraction(sessionId, student.id, storyId, 4, 1, {
+          endpoint: '/dost/level4/step1',
+          apiResponseText: response.textAudio ?? null,
+          apiResponseSummary: { section: currentSection + 1 },
+          audioStorageUrl: audioUrl,
+        }).catch(console.error);
       }
 
       // Play n8n response audio

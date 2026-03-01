@@ -78,7 +78,7 @@ export default function PractitionerInfoScreen({ onSkip, onContinue }: Props) {
                   onClick={onSkip}
                   className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-bold py-2 px-3 rounded transition duration-200"
                 >
-                  Evet, Ayla
+                  Evet, Atla
                 </button>
                 <button
                   type="button"

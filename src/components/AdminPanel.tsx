@@ -766,28 +766,58 @@ function StudentReadOnlyDetail({
   const [readingLogs, setReadingLogs] = useState<any[]>([]);
   const [readingGoals, setReadingGoals] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
+  const [stepCompletions, setStepCompletions] = useState<any[]>([]);
+  const [scores, setScores] = useState<any[]>([]);
+  const [studentActions, setStudentActions] = useState<any[]>([]);
+  const [apiLogs, setApiLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tableErrors, setTableErrors] = useState<Record<string, string>>({});
   const [selectedStoryFilter, setSelectedStoryFilter] = useState<'all' | string>('all');
   const [timeFilter, setTimeFilter] = useState<'all' | '7d' | '30d'>('all');
+  const [showDetailedReport, setShowDetailedReport] = useState(false);
+  const [detailReportTab, setDetailReportTab] = useState<'timing' | 'scores' | 'actions' | 'api'>('timing');
+  const [expandedApiLogId, setExpandedApiLogId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
-        const [storiesRes, progressRes, logsRes, readLogsRes, goalsRes, sessionsRes] = await Promise.all([
+        const [storiesRes, progressRes, logsRes, readLogsRes, goalsRes, sessionsRes,
+               stepCompRes, scoresRes, actionsRes, apiLogsRes] = await Promise.all([
           getStories(),
           getStudentProgress(student.id),
-          supabase.from('activity_logs').select('*').eq('student_id', student.id).order('timestamp', { ascending: false }).limit(80),
-          supabase.from('reading_logs').select('*').eq('student_id', student.id).order('timestamp', { ascending: false }).limit(50),
-          supabase.from('reading_goals').select('*').eq('student_id', student.id).order('timestamp', { ascending: false }).limit(30),
-          supabase.from('sessions').select('*').eq('student_id', student.id).order('started_at', { ascending: false }).limit(30),
+          supabase.from('activity_logs').select('*').eq('student_id', student.id).order('timestamp', { ascending: false }).limit(200),
+          supabase.from('reading_logs').select('*').eq('student_id', student.id).order('timestamp', { ascending: false }).limit(100),
+          supabase.from('reading_goals').select('*').eq('student_id', student.id).order('timestamp', { ascending: false }).limit(50),
+          supabase.from('sessions').select('*').eq('student_id', student.id).order('started_at', { ascending: false }).limit(50),
+          supabase.from('step_completions').select('*').eq('student_id', student.id).order('started_at', { ascending: false }).limit(200),
+          supabase.from('scores').select('*').eq('student_id', student.id).order('story_id', { ascending: true }).limit(200),
+          supabase.from('student_actions').select('*').eq('student_id', student.id).order('timestamp', { ascending: false }).limit(200),
+          supabase.from('api_logs').select('*').eq('student_id', student.id).order('timestamp', { ascending: false }).limit(200),
         ]);
+
+        const errs: Record<string, string> = {};
         if (!storiesRes.error) setStories(storiesRes.data || []);
+        else errs.stories = storiesRes.error.message;
         if (!progressRes.error) setProgressList(progressRes.data || []);
+        else errs.progress = progressRes.error.message;
         if (!logsRes.error) setActivityLogs(logsRes.data || []);
+        else errs.activity_logs = logsRes.error.message;
         if (!readLogsRes.error) setReadingLogs(readLogsRes.data || []);
+        else errs.reading_logs = readLogsRes.error.message;
         if (!goalsRes.error) setReadingGoals(goalsRes.data || []);
+        else errs.reading_goals = goalsRes.error.message;
         if (!sessionsRes.error) setSessions(sessionsRes.data || []);
+        else errs.sessions = sessionsRes.error.message;
+        if (!stepCompRes.error) setStepCompletions(stepCompRes.data || []);
+        else errs.step_completions = stepCompRes.error.message;
+        if (!scoresRes.error) setScores(scoresRes.data || []);
+        else errs.scores = scoresRes.error.message;
+        if (!actionsRes.error) setStudentActions(actionsRes.data || []);
+        else errs.student_actions = actionsRes.error.message;
+        if (!apiLogsRes.error) setApiLogs(apiLogsRes.data || []);
+        else errs.api_logs = apiLogsRes.error.message;
+        setTableErrors(errs);
       } catch (err) {
         console.error('Error loading student detail:', err);
       } finally {
@@ -891,8 +921,15 @@ function StudentReadOnlyDetail({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow p-8 text-center text-gray-600">
-        Öğrenci verileri yükleniyor...
+      <div className="bg-white rounded-xl shadow p-12 flex flex-col items-center justify-center gap-5">
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 rounded-full border-4 border-purple-100" />
+          <div className="absolute inset-0 rounded-full border-4 border-purple-600 border-t-transparent animate-spin" />
+        </div>
+        <div className="text-center">
+          <p className="text-lg font-semibold text-gray-700">Öğrenci verileri yükleniyor</p>
+          <p className="text-sm text-gray-400 mt-1">Tüm tablolar çekiliyor, lütfen bekleyin…</p>
+        </div>
       </div>
     );
   }
@@ -1241,6 +1278,591 @@ function StudentReadOnlyDetail({
             </table>
           )}
         </div>
+      </div>
+
+      {/* ─────────── DETAYLI RAPOR ─────────── */}
+      <div className="bg-white rounded-lg shadow overflow-hidden border border-indigo-100">
+        <button
+          type="button"
+          onClick={() => setShowDetailedReport((v) => !v)}
+          className="w-full flex items-center justify-between px-6 py-4 bg-indigo-50 hover:bg-indigo-100 transition-colors text-left"
+        >
+          <div>
+            <h2 className="text-lg font-bold text-indigo-800">Detaylı Rapor</h2>
+            <p className="text-xs text-indigo-600 mt-0.5">
+              Adım bazlı süre · Puan dağılımı · Öğrenci aksiyonları · Mikrofon / API logları
+            </p>
+          </div>
+          <span className="text-indigo-600 text-xl">{showDetailedReport ? '▲' : '▼'}</span>
+        </button>
+
+        {showDetailedReport && (
+          <div className="p-4 space-y-4">
+            {/* Tab seçici */}
+            <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-3">
+              {([
+                { id: 'timing',  label: '⏱ Adım Süresi' },
+                { id: 'scores',  label: '🏅 Puan Raporu' },
+                { id: 'actions', label: '🖱 Aksiyonlar' },
+                { id: 'api',     label: '📡 API / Mikrofon Logları' },
+              ] as const).map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setDetailReportTab(tab.id)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
+                    detailReportTab === tab.id
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* ── TAB: Adım Süresi ── */}
+            {detailReportTab === 'timing' && (() => {
+              if (stepCompletions.length === 0) {
+                return (
+                  <p className="text-gray-500 text-sm py-4 text-center">Adım tamamlanma kaydı yok.</p>
+                );
+              }
+
+              const durSec = (sc: any) => {
+                const s = sc.started_at ? new Date(sc.started_at).getTime() : null;
+                const e = sc.completed_at ? new Date(sc.completed_at).getTime() : null;
+                return s && e ? Math.round((e - s) / 1000) : null;
+              };
+              const durLabel = (sec: number | null) => {
+                if (sec == null) return '–';
+                return sec >= 60 ? `${Math.floor(sec / 60)} dk ${sec % 60} sn` : `${sec} sn`;
+              };
+
+              // Group: story → level → steps
+              const byStory: Record<number, Record<number, any[]>> = {};
+              stepCompletions.forEach((sc: any) => {
+                const sid = sc.story_id ?? 0;
+                const lv  = sc.level ?? 0;
+                if (!byStory[sid]) byStory[sid] = {};
+                if (!byStory[sid][lv]) byStory[sid][lv] = [];
+                byStory[sid][lv].push(sc);
+              });
+
+              return (
+                <div className="space-y-4">
+                  <p className="text-xs text-gray-500">
+                    Sarı = tamamlanmamış adım, yeşil = tamamlandı, turuncu arka plan = 10 dk'dan uzun sürdü.
+                  </p>
+                  {Object.entries(byStory)
+                    .sort(([a], [b]) => Number(a) - Number(b))
+                    .map(([storyIdStr, levelMap]) => {
+                      const storyId = Number(storyIdStr);
+                      const storyTitle = stories.find((s) => s.id === storyId)?.title || `Hikaye ${storyId}`;
+                      const allSteps = Object.values(levelMap).flat();
+                      const completedSteps = allSteps.filter((sc: any) => sc.is_completed).length;
+                      const totalSecAll = allSteps.reduce((acc: number, sc: any) => {
+                        const d = durSec(sc);
+                        return d != null ? acc + d : acc;
+                      }, 0);
+
+                      return (
+                        <div key={storyId} className="rounded-xl border border-purple-200 overflow-hidden">
+                          {/* Hikaye başlığı */}
+                          <div className="flex items-center justify-between px-4 py-3 bg-purple-50 border-b border-purple-200">
+                            <div className="flex items-center gap-3">
+                              <span className="text-base font-bold text-purple-800">{storyTitle}</span>
+                              <span className="text-xs text-purple-500 font-medium">
+                                {completedSteps}/{allSteps.length} adım tamamlandı
+                              </span>
+                            </div>
+                            <span className="text-xs font-semibold text-purple-700 bg-purple-100 px-2 py-1 rounded-full">
+                              Toplam: {durLabel(totalSecAll)}
+                            </span>
+                          </div>
+
+                          {/* Seviyeler */}
+                          <div className="divide-y divide-purple-100">
+                            {Object.entries(levelMap)
+                              .sort(([a], [b]) => Number(a) - Number(b))
+                              .map(([lvStr, steps]) => {
+                                const lv = Number(lvStr);
+                                const lvSec = steps.reduce((acc: number, sc: any) => {
+                                  const d = durSec(sc);
+                                  return d != null ? acc + d : acc;
+                                }, 0);
+                                const lvCompleted = steps.filter((sc: any) => sc.is_completed).length;
+
+                                return (
+                                  <div key={lv} className="pl-4">
+                                    {/* Seviye başlığı */}
+                                    <div className="flex items-center justify-between px-3 py-2 bg-indigo-50 border-b border-indigo-100">
+                                      <div className="flex items-center gap-2">
+                                        <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center">
+                                          {lv}
+                                        </span>
+                                        <span className="text-sm font-semibold text-indigo-800">
+                                          Seviye {lv}
+                                        </span>
+                                        <span className="text-xs text-indigo-400">
+                                          {lvCompleted}/{steps.length} adım
+                                        </span>
+                                      </div>
+                                      <span className="text-xs font-semibold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">
+                                        {durLabel(lvSec)}
+                                      </span>
+                                    </div>
+
+                                    {/* Adımlar */}
+                                    <div className="divide-y divide-gray-100">
+                                      {steps
+                                        .sort((a: any, b: any) => (a.step ?? 0) - (b.step ?? 0))
+                                        .map((sc: any) => {
+                                          const sec = durSec(sc);
+                                          const warn = sec != null && sec > 600;
+                                          return (
+                                            <div
+                                              key={sc.id}
+                                              className={`flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 ${
+                                                warn ? 'bg-orange-50' : 'hover:bg-gray-50'
+                                              }`}
+                                            >
+                                              {/* Adım numarası */}
+                                              <div className="flex items-center gap-2 min-w-[90px]">
+                                                <span className="w-5 h-5 rounded bg-gray-200 text-gray-700 text-xs font-bold flex items-center justify-center">
+                                                  {sc.step ?? '?'}
+                                                </span>
+                                                <span className="text-xs font-medium text-gray-700">Adım {sc.step ?? '?'}</span>
+                                              </div>
+
+                                              {/* Durum */}
+                                              {sc.is_completed ? (
+                                                <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                                                  Tamamlandı
+                                                </span>
+                                              ) : (
+                                                <span className="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">
+                                                  Yarım
+                                                </span>
+                                              )}
+
+                                              {/* Süre */}
+                                              <span className={`text-xs font-bold min-w-[70px] ${warn ? 'text-orange-600' : 'text-gray-700'}`}>
+                                                {durLabel(sec)}
+                                                {warn && <span className="ml-1" title="10 dk'dan uzun sürdü">⚠️</span>}
+                                              </span>
+
+                                              {/* Zaman aralığı */}
+                                              <span className="text-xs text-gray-400 ml-auto text-right">
+                                                {sc.started_at ? new Date(sc.started_at).toLocaleString('tr-TR') : '–'}
+                                                {sc.completed_at && (
+                                                  <> → {new Date(sc.completed_at).toLocaleString('tr-TR')}</>
+                                                )}
+                                              </span>
+                                            </div>
+                                          );
+                                        })}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              );
+            })()}
+
+            {/* ── TAB: Puan Raporu ── */}
+            {detailReportTab === 'scores' && (
+              <div>
+                <p className="text-xs text-gray-500 mb-2">
+                  Hikaye, seviye ve adım bazlı kazanılan puanlar ve puan türleri.
+                  <span className="ml-1 text-indigo-500">
+                    (Veriler <code className="bg-gray-100 px-1 rounded">scores</code> tablosundan çekilir; <code className="bg-gray-100 px-1 rounded">saveScore()</code> çağrılarıyla dolar.)
+                  </span>
+                </p>
+                {tableErrors.scores && (
+                  <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+                    <strong>Tablo hatası:</strong> {tableErrors.scores}
+                  </div>
+                )}
+                {scores.length === 0 ? (
+                  <div className="py-6 text-center">
+                    <p className="text-gray-500 text-sm">Puan kaydı yok.</p>
+                    {!tableErrors.scores && (
+                      <p className="text-gray-400 text-xs mt-1">
+                        Bu öğrenci için henüz <code>scores</code> tablosuna kayıt düşmemiş olabilir.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-100 text-sm">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-xs text-gray-600 uppercase">Hikaye</th>
+                          <th className="px-3 py-2 text-left text-xs text-gray-600 uppercase">Seviye</th>
+                          <th className="px-3 py-2 text-left text-xs text-gray-600 uppercase">Adım</th>
+                          <th className="px-3 py-2 text-left text-xs text-gray-600 uppercase">Puan Türü</th>
+                          <th className="px-3 py-2 text-right text-xs text-gray-600 uppercase">Puan</th>
+                          <th className="px-3 py-2 text-right text-xs text-gray-600 uppercase">Maks</th>
+                          <th className="px-3 py-2 text-left text-xs text-gray-600 uppercase">Tarih</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {scores.map((sc: any) => {
+                          const storyTitle = stories.find((s) => s.id === sc.story_id)?.title || `Hikaye ${sc.story_id}`;
+                          const pct = sc.max_points ? Math.round((sc.points / sc.max_points) * 100) : null;
+                          return (
+                            <tr key={sc.id} className="border-b border-gray-100 hover:bg-gray-50">
+                              <td className="px-3 py-2 text-xs text-gray-800 font-medium max-w-[160px] truncate">{storyTitle}</td>
+                              <td className="px-3 py-2 text-xs text-center">{sc.level ?? '–'}</td>
+                              <td className="px-3 py-2 text-xs text-center">{sc.step ?? '–'}</td>
+                              <td className="px-3 py-2 text-xs">
+                                <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-semibold text-xs">
+                                  {sc.score_type || '–'}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2 text-xs text-right font-bold text-indigo-700">{sc.points ?? 0}</td>
+                              <td className="px-3 py-2 text-xs text-right text-gray-500">
+                                {sc.max_points ?? '–'}
+                                {pct != null && (
+                                  <span className={`ml-1 text-xs font-semibold ${pct >= 70 ? 'text-green-600' : pct >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                    (%{pct})
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-3 py-2 text-xs text-gray-500">
+                                {sc.created_at ? new Date(sc.created_at).toLocaleString('tr-TR') : '–'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot className="bg-gray-50">
+                        <tr>
+                          <td colSpan={4} className="px-3 py-2 text-xs font-bold text-gray-700">Toplam</td>
+                          <td className="px-3 py-2 text-xs text-right font-bold text-indigo-700">
+                            {scores.reduce((s: number, sc: any) => s + (sc.points || 0), 0)}
+                          </td>
+                          <td colSpan={2} />
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── TAB: Aksiyonlar ── */}
+            {detailReportTab === 'actions' && (() => {
+              if (studentActions.length === 0) {
+                return (
+                  <div className="py-6 text-center">
+                    <p className="text-gray-500 text-sm">Aksiyon kaydı yok.</p>
+                    {tableErrors.student_actions && (
+                      <p className="text-red-500 text-xs mt-1">Hata: {tableErrors.student_actions}</p>
+                    )}
+                    {!tableErrors.student_actions && (
+                      <p className="text-gray-400 text-xs mt-1">
+                        Bu öğrenci için <code>student_actions</code> tablosuna henüz kayıt düşmemiş olabilir.
+                      </p>
+                    )}
+                  </div>
+                );
+              }
+
+              // Group: story → level → step → actions[]
+              const byStory: Record<number, Record<number, Record<number, any[]>>> = {};
+              studentActions.forEach((a: any) => {
+                const sid = a.story_id ?? 0;
+                const lv  = a.level ?? 0;
+                const st  = a.step ?? 0;
+                if (!byStory[sid]) byStory[sid] = {};
+                if (!byStory[sid][lv]) byStory[sid][lv] = {};
+                if (!byStory[sid][lv][st]) byStory[sid][lv][st] = [];
+                byStory[sid][lv][st].push(a);
+              });
+
+              return (
+                <div className="space-y-4">
+                  <p className="text-xs text-gray-500">
+                    Öğrencinin her adımda aldığı aksiyonlar. Renkler aksiyon türünü gösterir.
+                  </p>
+                  {Object.entries(byStory)
+                    .sort(([a], [b]) => Number(a) - Number(b))
+                    .map(([storyIdStr, levelMap]) => {
+                      const storyId = Number(storyIdStr);
+                      const storyTitle = stories.find((s) => s.id === storyId)?.title || `Hikaye ${storyId}`;
+                      const totalActions = Object.values(levelMap).flatMap(lv => Object.values(lv).flat()).length;
+
+                      return (
+                        <div key={storyId} className="rounded-xl border border-teal-200 overflow-hidden">
+                          {/* Hikaye başlığı */}
+                          <div className="flex items-center justify-between px-4 py-3 bg-teal-50 border-b border-teal-200">
+                            <span className="text-base font-bold text-teal-800">{storyTitle}</span>
+                            <span className="text-xs font-semibold text-teal-600 bg-teal-100 px-2 py-1 rounded-full">
+                              {totalActions} aksiyon
+                            </span>
+                          </div>
+
+                          <div className="divide-y divide-teal-100">
+                            {Object.entries(levelMap)
+                              .sort(([a], [b]) => Number(a) - Number(b))
+                              .map(([lvStr, stepMap]) => {
+                                const lv = Number(lvStr);
+                                const lvTotal = Object.values(stepMap).flat().length;
+
+                                return (
+                                  <div key={lv} className="pl-4">
+                                    {/* Seviye başlığı */}
+                                    <div className="flex items-center justify-between px-3 py-2 bg-teal-50/60 border-b border-teal-100">
+                                      <div className="flex items-center gap-2">
+                                        <span className="w-6 h-6 rounded-full bg-teal-600 text-white text-xs font-bold flex items-center justify-center">
+                                          {lv}
+                                        </span>
+                                        <span className="text-sm font-semibold text-teal-800">Seviye {lv}</span>
+                                      </div>
+                                      <span className="text-xs text-teal-500">{lvTotal} aksiyon</span>
+                                    </div>
+
+                                    {/* Adımlar */}
+                                    <div className="divide-y divide-gray-100">
+                                      {Object.entries(stepMap)
+                                        .sort(([a], [b]) => Number(a) - Number(b))
+                                        .map(([stStr, actions]) => {
+                                          const st = Number(stStr);
+                                          return (
+                                            <div key={st} className="pl-4 py-2">
+                                              {/* Adım başlığı */}
+                                              <div className="flex items-center gap-2 mb-2">
+                                                <span className="w-5 h-5 rounded bg-gray-200 text-gray-700 text-xs font-bold flex items-center justify-center">
+                                                  {st}
+                                                </span>
+                                                <span className="text-xs font-semibold text-gray-600">Adım {st}</span>
+                                                <span className="text-xs text-gray-400">({actions.length} aksiyon)</span>
+                                              </div>
+
+                                              {/* Aksiyon listesi */}
+                                              <div className="space-y-1 pl-7">
+                                                {(actions as any[])
+                                                  .slice()
+                                                  .sort((a, b) => new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime())
+                                                  .map((a: any) => {
+                                                    const audioUrl = a.action_data?.audio_storage_url ?? null;
+                                                    const transcript = a.action_data?.student_transcript ?? null;
+                                                    const displayData = a.action_data
+                                                      ? Object.fromEntries(
+                                                          Object.entries(a.action_data).filter(
+                                                            ([k]) => k !== 'audio_storage_url'
+                                                          )
+                                                        )
+                                                      : null;
+                                                    const dataStr = displayData && Object.keys(displayData).length > 0
+                                                      ? JSON.stringify(displayData, null, 2)
+                                                      : null;
+                                                    return (
+                                                      <details key={a.id} className="group">
+                                                        <summary className="flex flex-wrap items-center gap-2 cursor-pointer list-none">
+                                                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getActivityTypeStyle(a.action_type)}`}>
+                                                            {a.action_type || '–'}
+                                                          </span>
+                                                          <span className="text-xs text-gray-400">
+                                                            {a.timestamp ? new Date(a.timestamp).toLocaleString('tr-TR') : '–'}
+                                                          </span>
+                                                          {audioUrl && (
+                                                            <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">🎤 ses kaydı var</span>
+                                                          )}
+                                                          {transcript && (
+                                                            <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">📝 transcript</span>
+                                                          )}
+                                                          {(dataStr || audioUrl) && (
+                                                            <span className="text-xs text-indigo-500 group-open:hidden">▶ detay</span>
+                                                          )}
+                                                        </summary>
+                                                        <div className="mt-1 ml-2 space-y-1">
+                                                          {audioUrl && (
+                                                            <div className="bg-green-50 border border-green-200 rounded p-2">
+                                                              <p className="text-[10px] text-green-700 font-semibold mb-1">🎤 Öğrenci ses kaydı</p>
+                                                              <audio
+                                                                controls
+                                                                src={audioUrl}
+                                                                className="w-full h-7"
+                                                                style={{ height: '28px' }}
+                                                              />
+                                                            </div>
+                                                          )}
+                                                          {transcript && (
+                                                            <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                                                              <p className="text-[10px] text-blue-700 font-semibold mb-0.5">📝 Transcript (STT)</p>
+                                                              <p className="text-[11px] text-gray-800 italic">"{transcript}"</p>
+                                                            </div>
+                                                          )}
+                                                          {dataStr && (
+                                                            <pre className="text-[10px] bg-gray-50 border border-gray-200 rounded p-2 whitespace-pre-wrap break-all max-h-40 overflow-y-auto">
+                                                              {dataStr}
+                                                            </pre>
+                                                          )}
+                                                        </div>
+                                                      </details>
+                                                    );
+                                                  })}
+                                              </div>
+                                            </div>
+                                          );
+                                        })}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              );
+            })()}
+
+            {/* ── TAB: API / Mikrofon Logları ── */}
+            {detailReportTab === 'api' && (
+              <div>
+                <p className="text-xs text-gray-500 mb-2">
+                  Mikrofondan API'ye gönderilen istekler, gelen yanıtlar (başarılı ve hatalı, 4xx/5xx dahil).
+                  Her satıra tıklayarak istek ve yanıt detayını görüntüleyebilirsiniz.
+                  <span className="ml-1 text-indigo-500">
+                    (Veriler <code className="bg-gray-100 px-1 rounded">api_logs</code> tablosundan çekilir; <code className="bg-gray-100 px-1 rounded">logApiCall()</code> ile dolar.)
+                  </span>
+                </p>
+                {tableErrors.api_logs && (
+                  <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+                    <strong>Tablo hatası:</strong> {tableErrors.api_logs}
+                  </div>
+                )}
+                {apiLogs.length === 0 ? (
+                  <div className="py-6 text-center">
+                    <p className="text-gray-500 text-sm">API log kaydı yok.</p>
+                    {!tableErrors.api_logs && (
+                      <p className="text-gray-400 text-xs mt-1">
+                        Bu öğrenci için <code>api_logs</code> tablosuna henüz kayıt düşmemiş olabilir.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {apiLogs.map((log: any) => {
+                      const isError = log.response_status == null || log.response_status >= 400;
+                      const isServerError = log.response_status != null && log.response_status >= 500;
+                      const isClientError = log.response_status != null && log.response_status >= 400 && log.response_status < 500;
+                      const isOk = log.response_status != null && log.response_status < 400;
+                      const storyTitle = stories.find((s) => s.id === log.story_id)?.title || (log.story_id ? `Hikaye ${log.story_id}` : '–');
+                      const isExpanded = expandedApiLogId === log.id;
+                      return (
+                        <div
+                          key={log.id}
+                          className={`rounded-lg border ${
+                            isServerError
+                              ? 'border-red-300 bg-red-50'
+                              : isClientError
+                              ? 'border-orange-300 bg-orange-50'
+                              : isOk
+                              ? 'border-green-200 bg-green-50'
+                              : 'border-gray-200 bg-gray-50'
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setExpandedApiLogId(isExpanded ? null : log.id)}
+                            className="w-full flex flex-wrap items-center gap-3 px-4 py-3 text-left"
+                          >
+                            {/* Status badge */}
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-xs font-bold min-w-[44px] text-center ${
+                                isServerError
+                                  ? 'bg-red-200 text-red-800'
+                                  : isClientError
+                                  ? 'bg-orange-200 text-orange-800'
+                                  : isOk
+                                  ? 'bg-green-200 text-green-800'
+                                  : 'bg-gray-200 text-gray-700'
+                              }`}
+                            >
+                              {log.response_status ?? 'N/A'}
+                            </span>
+                            {/* Method */}
+                            <span className="text-xs font-mono font-semibold text-gray-700 bg-gray-200 px-1.5 py-0.5 rounded">
+                              {log.request_method || 'POST'}
+                            </span>
+                            {/* Endpoint */}
+                            <span className="text-xs text-gray-700 font-mono truncate max-w-[260px]">
+                              {log.api_endpoint || '–'}
+                            </span>
+                            {/* Story / Level / Step */}
+                            <span className="text-xs text-gray-500">
+                              {storyTitle} · Sv.{log.level ?? '–'} Adım{log.step ?? '–'}
+                            </span>
+                            {/* Response time */}
+                            {log.response_time_ms != null && (
+                              <span className={`text-xs font-semibold ${log.response_time_ms > 10000 ? 'text-orange-600' : 'text-gray-500'}`}>
+                                {log.response_time_ms > 1000
+                                  ? `${(log.response_time_ms / 1000).toFixed(1)}s`
+                                  : `${log.response_time_ms}ms`}
+                              </span>
+                            )}
+                            {/* Error flag */}
+                            {log.error_message && (
+                              <span className="text-xs font-semibold text-red-600">⚠️ Hata</span>
+                            )}
+                            {/* Timestamp */}
+                            <span className="text-xs text-gray-400 ml-auto">
+                              {log.timestamp ? new Date(log.timestamp).toLocaleString('tr-TR') : '–'}
+                            </span>
+                            <span className="text-gray-400 text-xs">{isExpanded ? '▲' : '▼'}</span>
+                          </button>
+
+                          {isExpanded && (
+                            <div className="px-4 pb-4 space-y-3 border-t border-gray-200 mt-1">
+                              {log.error_message && (
+                                <div className="p-2 bg-red-100 border border-red-300 rounded text-xs text-red-800 font-semibold">
+                                  Hata: {log.error_message}
+                                </div>
+                              )}
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                <div>
+                                  <p className="text-xs font-bold text-gray-700 mb-1">İstek (request_body)</p>
+                                  <pre className="text-[11px] bg-gray-100 rounded p-2 whitespace-pre-wrap break-all max-h-56 overflow-y-auto">
+                                    {log.request_body
+                                      ? typeof log.request_body === 'string'
+                                        ? log.request_body
+                                        : JSON.stringify(log.request_body, null, 2)
+                                      : '(boş)'}
+                                  </pre>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-bold text-gray-700 mb-1">Yanıt (response_body)</p>
+                                  <pre className={`text-[11px] rounded p-2 whitespace-pre-wrap break-all max-h-56 overflow-y-auto ${
+                                    isError ? 'bg-red-50' : 'bg-green-50'
+                                  }`}>
+                                    {log.response_body
+                                      ? typeof log.response_body === 'string'
+                                        ? log.response_body
+                                        : JSON.stringify(log.response_body, null, 2)
+                                      : '(boş)'}
+                                  </pre>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

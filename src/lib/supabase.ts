@@ -995,6 +995,105 @@ export async function logStudentAction(
     });
 }
 
+/**
+ * Öğrencinin mikrofonla verdiği sesli yanıtı (transcript + API cevabı) student_actions
+ * tablosuna kaydeder. Her API çağrısı sonrasında çağrılmalıdır.
+ * api_logs / scores tabloları henüz uygulama genelinde kullanılmadığından
+ * bu helper student_actions üzerinden veri tutar.
+ */
+export async function logVoiceInteraction(
+  sessionId: string | null,
+  studentId: string,
+  storyId: number,
+  level: number,
+  step: number,
+  params: {
+    endpoint?: string;
+    /** Öğrencinin sesinden çıkarılan yazı (STT transcript) */
+    studentTranscript?: string | null;
+    /** API'nin döndürdüğü kısa metin / feedback */
+    apiResponseText?: string | null;
+    /** WPM, skor, hata sayısı vb. özet metrikler */
+    apiResponseSummary?: Record<string, any> | null;
+    responseStatus?: number | null;
+    errorMessage?: string | null;
+    /** Supabase Storage'a yüklenen ses dosyasının public URL'i */
+    audioStorageUrl?: string | null;
+  }
+) {
+  return logStudentAction(
+    sessionId,
+    studentId,
+    'voice_submitted',
+    storyId,
+    level,
+    step,
+    {
+      endpoint: params.endpoint ?? null,
+      student_transcript: params.studentTranscript ?? null,
+      api_response_text: params.apiResponseText ?? null,
+      api_response_summary: params.apiResponseSummary ?? null,
+      response_status: params.responseStatus ?? null,
+      error_message: params.errorMessage ?? null,
+      audio_storage_url: params.audioStorageUrl ?? null,
+      recorded_at: new Date().toISOString(),
+    }
+  );
+}
+
+/** Blob veya base64 string'i Supabase Storage'daki student-voices klasörüne yükler.
+ *  Level 2 / Level 3-Step2 gibi uzun kayıtlar (6 dk) için kullanmayın; transcript yeterlidir.
+ */
+export async function uploadStudentAudio(
+  audio: Blob | string,
+  studentId: string,
+  storyId: number,
+  level: number,
+  step: number
+): Promise<string | null> {
+  try {
+    let base64Data: string;
+
+    if (typeof audio === 'string') {
+      base64Data = audio.includes('data:') ? audio.split(',')[1] : audio;
+    } else {
+      // Blob → base64
+      base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = (reader.result as string).split(',')[1];
+          resolve(result);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(audio);
+      });
+    }
+
+    const byteCharacters = atob(base64Data);
+    const byteArray = new Uint8Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteArray[i] = byteCharacters.charCodeAt(i);
+    }
+    const blob = new Blob([byteArray], { type: 'audio/webm' });
+
+    const fileName = `student-voices/${studentId}/story${storyId}-l${level}s${step}-${Date.now()}.webm`;
+    const { error } = await supabase.storage
+      .from('audios')
+      .upload(fileName, blob, { contentType: 'audio/webm', upsert: true });
+
+    if (error) {
+      console.warn('Student audio upload failed:', error.message);
+      return null;
+    }
+
+    const { data: urlData } = supabase.storage.from('audios').getPublicUrl(fileName);
+    return urlData.publicUrl;
+  } catch (err) {
+    console.warn('uploadStudentAudio error:', err);
+    return null;
+  }
+}
+
 // ===== READING GOALS HELPERS =====
 
 export async function getLatestReadingGoal(

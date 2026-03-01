@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getParagraphs, paragraphToPlain } from '../../data/stories';
-import { insertReadingLog, getLatestReadingGoal } from '../../lib/supabase';
+import { insertReadingLog, getLatestReadingGoal, logVoiceInteraction } from '../../lib/supabase';
 import type { RootState } from '../../store/store';
 import { getAppMode } from '../../lib/api';
 import { useStepContext } from '../../contexts/StepContext';
@@ -543,6 +543,25 @@ export default function L3Step2() {
       });
 
       console.log('✅ Received raw analysis from n8n:', rawResponse);
+
+      // Öğrencinin okuma hızı denemesini kaydet
+      if (student) {
+        const raw = rawResponse as any;
+        logVoiceInteraction(sessionId, student.id, storyId, 3, 2, {
+          endpoint: '/dost/level3/step2',
+          studentTranscript: raw.transcriptText ?? null,
+          apiResponseText: raw.speedSummary ?? raw.analysisText ?? null,
+          apiResponseSummary: {
+            wpmCorrect: raw.metrics?.wpmCorrect,
+            wpmSpoken: raw.metrics?.wpmSpoken,
+            accuracyPercent: raw.metrics?.accuracyPercent,
+            spokenWordCount: raw.metrics?.spokenWordCount,
+            matchedWordCount: raw.metrics?.matchedWordCount,
+            targetWPM,
+            reachedTarget: (raw.metrics?.wpmCorrect ?? wpm) >= targetWPM,
+          },
+        }).catch(console.error);
+      }
 
       // API yanıtını Level3Step2AnalysisResult formatına dönüştür
       const apiResponse = rawResponse as any;

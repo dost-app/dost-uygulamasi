@@ -7,6 +7,7 @@ import { getPlaybackRate } from '../../components/SidebarSettings';
 import { useAudioPlaybackRate } from '../../hooks/useAudioPlaybackRate';
 import { playTts } from '../../lib/playTts';
 import { submitSchemaSummary, getResumeResponseStep2 } from '../../lib/level4-api';
+import { logVoiceInteraction, uploadStudentAudio } from '../../lib/supabase';
 import type { RootState } from '../../store/store';
 import { getRecordingDurationSync } from '../../components/SidebarSettings';
 import { TestTube } from 'lucide-react';
@@ -353,6 +354,17 @@ export default function L4Step2() {
       // Show textAudio if available
       if (response.textAudio) {
         setApiResponseText(response.textAudio);
+      }
+
+      // Öğrencinin şema özet denemesini ve sesini kaydet
+      if (student) {
+        const audioUrl = await uploadStudentAudio(audioBase64, student.id, storyId, 4, 2).catch(() => null);
+        logVoiceInteraction(sessionId, student.id, storyId, 4, 2, {
+          endpoint: '/dost/level4/step2',
+          apiResponseText: response.textAudio ?? null,
+          apiResponseSummary: { section: currentSection + 1 },
+          audioStorageUrl: audioUrl,
+        }).catch(console.error);
       }
 
       // Play n8n response audio

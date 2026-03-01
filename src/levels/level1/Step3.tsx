@@ -12,7 +12,7 @@ import {
   type Paragraph,
 } from '../../data/stories';
 import { useStepContext } from '../../contexts/StepContext';
-import { getStoryById } from '../../lib/supabase';
+import { getStoryById, logVoiceInteraction, uploadStudentAudio } from '../../lib/supabase';
 import { getStoryImageUrl, getAssetUrl } from '../../lib/image-utils';
 import { useAudioPlaybackRate } from '../../hooks/useAudioPlaybackRate';
 import { getPlaybackRate, getRecordingDurationSync } from '../../components/SidebarSettings';
@@ -382,6 +382,17 @@ export default function Step3() {
       
       setChildrenVoiceResponse(responseText);
       setChildrenVoiceTextAudio(textAudio);
+
+      // Öğrencinin sesini ve API yanıtını kaydet
+      const user = getUser();
+      if (user?.studentId) {
+        const audioUrl = await uploadStudentAudio(audioBlob, user.studentId, storyId, 1, 3).catch(() => null);
+        logVoiceInteraction(sessionId, user.studentId, storyId, 1, 3, {
+          endpoint: '/dost/level1/step3 (cumle_tahmini)',
+          apiResponseText: responseText,
+          audioStorageUrl: audioUrl,
+        }).catch(console.error);
+      }
       
       // Play response audio if available
       if (response.audioBase64 && response.audioBase64.length > 100) {

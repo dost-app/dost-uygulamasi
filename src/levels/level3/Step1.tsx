@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { getParagraphsAsync, paragraphToPlain, getParagraphCountAsync } from '../../data/stories';
 import { getAppMode } from '../../lib/api';
 import { submitParagraphReading, getResumeResponse } from '../../lib/level3-api';
+import { logVoiceInteraction, uploadStudentAudio } from '../../lib/supabase';
 import type { RootState } from '../../store/store';
 import VoiceRecorder from '../../components/VoiceRecorder';
 import type { Paragraph } from '../../data/stories';
@@ -353,6 +354,7 @@ export default function L3Step1() {
         console.log('📥 API Response Details:');
         console.log('  - Endpoint: POST /dost/level3/step1');
         console.log('  - Response:', JSON.stringify(responseForLog, null, 2));
+
       } else {
         // Use resumeUrl for subsequent paragraphs (POST with same body as first request)
         if (!resumeUrl) {
@@ -406,6 +408,17 @@ export default function L3Step1() {
       // Show textAudio if available (optional)
       if (response.textAudio) {
         setApiResponseText(response.textAudio);
+      }
+
+      // Öğrencinin paragraf okumasını ve sesini kaydet (tüm paragraflar)
+      if (student && storyId) {
+        const audioUrl = await uploadStudentAudio(audioBase64, student.id, storyId, 3, 1).catch(() => null);
+        logVoiceInteraction(sessionId, student.id, storyId, 3, 1, {
+          endpoint: currentParagraphIdx === 0 ? '/dost/level3/step1' : resumeUrl || '/dost/level3/step1 (resume)',
+          apiResponseText: response.textAudio ?? null,
+          apiResponseSummary: { paragrafNo: currentParagraphIdx + 1 },
+          audioStorageUrl: audioUrl,
+        }).catch(console.error);
       }
 
       // Mark current paragraph as completed

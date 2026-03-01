@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
 import { useStepContext } from '../../contexts/StepContext';
 import { useAudioPlaybackRate } from '../../hooks/useAudioPlaybackRate';
-import { getStoryById } from '../../lib/supabase';
+import { getStoryById, logVoiceInteraction, uploadStudentAudio } from '../../lib/supabase';
 import { getStoryImageUrl, getAssetUrl } from '../../lib/image-utils';
 
 export default function Step2() {
@@ -258,6 +258,16 @@ export default function Step2() {
         '';
 
       setChildrenVoiceResponse(responseText);
+
+      // Öğrencinin sesini ve API yanıtını kaydet
+      if (currentStudent) {
+        const audioUrl = await uploadStudentAudio(audioBlob, currentStudent.id, storyId, 1, 2).catch(() => null);
+        logVoiceInteraction(sessionId, currentStudent.id, storyId, 1, 2, {
+          endpoint: '/dost/level1/step2 (baslik_tahmini)',
+          apiResponseText: responseText,
+          audioStorageUrl: audioUrl,
+        }).catch(console.error);
+      }
 
       console.log('📥 Voice response received:', {
         hasAudioBase64: !!response.audioBase64,
