@@ -240,6 +240,49 @@ export async function getStudentsByTeacherId(teacherId: string) {
     .eq('teacher_id', teacherId);
 }
 
+/**
+ * Verilen öğrenci ID'leri için son işlem/giriş zamanını döndürür.
+ * activity_logs.timestamp ve sessions.started_at birleştirilir; öğrenci başına en büyük tarih kullanılır.
+ */
+export async function getLastActivityByStudentIds(
+  studentIds: string[]
+): Promise<Record<string, string>> {
+  if (studentIds.length === 0) return {};
+
+  const result: Record<string, string> = {};
+
+  const [logsRes, sessionsRes] = await Promise.all([
+    supabase
+      .from('activity_logs')
+      .select('student_id, timestamp')
+      .in('student_id', studentIds)
+      .order('timestamp', { ascending: false })
+      .limit(1000),
+    supabase
+      .from('sessions')
+      .select('student_id, started_at')
+      .in('student_id', studentIds)
+      .order('started_at', { ascending: false })
+      .limit(1000),
+  ]);
+
+  const addMax = (rows: { student_id: string; timestamp?: string; started_at?: string }[], dateKey: 'timestamp' | 'started_at') => {
+    rows.forEach((row) => {
+      const id = row.student_id;
+      const date = row[dateKey];
+      if (!id || !date) return;
+      if (!result[id] || new Date(date) > new Date(result[id])) {
+        result[id] = date;
+      }
+    });
+  };
+
+  if (logsRes.data) addMax(logsRes.data as any, 'timestamp');
+  if (sessionsRes.data) addMax(sessionsRes.data as any, 'started_at');
+
+  return result;
+}
+
 // ===== STUDENT PROGRESS =====
 
 export async function initializeStudentProgress(

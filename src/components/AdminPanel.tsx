@@ -4,6 +4,7 @@ import {
   supabase, 
   getStories, 
   getTeacherStudents,
+  getLastActivityByStudentIds,
   getStudentProgress,
   getStudentProgressStats,
   createStory, 
@@ -648,6 +649,10 @@ function ViewStudentTab({ teachers, loading }: { teachers: any[]; loading: boole
   const [filterSchool, setFilterSchool] = useState<string>('all');
   const [filterTeacher, setFilterTeacher] = useState<string>('all');
   const [filterStudentSearch, setFilterStudentSearch] = useState('');
+  const [sortByLastActivity, setSortByLastActivity] = useState<boolean>(false);
+  const [studentLastActivity, setStudentLastActivity] = useState<Record<string, string>>({});
+  const [allStudentsByActivity, setAllStudentsByActivity] = useState<Array<{ student: any; teacher: any }>>([]);
+  const [loadingAllByActivity, setLoadingAllByActivity] = useState(false);
 
   const schoolNames = Array.from(
     new Set(teachers.map((t: any) => (t.school_name && String(t.school_name).trim()) || NO_SCHOOL_LABEL))
@@ -677,7 +682,15 @@ function ViewStudentTab({ teachers, loading }: { teachers: any[]; loading: boole
       setLoadingStudents(teacherId);
       try {
         const { data, error } = await getTeacherStudents(teacherId);
-        if (!error) setTeacherStudents(prev => ({ ...prev, [teacherId]: data || [] }));
+        if (!error) {
+          const list = data || [];
+          setTeacherStudents(prev => ({ ...prev, [teacherId]: list }));
+          if (sortByLastActivity && list.length > 0) {
+            const ids = list.map((s: any) => s.id);
+            const lastActivity = await getLastActivityByStudentIds(ids);
+            setStudentLastActivity(prev => ({ ...prev, ...lastActivity }));
+          }
+        }
       } catch (err) {
         console.error('Error fetching teacher students:', err);
       } finally {
@@ -705,11 +718,60 @@ function ViewStudentTab({ teachers, loading }: { teachers: any[]; loading: boole
     if (expandedTeacherId !== filterTeacher) setExpandedTeacherId(filterTeacher);
     if (teacherStudents[filterTeacher]) return;
     setLoadingStudents(filterTeacher);
-    getTeacherStudents(filterTeacher).then(({ data, error }) => {
-      if (!error) setTeacherStudents(prev => ({ ...prev, [filterTeacher]: data || [] }));
+    getTeacherStudents(filterTeacher).then(async ({ data, error }) => {
+      if (!error) {
+        const list = data || [];
+        setTeacherStudents(prev => ({ ...prev, [filterTeacher]: list }));
+        if (sortByLastActivity && list.length > 0) {
+          const lastActivity = await getLastActivityByStudentIds(list.map((s: any) => s.id));
+          setStudentLastActivity(prev => ({ ...prev, ...lastActivity }));
+        }
+      }
       setLoadingStudents(null);
     });
-  }, [filterTeacher, teachers]);
+  }, [filterTeacher, teachers, sortByLastActivity]);
+
+  useEffect(() => {
+    if (!sortByLastActivity) {
+      setAllStudentsByActivity([]);
+      return;
+    }
+    setLoadingAllByActivity(true);
+    (async () => {
+      try {
+        const { data: studentsData, error } = await supabase
+          .from('students')
+          .select('*, teachers(id, first_name, last_name, school_name)');
+        if (error || !studentsData?.length) {
+          setAllStudentsByActivity([]);
+          return;
+        }
+        const ids = studentsData.map((s: any) => s.id);
+        const lastActivity = await getLastActivityByStudentIds(ids);
+        const teacherById = teachers.reduce((acc: Record<string, any>, t) => {
+          acc[t.id] = t;
+          return acc;
+        }, {});
+        const list = studentsData
+          .map((s: any) => {
+            const teacher = s.teachers || teacherById[s.teacher_id] || null;
+            return { student: s, teacher };
+          })
+          .sort((a, b) => {
+            const ta = lastActivity[a.student.id] ? new Date(lastActivity[a.student.id]).getTime() : 0;
+            const tb = lastActivity[b.student.id] ? new Date(lastActivity[b.student.id]).getTime() : 0;
+            return tb - ta;
+          });
+        setAllStudentsByActivity(list);
+        setStudentLastActivity(lastActivity);
+      } catch (err) {
+        console.error('Error fetching all students by activity:', err);
+        setAllStudentsByActivity([]);
+      } finally {
+        setLoadingAllByActivity(false);
+      }
+    })();
+  }, [sortByLastActivity, teachers]);
 
   if (loading) {
     return (
@@ -781,13 +843,25 @@ function ViewStudentTab({ teachers, loading }: { teachers: any[]; loading: boole
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-400"
             />
           </div>
-          {(filterSchool !== 'all' || filterTeacher !== 'all' || filterStudentSearch.trim()) && (
+          <div className="min-w-[220px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Sırala</label>
+            <select
+              value={sortByLastActivity ? 'last_activity' : 'default'}
+              onChange={(e) => setSortByLastActivity(e.target.value === 'last_activity')}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 bg-white"
+            >
+              <option value="default">Varsayılan (okul → öğretmen → öğrenci)</option>
+              <option value="last_activity">Son işlem yapana göre (tek liste, en son aktif en üstte)</option>
+            </select>
+          </div>
+          {(filterSchool !== 'all' || filterTeacher !== 'all' || filterStudentSearch.trim() || sortByLastActivity) && (
             <button
               type="button"
               onClick={() => {
                 setFilterSchool('all');
                 setFilterTeacher('all');
                 setFilterStudentSearch('');
+                setSortByLastActivity(false);
                 setExpandedTeacherId(null);
               }}
               className="text-sm text-purple-600 hover:text-purple-800 font-medium"
@@ -799,83 +873,162 @@ function ViewStudentTab({ teachers, loading }: { teachers: any[]; loading: boole
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">Okullara göre öğretmenler ve öğrenciler</h2>
-          <p className="text-sm text-gray-600 mt-1">Okul → Öğretmen → Öğrenci. Öğrenciye tıklayınca detay sayfası açılır.</p>
-        </div>
-
-        {teachers.length === 0 ? (
-          <div className="px-6 py-8 text-center text-gray-500">Öğretmen bulunamadı.</div>
-        ) : (
-          <div className="divide-y divide-gray-200">
-            {schoolNames
-              .filter((school) => filterSchool === 'all' || filterSchool === school)
-              .map((school) => {
-              const schoolTeachers = teachersBySchool[school] || [];
-              const visibleTeachers =
-                filterTeacher !== 'all'
-                  ? schoolTeachers.filter((t: any) => t.id === filterTeacher)
-                  : schoolTeachers;
-              if (visibleTeachers.length === 0) return null;
-
+        {sortByLastActivity ? (
+          <>
+            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800">Son işlem yapana göre öğrenciler</h2>
+              <p className="text-sm text-gray-600 mt-1">Tüm öğrenciler tek listede; en son işlem yapan en üstte. Satıra tıklayarak detay açılır.</p>
+            </div>
+            {loadingAllByActivity ? (
+              <div className="px-6 py-12 flex flex-col items-center gap-3 text-gray-500">
+                <div className="w-10 h-10 rounded-full border-2 border-purple-200 border-t-purple-600 animate-spin" />
+                <p>Son işleme göre listeleniyor…</p>
+              </div>
+            ) : (() => {
+              const teacherSchool = (t: any) => (t?.school_name && String(t.school_name).trim()) || NO_SCHOOL_LABEL;
+              const flatFiltered = allStudentsByActivity.filter(({ student, teacher }) => {
+                if (filterSchool !== 'all' && teacherSchool(teacher) !== filterSchool) return false;
+                if (filterTeacher !== 'all' && teacher?.id !== filterTeacher) return false;
+                if (!studentMatchesSearch(student)) return false;
+                return true;
+              });
               return (
-                <div key={school} className="bg-white">
-                  <div className="px-6 py-3 bg-slate-100 border-b border-slate-200">
-                    <h3 className="text-base font-semibold text-slate-800">🏫 {school}</h3>
-                  </div>
-                  <ul className="divide-y divide-gray-100">
-                    {visibleTeachers.map((teacher: any) => (
-                      <li key={teacher.id}>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleTeacher(teacher.id)}
-                          className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="font-medium text-gray-900">
-                            {teacher.first_name} {teacher.last_name}
-                          </span>
-                          <span className="text-gray-400">
-                            {expandedTeacherId === teacher.id ? '▼' : '▶'}
-                          </span>
-                        </button>
-                        {expandedTeacherId === teacher.id && (
-                          <div className="bg-gray-50 px-6 pb-4">
-                            {loadingStudents === teacher.id ? (
-                              <p className="py-3 text-gray-500 text-sm">Öğrenciler yükleniyor...</p>
-                            ) : (
-                              <ul className="space-y-1">
-                                {(teacherStudents[teacher.id] || [])
-                                  .filter((s: any) => studentMatchesSearch(s))
-                                  .map((student: any) => (
-                                    <li key={student.id}>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleSelectStudent(student, teacher)}
-                                        className="w-full text-left px-4 py-3 rounded-lg bg-white border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors text-gray-800 font-medium"
-                                      >
-                                        {student.first_name} {student.last_name}
-                                      </button>
-                                    </li>
-                                  ))}
-                                {(teacherStudents[teacher.id] || []).filter((s: any) => studentMatchesSearch(s)).length === 0 &&
-                                  !loadingStudents && (
-                                    <p className="py-2 text-gray-500 text-sm">
-                                      {filterStudentSearch.trim()
-                                        ? 'Bu öğretmende arama kriterine uyan öğrenci yok.'
-                                        : 'Bu öğretmene kayıtlı öğrenci yok.'}
-                                    </p>
-                                  )}
-                              </ul>
-                            )}
-                          </div>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="bg-slate-100 border-b border-slate-200 text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                        <th className="px-4 py-3">#</th>
+                        <th className="px-4 py-3">Öğrenci</th>
+                        <th className="px-4 py-3">Öğretmen</th>
+                        <th className="px-4 py-3">Okul</th>
+                        <th className="px-4 py-3">Son işlem</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {flatFiltered.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                            {allStudentsByActivity.length === 0 ? 'Öğrenci bulunamadı.' : 'Filtreye uyan öğrenci yok.'}
+                          </td>
+                        </tr>
+                      ) : (
+                        flatFiltered.map(({ student, teacher }, idx) => (
+                          <tr
+                            key={student.id}
+                            className="hover:bg-purple-50 cursor-pointer transition-colors"
+                            onClick={() => handleSelectStudent(student, teacher)}
+                          >
+                            <td className="px-4 py-3 text-gray-400 font-medium">{idx + 1}</td>
+                            <td className="px-4 py-3 font-medium text-gray-900">
+                              {student.first_name} {student.last_name}
+                            </td>
+                            <td className="px-4 py-3 text-gray-700">
+                              {teacher ? `${teacher.first_name || ''} ${teacher.last_name || ''}`.trim() || '–' : '–'}
+                            </td>
+                            <td className="px-4 py-3 text-gray-600">
+                              {teacher ? teacherSchool(teacher) : '–'}
+                            </td>
+                            <td className="px-4 py-3 text-gray-500 text-sm">
+                              {studentLastActivity[student.id]
+                                ? new Date(studentLastActivity[student.id]).toLocaleDateString('tr-TR', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })
+                                : '–'}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               );
-            })}
-          </div>
+            })()}
+          </>
+        ) : (
+          <>
+            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800">Okullara göre öğretmenler ve öğrenciler</h2>
+              <p className="text-sm text-gray-600 mt-1">Okul → Öğretmen → Öğrenci. Öğrenciye tıklayınca detay sayfası açılır.</p>
+            </div>
+
+            {teachers.length === 0 ? (
+              <div className="px-6 py-8 text-center text-gray-500">Öğretmen bulunamadı.</div>
+            ) : (
+              <div className="divide-y divide-gray-200">
+                {schoolNames
+                  .filter((school) => filterSchool === 'all' || filterSchool === school)
+                  .map((school) => {
+                  const schoolTeachers = teachersBySchool[school] || [];
+                  const visibleTeachers =
+                    filterTeacher !== 'all'
+                      ? schoolTeachers.filter((t: any) => t.id === filterTeacher)
+                      : schoolTeachers;
+                  if (visibleTeachers.length === 0) return null;
+
+                  return (
+                    <div key={school} className="bg-white">
+                      <div className="px-6 py-3 bg-slate-100 border-b border-slate-200">
+                        <h3 className="text-base font-semibold text-slate-800">🏫 {school}</h3>
+                      </div>
+                      <ul className="divide-y divide-gray-100">
+                        {visibleTeachers.map((teacher: any) => (
+                          <li key={teacher.id}>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleTeacher(teacher.id)}
+                              className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+                            >
+                              <span className="font-medium text-gray-900">
+                                {teacher.first_name} {teacher.last_name}
+                              </span>
+                              <span className="text-gray-400">
+                                {expandedTeacherId === teacher.id ? '▼' : '▶'}
+                              </span>
+                            </button>
+                            {expandedTeacherId === teacher.id && (
+                              <div className="bg-gray-50 px-6 pb-4">
+                                {loadingStudents === teacher.id ? (
+                                  <p className="py-3 text-gray-500 text-sm">Öğrenciler yükleniyor...</p>
+                                ) : (
+                                  <ul className="space-y-1">
+                                    {(teacherStudents[teacher.id] || [])
+                                      .filter((s: any) => studentMatchesSearch(s))
+                                      .map((student: any) => (
+                                      <li key={student.id}>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleSelectStudent(student, teacher)}
+                                          className="w-full text-left px-4 py-3 rounded-lg bg-white border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors text-gray-800 font-medium"
+                                        >
+                                          {student.first_name} {student.last_name}
+                                        </button>
+                                      </li>
+                                    ))}
+                                    {(teacherStudents[teacher.id] || []).filter((s: any) => studentMatchesSearch(s)).length === 0 &&
+                                      !loadingStudents && (
+                                        <p className="py-2 text-gray-500 text-sm">
+                                          {filterStudentSearch.trim()
+                                            ? 'Bu öğretmende arama kriterine uyan öğrenci yok.'
+                                            : 'Bu öğretmene kayıtlı öğrenci yok.'}
+                                        </p>
+                                      )}
+                                  </ul>
+                                )}
+                              </div>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
