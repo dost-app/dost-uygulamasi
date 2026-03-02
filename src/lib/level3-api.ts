@@ -1,4 +1,5 @@
-import axios from 'axios';
+import apiClient from './apiClient';
+import type { ApiLogContext } from './apiClient';
 import { getApiBase } from './api';
 import { getVoiceResponseTimeoutSync, getParagraphResponseTimeoutSync } from '../components/SidebarSettings';
 import type {
@@ -9,6 +10,10 @@ import type {
   Level3Step2Request,
   Level3Step2Response,
 } from '../types';
+
+export interface Level3ApiOptions {
+  logContext?: ApiLogContext;
+}
 
 // Helper: Convert payload to FormData to avoid CORS preflight
 function toFormData(payload: Record<string, any>): FormData {
@@ -38,38 +43,18 @@ function toFormData(payload: Record<string, any>): FormData {
  * Bu sayede aynı kullanıcının farklı hikayeleri karışmaz
  */
 export async function submitParagraphReading(
-  request: Level3Step1Request
+  request: Level3Step1Request,
+  options?: Level3ApiOptions
 ): Promise<Level3Step1Response> {
-  // Log request without full audioBase64
-  const requestForLog = {
-    ...request,
-    audioBase64: request.audioBase64 ? `${request.audioBase64.substring(0, 50)}... (${request.audioBase64.length} chars)` : request.audioBase64
-  };
-  console.log('📤 Sending Level 3 Step 1 request (first paragraph):', {
-    studentId: request.studentId, // ⚠️ Aslında sessionId değeri - n8n "studentId" bekliyor
-    paragrafNo: request.paragrafNo,
-    isLatestParagraf: request.isLatestParagraf,
-    audioBase64Length: request.audioBase64?.length || 0,
-  });
-  
-  const response = await axios.post<Level3Step1Response>(
+  const response = await apiClient.post<Level3Step1Response>(
     `${getApiBase()}/dost/level3/step1`,
     request,
     {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      timeout: getParagraphResponseTimeoutSync(), // Use paragraph-specific timeout
-    }
+      headers: { 'Content-Type': 'application/json' },
+      timeout: getParagraphResponseTimeoutSync(),
+      meta: { logContext: options?.logContext },
+    } as any
   );
-  
-  // Log response without full audioBase64
-  const responseForLog = {
-    ...response.data,
-    audioBase64: response.data.audioBase64 ? `${response.data.audioBase64.substring(0, 50)}... (${response.data.audioBase64.length} chars)` : response.data.audioBase64
-  };
-  console.log('📥 Level 3 Step 1 response:', JSON.stringify(responseForLog, null, 2));
-  
   return response.data;
 }
 
@@ -81,72 +66,27 @@ export async function submitParagraphReading(
  */
 export async function getResumeResponse(
   resumeUrl: string,
-  request: Level3Step1Request
+  request: Level3Step1Request,
+  options?: Level3ApiOptions
 ): Promise<Level3Step1Response> {
-  // resumeUrl is a full URL like: https://arge.muhbirai.com/webhook-waiting/46487
-  // Ensure HTTPS to avoid SSL protocol errors on GitHub Pages (HTTPS site)
   let finalUrl = resumeUrl;
-  // If URL starts with http://, convert to https://
   if (finalUrl.startsWith('http://')) {
     finalUrl = finalUrl.replace('http://', 'https://');
-    console.log('⚠️ Converting HTTP resumeUrl to HTTPS:', resumeUrl, '→', finalUrl);
   }
-  
   const payload = {
-    // ⚠️ n8n "studentId" alanını bekliyor - değer olarak sessionId gönderiliyor
     studentId: request.studentId,
     paragrafText: request.paragrafText,
     audioBase64: request.audioBase64,
     isLatestParagraf: request.isLatestParagraf,
     paragrafNo: request.paragrafNo,
   };
-
-  // Log request without full audioBase64
-  const requestForLog = {
-    ...payload,
-    audioBase64: `${payload.audioBase64.substring(0, 50)}... (${payload.audioBase64.length} chars)`
-  };
-  
-  console.log('📤 Sending resume request to:', finalUrl);
-  console.log('📤 Using FormData (multipart/form-data) - NO CORS PREFLIGHT');
-  console.log('📤 Request data:', JSON.stringify(requestForLog, null, 2));
-  
-  try {
-    // Convert to FormData - this avoids CORS preflight!
-    const formData = toFormData(payload);
-    
-    // IMPORTANT: Do NOT set Content-Type header when using FormData
-    // Browser will set it automatically with boundary
-    const response = await axios.post<Level3Step1Response>(
-      finalUrl,
-      formData,
-      {
-        withCredentials: false, // No credentials = simpler CORS
-        timeout: getParagraphResponseTimeoutSync(), // Use paragraph-specific timeout for Level 3
-        // NO headers! Let browser set multipart/form-data automatically
-      }
-    );
-    
-    console.log('📥 Resume response status:', response.status);
-    console.log('📥 Resume response headers:', response.headers);
-    
-    // Log response without full audioBase64
-    const responseForLog = {
-      ...response.data,
-      audioBase64: response.data?.audioBase64 ? `${response.data.audioBase64.substring(0, 50)}... (${response.data.audioBase64.length} chars)` : response.data?.audioBase64
-    };
-    console.log('📥 Resume response data:', JSON.stringify(responseForLog, null, 2));
-      
-    return response.data;
-  } catch (error: any) {
-    console.error('❌ Error with resumeUrl:', {
-      url: resumeUrl,
-      error: error.message,
-      code: error.code,
-      response: error.response?.data,
-    });
-    throw error;
-  }
+  const formData = toFormData(payload);
+  const response = await apiClient.post<Level3Step1Response>(finalUrl, formData, {
+    withCredentials: false,
+    timeout: getParagraphResponseTimeoutSync(),
+    meta: { logContext: options?.logContext },
+  } as any);
+  return response.data;
 }
 
 /**
@@ -156,69 +96,31 @@ export async function getResumeResponse(
  * Bu sayede aynı kullanıcının farklı hikayeleri karışmaz
  */
 export async function submitReadingSpeedAnalysis(
-  request: Level3Step2Request
+  request: Level3Step2Request,
+  options?: Level3ApiOptions
 ): Promise<Level3Step2Response> {
-  console.log('📤 Sending Level 3 Step 2 request:', {
-    userId: request.userId, // ⚠️ Aslında sessionId değeri - n8n "userId" bekliyor
-    audioFileSize: request.audioFile.size,
-    durationMs: request.durationMs,
-    hedefOkuma: request.hedefOkuma,
-    mimeType: request.mimeType,
-    fileName: request.fileName,
-  });
-  
-  try {
-    // Use FormData to send audio file + metadata
-    const formData = new FormData();
-    formData.append('audioFile', request.audioFile, request.fileName || 'recording.webm');
-    // n8n "userId" alanını bekliyor, değer olarak sessionId gönderiliyor
-    formData.append('userId', request.userId);
-    formData.append('durationMs', String(request.durationMs));
-    formData.append('hedefOkuma', String(request.hedefOkuma));
-    formData.append('metin', request.metin);
-    
-    // Include timing metadata if provided
-    if (request.startTime) {
-      formData.append('startTime', request.startTime);
-    }
-    if (request.endTime) {
-      formData.append('endTime', request.endTime);
-    }
-    if (request.mimeType) {
-      formData.append('mimeType', request.mimeType);
-    }
-    
-    const response = await axios.post<Level3Step2Response>(
-      `${getApiBase()}/dost/level3/step2`,
-      formData,
-      {
-        withCredentials: false,
-        timeout: getVoiceResponseTimeoutSync() * 1.5, // 1.5x timeout for transcription + AI processing
-        // NO headers - browser sets multipart/form-data automatically
-      }
-    );
-    
-    console.log('📥 Level 3 Step 2 response:', {
-      kidName: response.data.kidName,
-      title: response.data.title,
-      speedSummary: response.data.speedSummary,
-      reachedTarget: response.data.reachedTarget,
-      wpmCorrect: response.data.metrics?.wpmCorrect,
-      audioBase64Length: response.data.audioBase64?.length || 0,
-    });
-    
-    return response.data;
-  } catch (error: any) {
-    console.error('❌ Error with Level 3 Step 2:', {
-      error: error.message,
-      code: error.code,
-      response: error.response?.data,
-    });
-    throw error;
-  }
+  const formData = new FormData();
+  formData.append('audioFile', request.audioFile, request.fileName || 'recording.webm');
+  formData.append('userId', request.userId);
+  formData.append('durationMs', String(request.durationMs));
+  formData.append('hedefOkuma', String(request.hedefOkuma));
+  formData.append('metin', request.metin);
+  if (request.startTime) formData.append('startTime', request.startTime);
+  if (request.endTime) formData.append('endTime', request.endTime);
+  if (request.mimeType) formData.append('mimeType', request.mimeType);
+
+  const response = await apiClient.post<Level3Step2Response>(
+    `${getApiBase()}/dost/level3/step2`,
+    formData,
+    {
+      withCredentials: false,
+      timeout: getVoiceResponseTimeoutSync() * 1.5,
+      meta: { logContext: options?.logContext },
+    } as any
+  );
+  return response.data;
 }
 
-// Level 3 Step 2 - Reading Analysis (same as Level 2 Step 1)
 export async function submitLevel3ReadingAnalysis(
   request: {
     sessionId: string;
@@ -227,32 +129,21 @@ export async function submitLevel3ReadingAnalysis(
     recordingStartTime: string;
     recordingEndTime: string;
     selectedWordCount: number;
-    userId?: string; // backward compat
-  }
+    userId?: string;
+  },
+  options?: Level3ApiOptions
 ): Promise<any> {
-  console.log('📤 Sending Level 3 Reading Analysis:', {
-    sessionId: request.sessionId,
-    userId: request.userId,
-    textLength: request.text.length,
-    selectedWordCount: request.selectedWordCount,
-  });
-  const response = await axios.post(
+  const response = await apiClient.post(
     `${getApiBase()}/dost/level3/step2`,
+    { ...request, sessionId: request.sessionId },
     {
-      ...request,
-      // Ensure sessionId is sent as primary
-      sessionId: request.sessionId,
-    },
-    {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
+      headers: { 'Content-Type': 'application/json' },
+      meta: { logContext: options?.logContext },
+    } as any
   );
   return response.data;
 }
 
-// Voice Generator API
 export interface VoiceGeneratorRequest {
   text: string;
 }
@@ -262,16 +153,16 @@ export interface VoiceGeneratorResponse {
 }
 
 export async function generateVoice(
-  request: VoiceGeneratorRequest
+  request: VoiceGeneratorRequest,
+  options?: Level3ApiOptions
 ): Promise<VoiceGeneratorResponse> {
-  const response = await axios.post<VoiceGeneratorResponse>(
+  const response = await apiClient.post<VoiceGeneratorResponse>(
     `${getApiBase()}/dost/voice-generator`,
     request,
     {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
+      headers: { 'Content-Type': 'application/json' },
+      meta: { logContext: options?.logContext },
+    } as any
   );
   return response.data;
 }

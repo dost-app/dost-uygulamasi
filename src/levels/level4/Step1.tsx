@@ -293,27 +293,25 @@ export default function L4Step1() {
         // ⚠️ n8n workflow "studentId" alanını bekliyor
         // Değer olarak sessionId gönderiliyor (her session için unique)
         // Bu sayede aynı kullanıcının farklı hikayeleri karışmaz
+        const logContextResume = student && storyId ? { sessionId, studentId: student.id, storyId, level: 4, step: 1 } : undefined;
         response = await getResumeResponse(resumeUrl, {
           studentId: sessionId || `anon-${Date.now()}`,
           sectionTitle,
-          paragrafText, // n8n bu field'ı bekliyor
+          paragrafText,
           audioBase64,
-          isLatestParagraf: isLastSection, // n8n bu field'ı bekliyor
-          paragrafNo: currentSection + 1, // n8n bu field'ı bekliyor
-        });
+          isLatestParagraf: isLastSection,
+          paragrafNo: currentSection + 1,
+        }, { logContext: logContextResume });
       } else {
-        // First section - initial webhook call
-        // ⚠️ n8n workflow "studentId" alanını bekliyor
-        // Değer olarak sessionId gönderiliyor (her session için unique)
-        // Bu sayede aynı kullanıcının farklı hikayeleri karışmaz
+        const logContextFirst = student && storyId ? { sessionId, studentId: student.id, storyId, level: 4, step: 1 } : undefined;
         response = await submitSchemaSectionReading({
           studentId: sessionId || `anon-${Date.now()}`,
           sectionTitle,
-          paragrafText, // n8n bu field'ı bekliyor
+          paragrafText,
           audioBase64,
-          isLatestParagraf: isLastSection, // n8n bu field'ı bekliyor
-          paragrafNo: currentSection + 1, // n8n bu field'ı bekliyor
-        });
+          isLatestParagraf: isLastSection,
+          paragrafNo: currentSection + 1,
+        }, { logContext: logContextFirst });
       }
 
       console.log(`✅ Received response for section ${currentSection + 1}:`, {

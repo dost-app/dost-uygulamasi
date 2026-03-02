@@ -343,7 +343,8 @@ export default function L3Step1() {
         console.log('  - Endpoint: POST /dost/level3/step1');
         console.log('  - Request Body:', JSON.stringify(requestForLog, null, 2));
 
-        response = await submitParagraphReading(requestData);
+        const logContext = student && storyId ? { sessionId, studentId: student.id, storyId, level: 3, step: 1 } : undefined;
+        response = await submitParagraphReading(requestData, { logContext });
 
         // Log response without full audioBase64
         const responseForLog = {
@@ -386,7 +387,8 @@ export default function L3Step1() {
         console.log('  - URL:', resumeUrl);
         console.log('  - Request Body:', JSON.stringify(requestForLog, null, 2));
 
-        response = await getResumeResponse(resumeUrl, requestData);
+        const logContextResume = student && storyId ? { sessionId, studentId: student.id, storyId, level: 3, step: 1 } : undefined;
+        response = await getResumeResponse(resumeUrl, requestData, { logContext: logContextResume });
 
         // Log response without full audioBase64
         const responseForLog = {

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { getStepCompletionData, awardPoints, logStudentAction, supabase } from '../../lib/supabase';
+import { getStepCompletionData, awardPoints, logStudentAction, supabase, saveScore } from '../../lib/supabase';
 import { useStepContext } from '../../contexts/StepContext';
 import type { RootState } from '../../store/store';
 import { useAudioPlaybackRate } from '../../hooks/useAudioPlaybackRate';
@@ -205,6 +205,7 @@ export default function L5Step2() {
           25,
           'Seviye 5 - Görsel ödülü oluşturuldu'
         );
+        saveScore(sessionId, student.id, storyId, 5, 2, 'reward_created', 25, undefined, { reason: 'Görsel ödülü oluşturuldu' }).catch(console.error);
         if (!pointsError) {
           setEarnedPoints(25);
           setShowPointsAnimation(true);

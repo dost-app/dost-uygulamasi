@@ -364,14 +364,17 @@ export default function Step3() {
     
     try {
       // Use sessionId for consistency with DOST API
+      const user = getUser();
+      const logContext = user?.studentId ? { sessionId, studentId: user.studentId, storyId, level: 1, step: 3 } : undefined;
       const response: Level1ChildrenVoiceResponse = await submitChildrenVoice(
         audioBlob,
         resumeUrl,
         story.title,
         3,
         'cumle_tahmini',
-        sessionId || `anon-${Date.now()}`, // sessionId (same as userId in DOST API)
-        studentSentences // Target sentences for n8n comparison
+        sessionId || `anon-${Date.now()}`,
+        studentSentences,
+        { logContext }
       );
 
       console.log('✅ Çocuk sesi yanıtı alındı:', response);
@@ -384,7 +387,6 @@ export default function Step3() {
       setChildrenVoiceTextAudio(textAudio);
 
       // Öğrencinin sesini ve API yanıtını kaydet
-      const user = getUser();
       if (user?.studentId) {
         const audioUrl = await uploadStudentAudio(audioBlob, user.studentId, storyId, 1, 3).catch(() => null);
         logVoiceInteraction(sessionId, user.studentId, storyId, 1, 3, {

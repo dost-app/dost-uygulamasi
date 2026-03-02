@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { getPlaybackRate } from '../../components/SidebarSettings';
 import { useAudioPlaybackRate } from '../../hooks/useAudioPlaybackRate';
-import { awardPoints, updateStudentProgressStep } from '../../lib/supabase';
+import { awardPoints, updateStudentProgressStep, saveScore } from '../../lib/supabase';
 import { calculatePointsForLevel } from '../../lib/points';
 import PointsAnimation from '../../components/PointsAnimation';
 import type { RootState } from '../../store/store';
@@ -114,6 +114,7 @@ export default function Level2Completion() {
           points,
           'Seviye 2 tamamlandı'
         );
+        saveScore(null, student.id, storyId, 2, 4, 'level_complete', points, undefined, { reason: 'Seviye 2 tamamlandı' }).catch(console.error);
 
         if (pointsError) {
           console.error('❌ Points error:', pointsError);

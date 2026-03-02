@@ -189,13 +189,11 @@ export default function Step2() {
   const handleTitleAnalysis = async () => {
     setIsAnalyzing(true);
     try {
+      const logContext = currentStudent ? { sessionId, studentId: currentStudent.id, storyId, level: 1, step: 2 } : undefined;
       const response: Level1TitleAnalysisResponse = await analyzeTitleForStep2({
         stepNum: 2,
-        // ⚠️ n8n workflow "userId" alanını bekliyor
-        // Değer olarak sessionId gönderiliyor (her session için unique)
-        // Bu sayede aynı kullanıcının farklı hikayeleri karışmaz
         userId: sessionId || `anon-${Date.now()}`,
-      });
+      }, { logContext });
 
       const text =
         response.titleExplanation ||
@@ -241,12 +239,16 @@ export default function Step2() {
     if (!story) return;
     setIsProcessingVoice(true);
     try {
+      const logContext = currentStudent ? { sessionId, studentId: currentStudent.id, storyId, level: 1, step: 2 } : undefined;
       const response: Level1ChildrenVoiceResponse = await submitChildrenVoice(
         audioBlob,
         resumeUrl,
         story.title,
         2,
-        'baslik_tahmini'
+        'baslik_tahmini',
+        sessionId || '',
+        undefined,
+        { logContext }
       );
 
       const responseText =

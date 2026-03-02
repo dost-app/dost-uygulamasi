@@ -2,7 +2,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { awardPoints, updateStudentProgressStep } from '../../lib/supabase';
+import { awardPoints, updateStudentProgressStep, saveScore } from '../../lib/supabase';
 import { calculatePointsForLevel } from '../../lib/points';
 import PointsAnimation from '../../components/PointsAnimation';
 import type { RootState } from '../../store/store';
@@ -103,6 +103,7 @@ export default function Level3Completion() {
           points,
           'Seviye 3 tamamlandı'
         );
+        saveScore(null, student.id, storyId, 3, 4, 'level_complete', points, undefined, { reason: 'Seviye 3 tamamlandı' }).catch(console.error);
 
         if (pointsError) {
           console.error('❌ Points error:', pointsError);

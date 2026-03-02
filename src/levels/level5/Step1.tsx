@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { getComprehensionQuestions } from '../../data/stories';
-import { getComprehensionQuestionsByStory, type ComprehensionQuestion, logStudentAction, awardPoints } from '../../lib/supabase';
+import { getComprehensionQuestionsByStory, type ComprehensionQuestion, logStudentAction, awardPoints, saveScore } from '../../lib/supabase';
 import { useStepContext } from '../../contexts/StepContext';
 import { getPlaybackRate } from '../../components/SidebarSettings';
 import { useAudioPlaybackRate } from '../../hooks/useAudioPlaybackRate';
@@ -454,6 +454,7 @@ export default function L5Step1() {
           10,
           `Seviye 5 - Soru ${question.questionNumber} doğru cevap`
         );
+        saveScore(sessionId, student.id, storyId, 5, question.questionNumber, 'correct_answer', 10, 10, { questionNumber: question.questionNumber }).catch(console.error);
         if (pointsError) {
           console.error('❌ Error awarding points:', pointsError);
         } else {

@@ -168,18 +168,16 @@ export default function Step1() {
       // Get full URL for the image that works both locally and in production
       const imageUrl = getStoryImageUrl(story.image);
 
+      const logContext = currentStudent ? { sessionId, studentId: currentStudent.id, storyId, level: 1, step: 1 } : undefined;
       const response: Level1ImageAnalysisResponse = await analyzeStoryImage({
         imageUrl,
         stepNum: 1,
         storyTitle: story.title,
-        // ⚠️ n8n workflow "userId" alanını bekliyor
-        // Değer olarak sessionId gönderiliyor (her session için unique)
-        // Bu sayede aynı kullanıcının farklı hikayeleri karışmaz
         userId: sessionId || `anon-${Date.now()}`,
         userName: currentStudent?.first_name + " " + currentStudent?.last_name,
         ilkUcParagraf,
         metin,
-      });
+      }, { logContext });
 
       const analysisText =
         response.imageExplanation ||
@@ -262,12 +260,16 @@ export default function Step1() {
     if (!story) return;
     setIsProcessingVoice(true);
     try {
+      const logContext = currentStudent ? { sessionId, studentId: currentStudent.id, storyId, level: 1, step: 1 } : undefined;
       const response: Level1ChildrenVoiceResponse = await submitChildrenVoice(
         audioBlob,
         resumeUrl,
         story.title,
         1,
-        'gorsel_tahmini'
+        'gorsel_tahmini',
+        sessionId || '',
+        undefined,
+        { logContext }
       );
 
       const responseText = response.respodKidVoice || response.message || response.text || response.response || 'Çok güzel gözlemler! Karıncaları gerçekten iyi incelemişsin.';

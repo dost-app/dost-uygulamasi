@@ -318,27 +318,25 @@ export default function L4Step2() {
         // ⚠️ n8n workflow "studentId" alanını bekliyor
         // Değer olarak sessionId gönderiliyor (her session için unique)
         // Bu sayede aynı kullanıcının farklı hikayeleri karışmaz
+        const logContextResume = student && storyId ? { sessionId, studentId: student.id, storyId, level: 4, step: 2 } : undefined;
         response = await getResumeResponseStep2(resumeUrl, {
           studentId: sessionId || `anon-${Date.now()}`,
           sectionTitle: section.title,
-          paragrafText, // n8n bu field'ı bekliyor
+          paragrafText,
           audioBase64,
-          isLatestParagraf: isLastSection, // n8n bu field'ı bekliyor
-          paragrafNo: currentSection + 1, // n8n bu field'ı bekliyor
-        });
+          isLatestParagraf: isLastSection,
+          paragrafNo: currentSection + 1,
+        }, { logContext: logContextResume });
       } else {
-        // First section - initial webhook call
-        // ⚠️ n8n workflow "studentId" alanını bekliyor
-        // Değer olarak sessionId gönderiliyor (her session için unique)
-        // Bu sayede aynı kullanıcının farklı hikayeleri karışmaz
+        const logContextFirst = student && storyId ? { sessionId, studentId: student.id, storyId, level: 4, step: 2 } : undefined;
         response = await submitSchemaSummary({
           studentId: sessionId || `anon-${Date.now()}`,
           sectionTitle: section.title,
-          paragrafText, // n8n bu field'ı bekliyor
+          paragrafText,
           audioBase64,
-          isLatestParagraf: isLastSection, // n8n bu field'ı bekliyor
-          paragrafNo: currentSection + 1, // n8n bu field'ı bekliyor
-        });
+          isLatestParagraf: isLastSection,
+          paragrafNo: currentSection + 1,
+        }, { logContext: logContextFirst });
       }
 
       console.log(`✅ Received response for section ${currentSection + 1}:`, {

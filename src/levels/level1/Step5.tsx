@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useStepContext } from '../../contexts/StepContext';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
-import { updateStudentProgressStep, awardPoints } from '../../lib/supabase';
+import { updateStudentProgressStep, awardPoints, saveScore } from '../../lib/supabase';
 import { calculatePointsForLevel } from '../../lib/points';
 
 const completionText = 'Metnin görselini inceleme, Metnin başlığını inceleme, Metnin içindeki cümlelerden bazılarını okuma ve tahminde bulunma, okuma amacı görevlerini gerçekleştirerek 1. Seviyemizi tamamladık seni tebrik ediyorum.';
@@ -11,7 +11,7 @@ const completionText = 'Metnin görselini inceleme, Metnin başlığını incele
 export default function Step5() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { storyId, onStepCompleted } = useStepContext();
+  const { sessionId, storyId, onStepCompleted } = useStepContext();
   const student = useSelector((state: RootState) => state.user.student);
   const finalStoryId = storyId || Number(searchParams.get('storyId')) || 1;
   const [isCompleting, setIsCompleting] = useState(false);
@@ -74,7 +74,8 @@ export default function Step5() {
                 
                 // First award points
                 const pointsResult = await awardPoints(student.id, finalStoryId, points, 'Seviye 1 tamamlandı');
-                
+                saveScore(sessionId, student.id, finalStoryId, 1, 5, 'level_complete', points, undefined, { reason: 'Seviye 1 tamamlandı' }).catch(console.error);
+
                 if (pointsResult.error) {
                   console.error('❌ Points error:', pointsResult.error);
                   alert(`Puan verilirken hata oluştu: ${pointsResult.error.message || 'Bilinmeyen hata'}`);

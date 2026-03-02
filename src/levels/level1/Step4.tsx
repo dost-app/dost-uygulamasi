@@ -4,6 +4,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { analyzeObjectiveForStep4 } from '../../lib/level1-api';
 import type { Level1ObjectiveAnalysisResponse } from '../../types';
 import { useStepContext } from '../../contexts/StepContext';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../store/store';
 import { getPlaybackRate } from '../../components/SidebarSettings';
 import { useAudioPlaybackRate } from '../../hooks/useAudioPlaybackRate';
 import { getStoryById } from '../../lib/supabase';
@@ -24,7 +26,8 @@ export default function Step4() {
   const [paragraphs, setParagraphs] = useState<Paragraph[]>([]);
 
   const { sessionId, onStepCompleted, storyId: contextStoryId, setFooterVisible } = useStepContext();
-  
+  const currentStudent = useSelector((s: RootState) => s.user?.student ?? null);
+
   // Apply playback rate to audio element
   useAudioPlaybackRate(audioRef);
   
@@ -168,10 +171,11 @@ export default function Step4() {
     setMascotState('speaking');
     
     try {
+      const logContext = currentStudent ? { sessionId, studentId: currentStudent.id, storyId: finalStoryId, level: 1, step: 4 } : undefined;
       const response: Level1ObjectiveAnalysisResponse = await analyzeObjectiveForStep4({
         stepNum: 4,
         userId: sessionId || `anon-${Date.now()}`,
-      });
+      }, { logContext });
 
       const text = 
         response.answer || 

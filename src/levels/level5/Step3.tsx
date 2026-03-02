@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { awardPoints, logStudentAction, updateSessionCompletedLevels } from '../../lib/supabase';
+import { awardPoints, logStudentAction, updateSessionCompletedLevels, saveScore } from '../../lib/supabase';
 import { useStepContext } from '../../contexts/StepContext';
 import type { RootState } from '../../store/store';
 import { useAudioPlaybackRate } from '../../hooks/useAudioPlaybackRate';
@@ -106,6 +106,7 @@ export default function L5Step3() {
         50,
         'Seviye 5 - Oturum tamamlandı'
       );
+      saveScore(sessionId, student.id, storyId, 5, 3, 'level_complete', 50, undefined, { reason: 'Seviye 5 - Oturum tamamlandı' }).catch(console.error);
 
       if (!error) {
         setEarnedPoints(50);

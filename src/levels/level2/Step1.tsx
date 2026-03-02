@@ -12,7 +12,7 @@ import { getPlaybackRate } from '../../components/SidebarSettings';
 import { useAudioPlaybackRate } from '../../hooks/useAudioPlaybackRate';
 import { TestTube } from 'lucide-react';
 import { getTestAudioBlob } from '../../components/TestAudioManager';
-import { getStoryById, logVoiceInteraction } from '../../lib/supabase';
+import { getStoryById, logVoiceInteraction, saveScore } from '../../lib/supabase';
 import { getStoryImageUrl, getAssetUrl } from '../../lib/image-utils';
 import { getLevel2Step1ReadingSeconds } from '../../components/SidebarSettings';
 
@@ -344,7 +344,8 @@ export default function Level2Step1() {
           setIsUploading(true);
           
           try {
-            const response = await submitReadingAnalysis(payload) as Level2Step1ReadingAnalysisResponse;
+            const logContext = currentStudent ? { sessionId, studentId: currentStudent.id, storyId, level: 2, step: 1 } : undefined;
+            const response = await submitReadingAnalysis(payload, { logContext }) as Level2Step1ReadingAnalysisResponse;
             
             console.log('✅ Test audio analiz yanıtı:', response);
             setAnalysis(response);
@@ -521,7 +522,8 @@ export default function Level2Step1() {
       };
 
       setIsUploading(true);
-      const response = await submitReadingAnalysis(payload) as Level2Step1ReadingAnalysisResponse;
+      const logContext = currentStudent ? { sessionId, studentId: currentStudent.id, storyId, level: 2, step: 1 } : undefined;
+      const response = await submitReadingAnalysis(payload, { logContext }) as Level2Step1ReadingAnalysisResponse;
 
       setResult({ wordsRead, wpm, wordsPerSecond: wpm / 60 });
 
@@ -536,19 +538,22 @@ export default function Level2Step1() {
       if (currentStudent) {
         const out = (response as any)?.output;
         const analysisData = out?.analysis || {};
+        const summary = out ? {
+          wordsPerMinute: analysisData.wordsPerMinute ?? null,
+          correctWordsPerMinute: analysisData.correctWordsPerMinute ?? null,
+          pronunciationAccuracy: analysisData.pronunciationAccuracy ?? null,
+          originalWordCount: analysisData.originalWordCount ?? null,
+          spokenWordCount: analysisData.spokenWordCount ?? null,
+          correctWordCount: analysisData.correctWordCount ?? null,
+          errors: analysisData.errors ?? [],
+        } : null;
         logVoiceInteraction(sessionId, currentStudent.id, storyId, 2, 1, {
           endpoint: '/dost/level2/step1',
           studentTranscript: out?.transcript ?? null,
-          apiResponseSummary: out ? {
-            wordsPerMinute: analysisData.wordsPerMinute ?? null,
-            correctWordsPerMinute: analysisData.correctWordsPerMinute ?? null,
-            pronunciationAccuracy: analysisData.pronunciationAccuracy ?? null,
-            originalWordCount: analysisData.originalWordCount ?? null,
-            spokenWordCount: analysisData.spokenWordCount ?? null,
-            correctWordCount: analysisData.correctWordCount ?? null,
-            errors: analysisData.errors ?? [],
-          } : null,
+          apiResponseSummary: summary,
         }).catch(console.error);
+        const overallScore = (out?.overallScore != null && typeof out.overallScore === 'number') ? out.overallScore : (analysisData.pronunciationAccuracy ?? 0);
+        saveScore(sessionId, currentStudent.id, storyId, 2, 1, 'reading_analysis', Math.round(overallScore), 100, summary).catch(console.error);
       }
 
       // Mark step as completed

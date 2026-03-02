@@ -1,4 +1,5 @@
-import axios from 'axios';
+import apiClient from './apiClient';
+import type { ApiLogContext } from './apiClient';
 import { getApiBase } from './api';
 import type {
   Level1ImageAnalysisRequest,
@@ -14,75 +15,74 @@ import type {
 
 // Re-export for convenience
 export type { Level1ChildrenVoiceResponse } from '../types';
+export type { ApiLogContext } from './apiClient';
+
+export interface Level1ApiOptions {
+  logContext?: ApiLogContext;
+}
 
 /**
  * Analyzes the story image and returns explanation, audio, and resumeUrl
  */
 export async function analyzeStoryImage(
-  request: Level1ImageAnalysisRequest
+  request: Level1ImageAnalysisRequest,
+  options?: Level1ApiOptions
 ): Promise<Level1ImageAnalysisResponse> {
-  const { data } = await axios.post<Level1ImageAnalysisResponse>(
+  const { data } = await apiClient.post<Level1ImageAnalysisResponse>(
     `${getApiBase()}/dost/level1`,
     request,
-    { headers: { 'Content-Type': 'application/json' } }
+    { headers: { 'Content-Type': 'application/json' }, meta: { logContext: options?.logContext } } as any
   );
-
   return data;
 }
 
 /**
  * Analyzes story title for Step 2
- * Returns audioBase64 for playback and resumeUrl for voice submission
  */
 export async function analyzeTitleForStep2(
-  request: Level1TitleAnalysisRequest
+  request: Level1TitleAnalysisRequest,
+  options?: Level1ApiOptions
 ): Promise<Level1TitleAnalysisResponse> {
-  const { data } = await axios.post<Level1TitleAnalysisResponse>(
+  const { data } = await apiClient.post<Level1TitleAnalysisResponse>(
     `${getApiBase()}/dost/level1/step2`,
     request,
-    { headers: { 'Content-Type': 'application/json' } }
+    { headers: { 'Content-Type': 'application/json' }, meta: { logContext: options?.logContext } } as any
   );
-
   return data;
 }
 
 /**
  * Analyzes story sentences for Step 3
- * Returns audioBase64 for playback and resumeUrl for voice submission
  */
 export async function analyzeSentencesForStep3(
-  request: Level1SentencesAnalysisRequest
+  request: Level1SentencesAnalysisRequest,
+  options?: Level1ApiOptions
 ): Promise<Level1SentencesAnalysisResponse> {
-  const { data } = await axios.post<Level1SentencesAnalysisResponse>(
+  const { data } = await apiClient.post<Level1SentencesAnalysisResponse>(
     `${getApiBase()}/dost/level1/step3`,
     request,
-    { headers: { 'Content-Type': 'application/json' } }
+    { headers: { 'Content-Type': 'application/json' }, meta: { logContext: options?.logContext } } as any
   );
-
   return data;
 }
 
 /**
  * Analyzes reading objective for Step 4
- * Returns audioBase64 for playback and resumeUrl for voice submission
  */
 export async function analyzeObjectiveForStep4(
-  request: Level1ObjectiveAnalysisRequest
+  request: Level1ObjectiveAnalysisRequest,
+  options?: Level1ApiOptions
 ): Promise<Level1ObjectiveAnalysisResponse> {
-  const { data } = await axios.post<Level1ObjectiveAnalysisResponse>(
+  const { data } = await apiClient.post<Level1ObjectiveAnalysisResponse>(
     `${getApiBase()}/dost/level1/step4`,
     request,
-    { headers: { 'Content-Type': 'application/json' } }
+    { headers: { 'Content-Type': 'application/json' }, meta: { logContext: options?.logContext } } as any
   );
-
   return data;
 }
 
 /**
  * Submits children's voice recording for analysis
- * Uses the resumeUrl from the image analysis response or title analysis response
- * @param targetSentences - (Optional) Target sentences for comparison, used in Step 3 student phase
- * @param sessionId - Session/section ID for tracking (same as userId in DOST API)
  */
 export async function submitChildrenVoice(
   audioBlob: Blob,
@@ -91,31 +91,24 @@ export async function submitChildrenVoice(
   stepNum: number = 1,
   stepType: string = 'gorsel_tahmini',
   sessionId: string = '',
-  targetSentences?: string[]
+  targetSentences?: string[],
+  options?: Level1ApiOptions
 ): Promise<Level1ChildrenVoiceResponse> {
   const file = new File([audioBlob], 'cocuk_sesi.mp3', { type: 'audio/mp3' });
   const formData = new FormData();
   formData.append('ses', file);
-  
-  // Use consistent field names with DOST API
-  // Note: "userId" in n8n is actually used as sessionId/sectionId
   formData.append('title', storyTitle);
   formData.append('step', String(stepNum));
   formData.append('userId', sessionId || `anon-${Date.now()}`);
   formData.append('stepType', stepType);
-  
-  // Add target sentences if provided (for Step 3 student phase comparison)
-  // Using "firstSentences" to match DOST API format
   if (targetSentences && targetSentences.length > 0) {
     formData.append('firstSentences', JSON.stringify(targetSentences));
-    console.log('📤 Target sentences (firstSentences) sent to API:', targetSentences);
   }
 
-  const { data } = await axios.post<Level1ChildrenVoiceResponse>(
+  const { data } = await apiClient.post<Level1ChildrenVoiceResponse>(
     resumeUrl,
     formData,
-    { headers: { 'Content-Type': 'multipart/form-data' } }
+    { headers: { 'Content-Type': 'multipart/form-data' }, meta: { logContext: options?.logContext } } as any
   );
-
   return data;
 }

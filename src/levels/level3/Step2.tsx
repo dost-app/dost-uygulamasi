@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getParagraphs, paragraphToPlain } from '../../data/stories';
-import { insertReadingLog, getLatestReadingGoal, logVoiceInteraction } from '../../lib/supabase';
+import { insertReadingLog, getLatestReadingGoal, logVoiceInteraction, saveScore } from '../../lib/supabase';
 import type { RootState } from '../../store/store';
 import { getAppMode } from '../../lib/api';
 import { useStepContext } from '../../contexts/StepContext';
@@ -295,6 +295,7 @@ export default function L3Step2() {
           const wpm = Math.round((totalWords / elapsedSec) * 60);
           
           // API'ye gönder
+          const logContextTest = student && storyId ? { sessionId, studentId: student.id, storyId, level: 3, step: 2 } : undefined;
           const rawResponse = await submitReadingSpeedAnalysis({
             userId: sessionId || `anon-${Date.now()}`,
             audioFile: testBlob,
@@ -305,7 +306,7 @@ export default function L3Step2() {
             endTime: new Date().toISOString(),
             mimeType: mimeType,
             fileName: `test-recording.webm`,
-          });
+          }, { logContext: logContextTest });
           
           console.log('✅ Test audio analiz yanıtı:', rawResponse);
           
@@ -530,6 +531,7 @@ export default function L3Step2() {
       // ⚠️ n8n workflow "userId" alanını bekliyor
       // Değer olarak sessionId gönderiliyor (her session için unique)
       // Bu sayede aynı kullanıcının farklı hikayeleri karışmaz
+      const logContextL3 = student && storyId ? { sessionId, studentId: student.id, storyId, level: 3, step: 2 } : undefined;
       const rawResponse = await submitReadingSpeedAnalysis({
         userId: sessionId || `anon-${Date.now()}`,
         audioFile: audioBlob,
@@ -540,27 +542,30 @@ export default function L3Step2() {
         endTime: new Date().toISOString(),
         mimeType: finalMime,
         fileName: `recording.${mimeToExt(finalMime)}`,
-      });
+      }, { logContext: logContextL3 });
 
       console.log('✅ Received raw analysis from n8n:', rawResponse);
 
       // Öğrencinin okuma hızı denemesini kaydet
       if (student) {
         const raw = rawResponse as any;
+        const summary = {
+          wpmCorrect: raw.metrics?.wpmCorrect,
+          wpmSpoken: raw.metrics?.wpmSpoken,
+          accuracyPercent: raw.metrics?.accuracyPercent,
+          spokenWordCount: raw.metrics?.spokenWordCount,
+          matchedWordCount: raw.metrics?.matchedWordCount,
+          targetWPM,
+          reachedTarget: (raw.metrics?.wpmCorrect ?? wpm) >= targetWPM,
+        };
         logVoiceInteraction(sessionId, student.id, storyId, 3, 2, {
           endpoint: '/dost/level3/step2',
           studentTranscript: raw.transcriptText ?? null,
           apiResponseText: raw.speedSummary ?? raw.analysisText ?? null,
-          apiResponseSummary: {
-            wpmCorrect: raw.metrics?.wpmCorrect,
-            wpmSpoken: raw.metrics?.wpmSpoken,
-            accuracyPercent: raw.metrics?.accuracyPercent,
-            spokenWordCount: raw.metrics?.spokenWordCount,
-            matchedWordCount: raw.metrics?.matchedWordCount,
-            targetWPM,
-            reachedTarget: (raw.metrics?.wpmCorrect ?? wpm) >= targetWPM,
-          },
+          apiResponseSummary: summary,
         }).catch(console.error);
+        const wpmPts = raw.metrics?.wpmCorrect ?? wpm;
+        saveScore(sessionId, student.id, storyId, 3, 2, 'reading_speed', Math.round(wpmPts), targetWPM, summary).catch(console.error);
       }
 
       // API yanıtını Level3Step2AnalysisResult formatına dönüştür
