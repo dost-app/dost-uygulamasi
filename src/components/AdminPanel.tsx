@@ -17,21 +17,20 @@ import {
   type ComprehensionQuestion
 } from '../lib/supabase';
 import { generateVoice, uploadAudioToSupabase } from '../lib/voiceGenerator';
-import type { Teacher, Student, ActivityLog } from '../lib/supabase-types';
+import type { Teacher, Student } from '../lib/supabase-types';
 import { signOut } from '../lib/auth';
 import { clearUser } from '../store/userSlice';
 import type { AppDispatch } from '../store/store';
 import { getStoryImageUrl } from '../lib/image-utils';
 import { getApiEnv, setApiEnv, getApiBase, getAppMode, setAppMode, type ApiEnv, type AppMode } from '../lib/api';
 
-type TabType = 'teachers' | 'students' | 'logs' | 'stories' | 'settings' | 'view-student';
+type TabType = 'teachers' | 'students' | 'stories' | 'settings' | 'view-student';
 
 export default function AdminPanel() {
   const dispatch = useDispatch<AppDispatch>();
   const [activeTab, setActiveTab] = useState<TabType>('teachers');
   const [teachers, setTeachers] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
-  const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -39,8 +38,6 @@ export default function AdminPanel() {
       fetchTeachers();
     } else if (activeTab === 'students') {
       fetchStudents();
-    } else if (activeTab === 'logs') {
-      fetchActivityLogs();
     }
   }, [activeTab]);
 
@@ -77,25 +74,6 @@ export default function AdminPanel() {
       }
     } catch (err) {
       console.error('Error fetching students:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchActivityLogs = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('activity_logs')
-        .select('*')
-        .order('timestamp', { ascending: false })
-        .limit(100);
-
-      if (!error) {
-        setLogs(data || []);
-      }
-    } catch (err) {
-      console.error('Error fetching logs:', err);
     } finally {
       setLoading(false);
     }
@@ -146,7 +124,7 @@ export default function AdminPanel() {
       {/* Tab Navigation */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 flex gap-8">
-          {(['teachers', 'students', 'view-student', 'logs', 'stories', 'settings'] as TabType[]).map((tab) => (
+          {(['teachers', 'students', 'view-student', 'stories', 'settings'] as TabType[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -159,7 +137,6 @@ export default function AdminPanel() {
               {tab === 'teachers' && 'Öğretmenler'}
               {tab === 'students' && 'Öğrenciler'}
               {tab === 'view-student' && 'Öğrenci Görünümü'}
-              {tab === 'logs' && 'Aktivite Günlükleri'}
               {tab === 'stories' && 'Hikayeler'}
               {tab === 'settings' && 'Ayarlar'}
             </button>
@@ -179,8 +156,6 @@ export default function AdminPanel() {
           <StudentsTab students={students} />
         ) : activeTab === 'view-student' ? (
           <ViewStudentTab teachers={teachers} loading={loading} />
-        ) : activeTab === 'logs' ? (
-          <LogsTab logs={logs} />
         ) : activeTab === 'settings' ? (
           <SettingsTab />
         ) : (
@@ -2160,70 +2135,6 @@ function StudentReadOnlyDetail({
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function LogsTab({ logs }: { logs: ActivityLog[] }) {
-  return (
-    <div className="bg-white rounded-lg shadow overflow-hidden overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Aktivite Tipi
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Hikaye
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Seviye
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Adım
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Zaman
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Hata
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {logs.map((log) => (
-            <tr key={log.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
-                  {log.activity_type}
-                </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                {log.story_id || '-'}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                {log.level_id || '-'}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                {log.step_number || '-'}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                {new Date(log.timestamp).toLocaleString('tr-TR')}
-              </td>
-              <td className="px-6 py-4 text-sm text-red-600">
-                {log.error_message ? (
-                  <span className="truncate max-w-xs">{log.error_message}</span>
-                ) : (
-                  '-'
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {logs.length === 0 && (
-        <div className="text-center py-8 text-gray-600">Aktivite kaydı bulunamadı</div>
-      )}
     </div>
   );
 }
