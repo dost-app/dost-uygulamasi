@@ -23,11 +23,9 @@ export default function L4Step1() {
   const [isPlayingSiraSende, setIsPlayingSiraSende] = useState(false);
   const [isWaitingForRecording, setIsWaitingForRecording] = useState(false);
   const [isProcessingResponse, setIsProcessingResponse] = useState(false);
-  const [isPlayingResponse, setIsPlayingResponse] = useState(false);
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [completedSections, setCompletedSections] = useState<Set<number>>(new Set());
   const [testAudioActive, setTestAudioActive] = useState(false);
-  const [apiResponseText, setApiResponseText] = useState<string>('');
   const { sessionId, onStepCompleted, storyId, setFooterVisible } = useStepContext();
   
   // Apply playback rate to audio element
@@ -324,11 +322,6 @@ export default function L4Step1() {
         setResumeUrl(response.resumeUrl);
       }
 
-      // Show textAudio if available
-      if (response.textAudio) {
-        setApiResponseText(response.textAudio);
-      }
-
       // Öğrencinin şema okuma denemesini ve sesini kaydet
       if (student) {
         const audioUrl = await uploadStudentAudio(audioBase64, student.id, storyId, 4, 1).catch(() => null);
@@ -338,11 +331,6 @@ export default function L4Step1() {
           apiResponseSummary: { section: currentSection + 1 },
           audioStorageUrl: audioUrl,
         }).catch(console.error);
-      }
-
-      // Play n8n response audio
-      if (response.audioBase64) {
-        await playResponseAudio(response.audioBase64);
       }
 
       // Mark section as completed
@@ -358,11 +346,11 @@ export default function L4Step1() {
           });
         }
       } else {
-        // Auto-advance to next section
+        // API yaniti alinmaya devam ediyor ama metin/ses geri bildirimi
+        // gecici olarak gizli; response gelir gelmez bir sonraki semaya gec.
         setTimeout(() => {
-          setApiResponseText(''); // Clear previous response text
           setCurrentSection(currentSection + 1);
-        }, 1000);
+        }, 300);
       }
 
     } catch (err) {
@@ -371,44 +359,6 @@ export default function L4Step1() {
     } finally {
       setIsProcessingResponse(false);
     }
-  };
-
-  const playResponseAudio = async (audioBase64: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const el = audioRef.current;
-      if (!el) {
-        reject(new Error('Audio element not found'));
-        return;
-      }
-
-      try {
-        const audioData = `data:audio/mp3;base64,${audioBase64}`;
-        el.src = audioData;
-        (el as any).playsInline = true;
-        el.muted = false;
-        el.playbackRate = getPlaybackRate();
-        
-        setIsPlayingResponse(true);
-        
-        el.onended = () => {
-          setIsPlayingResponse(false);
-          resolve();
-        };
-        
-        el.onerror = () => {
-          setIsPlayingResponse(false);
-          reject(new Error('Error playing response audio'));
-        };
-        
-        el.play().catch((err) => {
-          setIsPlayingResponse(false);
-          reject(err);
-        });
-      } catch (err) {
-        setIsPlayingResponse(false);
-        reject(err);
-      }
-    });
   };
 
   const startFlow = async () => {
@@ -537,12 +487,12 @@ export default function L4Step1() {
             </div>
 
             {/* Microphone/Response Card - Always visible when started */}
-            {(isPlayingSectionAudio || isPlayingSiraSende || isWaitingForRecording || isProcessingResponse || isPlayingResponse || apiResponseText) && (
+            {(isPlayingSectionAudio || isPlayingSiraSende || isWaitingForRecording || isProcessingResponse) && (
               <div className="sticky bottom-0 bg-white border-t-2 rounded-lg shadow-lg p-4 mt-3 z-50" 
                    style={{
-                     borderColor: isPlayingSectionAudio ? '#9CA3AF' : isPlayingSiraSende ? '#10B981' : isProcessingResponse || isPlayingResponse ? '#F59E0B' : apiResponseText ? '#3B82F6' : '#10B981'
+                     borderColor: isPlayingSectionAudio ? '#9CA3AF' : isPlayingSiraSende ? '#10B981' : isProcessingResponse ? '#F59E0B' : '#10B981'
                    }}>
-                {isPlayingSectionAudio && !apiResponseText && (
+                {isPlayingSectionAudio && (
                   <>
                     <p className="text-center mb-2 text-base font-bold text-gray-500">
                       🔊 DOST şematiği okuyor...
@@ -556,7 +506,7 @@ export default function L4Step1() {
                   </>
                 )}
                 
-                {isPlayingSiraSende && !apiResponseText && (
+                {isPlayingSiraSende && (
                   <>
                     <p className="text-center mb-2 text-base font-bold text-green-700">
                       🎤 Şimdi sıra sende! Mikrofona konuş
@@ -570,7 +520,7 @@ export default function L4Step1() {
                   </>
                 )}
                 
-                {isWaitingForRecording && !isProcessingResponse && !isPlayingResponse && !apiResponseText && !isPlayingSiraSende && (
+                {isWaitingForRecording && !isProcessingResponse && !isPlayingSiraSende && (
                   <>
                     <p className="text-center mb-2 text-base font-bold text-green-700">
                       🎤 Şimdi sıra sende! Mikrofona konuş
@@ -595,7 +545,7 @@ export default function L4Step1() {
                   </>
                 )}
                 
-                {(isProcessingResponse || isPlayingResponse) && !apiResponseText && (
+                {isProcessingResponse && (
                   <div className="text-center">
                     <div className="flex flex-col items-center gap-2">
                       <div className="animate-spin rounded-full h-6 w-6 border-2 border-orange-500 border-t-transparent"></div>
@@ -603,13 +553,6 @@ export default function L4Step1() {
                         ⏳ DOST'tan cevap bekleniyor...
                       </p>
                     </div>
-                  </div>
-                )}
-
-                {apiResponseText && (
-                  <div>
-                    <h4 className="font-bold text-blue-800 mb-2 text-center">🤖 DOST'un Yanıtı:</h4>
-                    <p className="text-blue-700 text-center">{apiResponseText}</p>
                   </div>
                 )}
               </div>
