@@ -17,6 +17,7 @@ interface Props {
   onStepCompleted?: (completionData?: any) => void; // Adım tamamlandığında çağrılacak callback
   storyTitle?: string; // Hikaye adı
   level?: number; // Seviye numarası
+  compactLayout?: boolean; // true ise ana alan esnemez, footer içeriğin hemen altında durur
 }
 
 export default function StepLayout({ 
@@ -32,7 +33,8 @@ export default function StepLayout({
   stepCompleted = false,
   onStepCompleted,
   storyTitle,
-  level
+  level,
+  compactLayout = false
 }: Props) {
   const handlePrev = async () => {
     await playSoundEffect('whoosh');
@@ -85,7 +87,7 @@ export default function StepLayout({
       </div>
 
       {/* Main Content with Nav */}
-      <div className="relative flex-1">
+      <div className={`relative ${compactLayout ? '' : 'flex-1'}`}>
         {/* Prev Button - Fixed to left edge (hidden when hidePrev) */}
         {!hidePrev && (
           <button

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { awardPoints, logStudentAction, updateSessionCompletedLevels, saveScore } from '../../lib/supabase';
+import { awardPoints, logStudentAction, updateSessionCompletedLevels, saveScore, completeStory } from '../../lib/supabase';
 import { useStepContext } from '../../contexts/StepContext';
 import type { RootState } from '../../store/store';
 import { useAudioPlaybackRate } from '../../hooks/useAudioPlaybackRate';
@@ -116,7 +116,10 @@ export default function L5Step3() {
       }
     }
 
-    // Step completion – storyCompleted: true ile bir sonraki hikayenin kilidi açılır
+    // Hikayeyi tamamla – bir sonraki hikaye kilidi açılsın (sessionId yoksa da çalışır)
+    if (student && storyId) {
+      await completeStory(student.id, storyId);
+    }
     if (onStepCompleted) {
       await onStepCompleted({
         sessionCompleted: true,

@@ -34,8 +34,11 @@ import {
   completeStory,
   endSession,
   getStoryById,
-  getReadingGoal
+  getReadingGoal,
+  awardPoints,
+  saveScore
 } from '../lib/supabase';
+import { calculatePointsForLevel } from '../lib/points';
 import type { RootState, AppDispatch } from '../store/store';
 import { StepProvider } from '../contexts/StepContext';
 import { setSelectedGoal, setAnalysisResult } from '../store/level2Slice';
@@ -263,6 +266,9 @@ export default function LevelRouter() {
   const onNext = async () => {
     if (!student) return;
 
+    // Seviye 1 Adım 5: Tamamlama Step5 içindeki butonla yapılıyor (onNext burada tetiklenmez)
+    if (level === 1 && step === 5) return;
+
     // In prod mode, check if step is completed
     if (appMode === 'prod' && !stepCompleted) {
       alert('Bu adımı tamamlamadan bir sonraki adıma geçemezsiniz.');
@@ -365,6 +371,18 @@ export default function LevelRouter() {
 
   // Function to mark step as completed (called by step components)
   const handleStepCompleted = async (completionData?: any) => {
+    // Hikaye tamamlandıysa (L5 Step3) mutlaka completeStory çağır – sessionId olmasa da sonraki hikaye kilidi açılsın
+    if (student && completionData?.storyCompleted && level === 5 && step === 3) {
+      await completeStory(student.id, storyId);
+      if (sessionId) {
+        try {
+          await endSession(sessionId);
+          await logStudentAction(sessionId, student.id, 'story_completed', storyId, level, step);
+        } catch (e) {
+          console.error('Error ending session:', e);
+        }
+      }
+    }
     if (!student || !sessionId) return;
 
     try {
@@ -380,19 +398,43 @@ export default function LevelRouter() {
       if (!error) {
         setStepCompleted(true);
         await logStudentAction(sessionId, student.id, 'step_completed', storyId, level, step, completionData);
-        
-        // If story is completed (level 5, step 3), mark story as completed
-        if (completionData?.storyCompleted && level === 5 && step === 3) {
-          const { error: completeError } = await completeStory(student.id, storyId);
-          if (!completeError) {
-            // End session
-            await endSession(sessionId);
-            await logStudentAction(sessionId, student.id, 'story_completed', storyId, level, step);
-          }
-        }
       }
     } catch (err) {
       console.error('Error marking step completed:', err);
+    }
+  };
+
+  const handleLevel1Complete = async () => {
+    if (!student) return;
+    if (isSaving) return; // Çift tıklamayı engelle
+    const studentId = student.id;
+    const currentStoryId = storyId;
+    setIsSaving(true);
+    try {
+      await handleStepCompleted({ level: 1, completed: true });
+      const points = calculatePointsForLevel(1, 5);
+      const pointsResult = await awardPoints(studentId, currentStoryId, points, 'Seviye 1 tamamlandı');
+      saveScore(sessionId, studentId, currentStoryId, 1, 5, 'level_complete', points, undefined, { reason: 'Seviye 1 tamamlandı' }).catch(console.error);
+      if (pointsResult.error) {
+        console.error('Points error:', pointsResult.error);
+        alert(`Puan verilirken hata oluştu: ${pointsResult.error.message || 'Bilinmeyen hata'}`);
+      }
+      await new Promise((r) => setTimeout(r, 300));
+      const progressResult = await updateStudentProgressStep(studentId, currentStoryId, 2, 1, 1);
+      if (progressResult.error) {
+        console.error('Progress update error:', progressResult.error);
+        alert(`İlerleme güncellenirken hata oluştu: ${progressResult.error.message || 'Bilinmeyen hata'}`);
+      } else {
+        window.dispatchEvent(new Event('progressUpdated'));
+      }
+      // Her durumda 2. seviyeye yönlendir (anasayfaya düşmeyi önlemek için sabit storyId kullan)
+      navigate(`/level/2/intro?storyId=${currentStoryId}`);
+    } catch (err: any) {
+      console.error('Error completing level 1:', err);
+      alert(`Hata oluştu: ${err.message || 'Bilinmeyen hata'}. Lütfen tekrar deneyin.`);
+      navigate(`/level/2/intro?storyId=${currentStoryId}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -402,7 +444,7 @@ export default function LevelRouter() {
     else if (step === 2) content = <Step2 />;
     else if (step === 3) content = <Step3 />;
     else if (step === 4) content = <Step4 />;
-    else if (step === 5) content = <Step5 />;
+    else if (step === 5) content = <Step5 onComplete={handleLevel1Complete} isCompleting={isSaving} />;
   } else if (level === 2) {
     if (step === 1) content = <L2Step1 />;
     else if (step === 2) content = <L2Step2 />;
@@ -463,8 +505,8 @@ export default function LevelRouter() {
     );
   };
 
-  // In prod mode, disable next button if step is not completed
-  const canProceed = appMode === 'dev' || stepCompleted || isCheckingCompletion;
+  // In prod mode, disable next button if step is not completed (L1 S5 hariç: tamamlama tek butonla yapılıyor)
+  const canProceed = appMode === 'dev' || stepCompleted || isCheckingCompletion || (level === 1 && step === 5);
 
   // "Başla" adımlarında footer başta gizli; adım içinde Başla'ya basınca setFooterVisible(true) ile açılır
   const stepsWithStartButton: [number, number][] = [
@@ -489,11 +531,13 @@ export default function LevelRouter() {
       onNext={onNext}
       hidePrev
       hideNext={level === 1 && step === totalSteps}
+      hideFooter={level === 1 && step === 5}
       disableNext={!canProceed}
       stepCompleted={stepCompleted}
       onStepCompleted={handleStepCompleted}
       storyTitle={storyTitle}
       level={level}
+      compactLayout={level === 1 && step === 5}
     >
       {level === 1 ? (step === 5 ? null : renderLevelChecklist(LEVEL1_TITLES)) : null}
       {level === 2 ? renderLevelChecklist(LEVEL2_TITLES) : null}

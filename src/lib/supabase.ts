@@ -423,28 +423,62 @@ export async function updateStudentProgress(
 export async function completeStory(studentId: string, storyId: number) {
   // First, get existing progress to update completed_levels
   const { data: existing, error: fetchError } = await getStudentProgressByStory(studentId, storyId);
-  
-  if (fetchError && fetchError.code !== 'PGRST116') {
-    console.error('Error fetching progress for completeStory:', fetchError);
-  }
 
   const completedLevels = Array.isArray(existing?.completed_levels)
-    ? existing.completed_levels
+    ? [...existing.completed_levels]
     : [];
-
-  // Ensure level 5 is in completed_levels
   if (!completedLevels.includes(5)) {
     completedLevels.push(5);
   }
 
-  // Update without .single() to avoid RLS issues
+  const now = new Date().toISOString();
+  const payload = {
+    is_completed: true,
+    completed_at: now,
+    completed_levels: completedLevels,
+    updated_at: now,
+  };
+
+  // If no row exists (e.g. story 6+ never started), insert so next story can unlock
+  if (fetchError?.code === 'PGRST116' || !existing) {
+    const insertResult = await supabase
+      .from('student_progress')
+      .insert({
+        student_id: studentId,
+        story_id: storyId,
+        current_level: 5,
+        current_step: 1,
+        completed_levels: completedLevels,
+        is_completed: true,
+        completed_at: now,
+        points: 0,
+        updated_at: now,
+      })
+      .select()
+      .single();
+
+    if (insertResult.error) {
+      // Duplicate key: row was created elsewhere, try update again
+      const retry = await getStudentProgressByStory(studentId, storyId);
+      if (retry.data) {
+        await supabase
+          .from('student_progress')
+          .update(payload)
+          .eq('student_id', studentId)
+          .eq('story_id', storyId);
+      }
+      window.dispatchEvent(new Event('progressUpdated'));
+      return { error: null, data: retry.data };
+    }
+    window.dispatchEvent(new Event('progressUpdated'));
+    return { error: null, data: insertResult.data };
+  }
+
   const updateResult = await supabase
     .from('student_progress')
     .update({
-      is_completed: true,
-      completed_at: new Date().toISOString(),
-      completed_levels: completedLevels, // Ensure level 5 is marked as completed
-      updated_at: new Date().toISOString(),
+      ...payload,
+      points: existing.points ?? 0,
     })
     .eq('student_id', studentId)
     .eq('story_id', storyId);
@@ -453,15 +487,9 @@ export async function completeStory(studentId: string, storyId: number) {
     return { error: updateResult.error, data: null };
   }
 
-  // Wait a bit to ensure database consistency
   await new Promise(resolve => setTimeout(resolve, 200));
-
-  // Fetch updated data separately
   const { data: updatedData } = await getStudentProgressByStory(studentId, storyId);
-  
-  // Dispatch event to refresh progress in UI
   window.dispatchEvent(new Event('progressUpdated'));
-  
   return { error: null, data: updatedData };
 }
 
@@ -1211,7 +1239,9 @@ export async function createComprehensionQuestion(
       question_audio_url: questionAudioUrl || null,
       correct_answer_audio_url: correctAnswerAudioUrl || null,
       wrong_answer_audio_url: wrongAnswerAudioUrl || null,
-    });
+    })
+    .select('id')
+    .single();
 }
 
 export async function updateComprehensionQuestion(

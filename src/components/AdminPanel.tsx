@@ -7,15 +7,19 @@ import {
   getLastActivityByStudentIds,
   getStudentProgress,
   getStudentProgressStats,
+  completeStory,
   createStory, 
   updateStory, 
   deleteStory,
+  deleteStoryParagraphs,
+  insertStoryParagraphs,
   getComprehensionQuestionsByStory,
   createComprehensionQuestion,
   updateComprehensionQuestion,
   deleteComprehensionQuestion,
   type ComprehensionQuestion
 } from '../lib/supabase';
+import { getParagraphs } from '../data/stories';
 import { generateVoice, uploadAudioToSupabase } from '../lib/voiceGenerator';
 import type { Teacher, Student } from '../lib/supabase-types';
 import { signOut } from '../lib/auth';
@@ -223,6 +227,8 @@ function StudentsTab({ students }: { students: any[] }) {
   const [stories, setStories] = useState<any[]>([]);
   const [studentProgress, setStudentProgress] = useState<any[]>([]);
   const [loadingProgress, setLoadingProgress] = useState(false);
+  const [studentSearchFilter, setStudentSearchFilter] = useState('');
+  const [unlockLoading, setUnlockLoading] = useState<string | null>(null);
 
   useEffect(() => {
     if (showLevelEditor) {
@@ -267,6 +273,32 @@ function StudentsTab({ students }: { students: any[] }) {
       setStudentProgress([]);
     } finally {
       setLoadingProgress(false);
+    }
+  };
+
+  const q = (studentSearchFilter || '').trim().toLowerCase();
+  const filteredStudents = q
+    ? students.filter(
+        (s: any) =>
+          `${(s.first_name || '')} ${(s.last_name || '')}`.toLowerCase().includes(q) ||
+          (s.users?.email || '').toLowerCase().includes(q)
+      )
+    : students;
+
+  const handleUnlockStory = async (studentId: string, storyId: number) => {
+    setUnlockLoading(`${studentId}-${storyId}`);
+    setError('');
+    setSuccess('');
+    try {
+      const { error: unlockError } = await completeStory(studentId, storyId);
+      if (unlockError) throw unlockError;
+      setSuccess(`Hikaye ${storyId} tamamlandı işaretlendi, sonraki hikaye kilidi açıldı.`);
+      await fetchStudentProgress();
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kilit açılamadı');
+    } finally {
+      setUnlockLoading(null);
     }
   };
 
@@ -395,6 +427,16 @@ function StudentsTab({ students }: { students: any[] }) {
           )}
 
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Öğrenci ara</label>
+            <input
+              type="text"
+              placeholder="Ad, soyad veya e-posta ile filtrele..."
+              value={studentSearchFilter}
+              onChange={(e) => setStudentSearchFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2"
+            />
+          </div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Öğrenci</label>
             <select
               value={selectedStudent}
@@ -402,12 +444,15 @@ function StudentsTab({ students }: { students: any[] }) {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             >
               <option value="">-- Seçiniz --</option>
-              {students.map((student) => (
+              {filteredStudents.map((student: any) => (
                 <option key={student.id} value={student.id}>
                   {student.first_name} {student.last_name} ({student.users?.email})
                 </option>
               ))}
             </select>
+            {studentSearchFilter.trim() && (
+              <p className="text-xs text-gray-500 mt-1">{filteredStudents.length} öğrenci listeleniyor</p>
+            )}
           </div>
 
 
@@ -482,6 +527,21 @@ function StudentsTab({ students }: { students: any[] }) {
           >
             {loading ? 'Güncelleniyor...' : 'Seviyeyi Güncelle'}
           </button>
+
+          <div className="border-t border-gray-200 pt-4 mt-4">
+            <h4 className="text-sm font-semibold text-gray-800 mb-2">Hikaye kilidi aç</h4>
+            <p className="text-xs text-gray-600 mb-2">
+              Öğrenci ve hikaye seçip aşağıdaki butonla bu hikayeyi tamamlandı işaretleyebilirsiniz; bir sonraki hikaye kilidi açılır.
+            </p>
+            <button
+              type="button"
+              onClick={() => selectedStudent && selectedStory && handleUnlockStory(selectedStudent, parseInt(selectedStory))}
+              disabled={!selectedStudent || !selectedStory || !!unlockLoading}
+              className="w-full px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 text-white rounded-lg transition-colors font-medium"
+            >
+              {unlockLoading ? 'İşleniyor...' : 'Bu hikayeyi tamamlandı işaretle (sonraki kilidi aç)'}
+            </button>
+          </div>
         </div>
       )}
 
@@ -521,11 +581,15 @@ function StudentsTab({ students }: { students: any[] }) {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Durum
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    İşlem
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {studentProgress.map((progress) => {
                   const story = stories.find(s => s.id === progress.story_id);
+                  const key = `${selectedStudent}-${progress.story_id}`;
                   return (
                     <tr key={progress.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -558,6 +622,18 @@ function StudentsTab({ students }: { students: any[] }) {
                           </span>
                         )}
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {!progress.is_completed && (
+                          <button
+                            type="button"
+                            onClick={() => handleUnlockStory(selectedStudent, progress.story_id)}
+                            disabled={unlockLoading === key}
+                            className="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs rounded disabled:opacity-50"
+                          >
+                            {unlockLoading === key ? '...' : 'Kilit aç'}
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -568,6 +644,11 @@ function StudentsTab({ students }: { students: any[] }) {
       )}
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
+        {studentSearchFilter.trim() && (
+          <div className="px-4 py-2 bg-gray-50 border-b text-sm text-gray-600">
+            Arama: &quot;{studentSearchFilter}&quot; — {filteredStudents.length} öğrenci
+          </div>
+        )}
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -586,7 +667,7 @@ function StudentsTab({ students }: { students: any[] }) {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {students.map((student) => (
+            {filteredStudents.map((student: any) => (
               <tr key={student.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {student.first_name} {student.last_name}
@@ -604,8 +685,10 @@ function StudentsTab({ students }: { students: any[] }) {
             ))}
           </tbody>
         </table>
-        {students.length === 0 && (
-          <div className="text-center py-8 text-gray-600">Öğrenci bulunamadı</div>
+        {filteredStudents.length === 0 && (
+          <div className="text-center py-8 text-gray-600">
+            {studentSearchFilter.trim() ? 'Arama kriterine uyan öğrenci bulunamadı.' : 'Öğrenci bulunamadı'}
+          </div>
         )}
       </div>
     </div>
@@ -1037,6 +1120,24 @@ function StudentReadOnlyDetail({
   const [showDetailedReport, setShowDetailedReport] = useState(false);
   const [detailReportTab, setDetailReportTab] = useState<'timing' | 'scores' | 'actions' | 'api'>('timing');
   const [expandedApiLogId, setExpandedApiLogId] = useState<string | null>(null);
+  const [unlockLoadingDetail, setUnlockLoadingDetail] = useState<number | null>(null);
+
+  const refreshProgress = async () => {
+    const progressRes = await getStudentProgress(student.id);
+    if (!progressRes.error) setProgressList(progressRes.data || []);
+  };
+
+  const handleUnlockStoryDetail = async (storyIdToUnlock: number) => {
+    const prevStoryId = storyIdToUnlock - 1;
+    if (prevStoryId < 1) return;
+    setUnlockLoadingDetail(storyIdToUnlock);
+    try {
+      await completeStory(student.id, prevStoryId);
+      await refreshProgress();
+    } finally {
+      setUnlockLoadingDetail(null);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -1340,6 +1441,7 @@ function StudentReadOnlyDetail({
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">Puan</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">Tamamlanan seviyeler</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">Durum</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">İşlem</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -1377,6 +1479,18 @@ function StudentReadOnlyDetail({
                         </span>
                       ) : (
                         <span className="text-gray-400 text-xs">–</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {!unlocked && story.id > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleUnlockStoryDetail(story.id)}
+                          disabled={unlockLoadingDetail === story.id}
+                          className="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs rounded disabled:opacity-50"
+                        >
+                          {unlockLoadingDetail === story.id ? '...' : 'Kilit aç'}
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -2166,7 +2280,8 @@ function StoriesTab() {
     correct_option: 'A' as 'A' | 'B' | 'C' | 'D',
     question_order: 1,
   });
-  const [generatingAudio, setGeneratingAudio] = useState<string | null>(null);
+  const [uploadingParagraphs, setUploadingParagraphs] = useState(false);
+  const [paragraphUploadMessage, setParagraphUploadMessage] = useState('');
 
   const fetchStories = async () => {
     setLoading(true);
@@ -2263,23 +2378,72 @@ function StoriesTab() {
     }
   };
 
+  const handleUploadParagraphsToSupabase = async () => {
+    setUploadingParagraphs(true);
+    setParagraphUploadMessage('');
+    try {
+      let uploaded = 0;
+      let failed = 0;
+      for (let storyId = 1; storyId <= 24; storyId++) {
+        const paragraphs = getParagraphs(storyId);
+        if (!paragraphs.length) continue;
+        const { error: delErr } = await deleteStoryParagraphs(storyId);
+        if (delErr) console.warn(`Story ${storyId} delete paragraphs:`, delErr);
+        const payload = paragraphs.map((p, i) => ({
+          paragraph_index: i,
+          text_segments: p,
+        }));
+        const { error: insErr } = await insertStoryParagraphs(storyId, payload);
+        if (insErr) {
+          console.error(`Story ${storyId} insert:`, insErr);
+          failed++;
+        } else {
+          uploaded++;
+        }
+      }
+      setParagraphUploadMessage(
+        failed === 0
+          ? `Paragraflar yüklendi: ${uploaded} hikaye.`
+          : `${uploaded} hikaye yüklendi, ${failed} hikaye hata verdi. Konsolu kontrol edin.`
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Yükleme başarısız';
+      setParagraphUploadMessage(message);
+    } finally {
+      setUploadingParagraphs(false);
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-8">Yükleniyor...</div>;
   }
 
   return (
     <div className="space-y-6">
-      <button
-        onClick={() => {
-          setShowForm(!showForm);
-          setEditingId(null);
-          setFormData({ id: '', title: '', description: '', image: '', locked: false });
-          setError('');
-        }}
-        className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
-      >
-        {showForm ? 'İptal' : '+ Yeni Hikaye Ekle'}
-      </button>
+      <div className="flex flex-wrap gap-2 items-center">
+        <button
+          onClick={() => {
+            setShowForm(!showForm);
+            setEditingId(null);
+            setFormData({ id: '', title: '', description: '', image: '', locked: false });
+            setError('');
+          }}
+          className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+        >
+          {showForm ? 'İptal' : '+ Yeni Hikaye Ekle'}
+        </button>
+        <button
+          onClick={handleUploadParagraphsToSupabase}
+          disabled={uploadingParagraphs}
+          className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-lg transition-colors"
+          title="stories.ts içindeki tüm paragrafları (1–24) story_paragraphs tablosuna yükler"
+        >
+          {uploadingParagraphs ? 'Yükleniyor...' : 'Paragrafları Supabase\'e yükle (1–24)'}
+        </button>
+        {paragraphUploadMessage && (
+          <span className="text-sm text-gray-700">{paragraphUploadMessage}</span>
+        )}
+      </div>
 
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
@@ -2460,18 +2624,46 @@ function QuestionsModal({
     correct_option: 'A' as 'A' | 'B' | 'C' | 'D',
     question_order: 1,
   });
-  const [generatingAudio, setGeneratingAudio] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
+
+  /** Yeni eklenen soru için soru metni, doğru ve yanlış cevap seslerini oluşturur ve Supabase'e yükler. */
+  const generateAudiosForNewQuestion = async (
+    questionId: string,
+    formData: { question_text: string; option_a: string; option_b: string; option_c: string; option_d: string; correct_option: 'A' | 'B' | 'C' | 'D' }
+  ): Promise<{ question_audio_url: string; correct_answer_audio_url: string; wrong_answer_audio_url: string }> => {
+    const optKey = formData.correct_option.toLowerCase() as 'a' | 'b' | 'c' | 'd';
+    const correctOptionText = formData[`option_${optKey}` as keyof typeof formData] as string;
+    const correctText = `Tebrikler, doğru cevap. ${formData.correct_option} şıkkı, ${correctOptionText}`;
+    const wrongText = `Yanlış cevap. Doğru cevap ${formData.correct_option} şıkkı, ${correctOptionText} olacaktı.`;
+
+    const gen = async (text: string, type: 'question' | 'correct' | 'wrong') => {
+      const result = await generateVoice(text);
+      if (!result.success || !result.audioBase64) throw new Error(result.error || 'Ses oluşturulamadı');
+      const fileName = `story-${storyId}-question-${questionId}-${type}.mp3`;
+      const url = await uploadAudioToSupabase(result.audioBase64, fileName);
+      if (!url) throw new Error('Ses yüklenemedi');
+      return url;
+    };
+
+    const [question_audio_url, correct_answer_audio_url, wrong_answer_audio_url] = await Promise.all([
+      gen(formData.question_text, 'question'),
+      gen(correctText, 'correct'),
+      gen(wrongText, 'wrong'),
+    ]);
+    return { question_audio_url, correct_answer_audio_url, wrong_answer_audio_url };
+  };
 
   const handleQuestionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setInfoMessage(null);
 
     try {
       if (editingQuestionId) {
         await updateComprehensionQuestion(editingQuestionId, questionFormData);
       } else {
-        await createComprehensionQuestion(
+        const { data, error: createErr } = await createComprehensionQuestion(
           storyId,
           questionFormData.question_text,
           questionFormData.option_a,
@@ -2481,6 +2673,20 @@ function QuestionsModal({
           questionFormData.correct_option,
           questionFormData.question_order
         );
+
+        if (createErr) throw createErr;
+
+        if (data?.id) {
+          setInfoMessage('Sesler oluşturuluyor...');
+          try {
+            const urls = await generateAudiosForNewQuestion(data.id, questionFormData);
+            await updateComprehensionQuestion(data.id, urls);
+            setInfoMessage('Sesler oluşturuldu.');
+          } catch (audioErr) {
+            const msg = audioErr instanceof Error ? audioErr.message : 'Bilinmeyen hata';
+            setInfoMessage(`Sesler oluşturulamadı: ${msg}`);
+          }
+        }
       }
 
       setQuestionFormData({
@@ -2527,53 +2733,6 @@ function QuestionsModal({
     }
   };
 
-  const handleGenerateAudio = async (
-    questionId: string,
-    type: 'question' | 'correct' | 'wrong',
-    text: string
-  ) => {
-    if (!text.trim()) {
-      setError('Seslendirme için metin gerekli');
-      return;
-    }
-
-    setGeneratingAudio(`${questionId}-${type}`);
-    setError('');
-
-    try {
-      // Generate audio
-      const result = await generateVoice(text);
-      if (!result.success || !result.audioBase64) {
-        throw new Error(result.error || 'Ses oluşturulamadı');
-      }
-
-      // Upload to Supabase
-      const fileName = `story-${storyId}-question-${questionId}-${type}.mp3`;
-      const audioUrl = await uploadAudioToSupabase(result.audioBase64, fileName);
-
-      if (!audioUrl) {
-        throw new Error('Ses Supabase\'e yüklenemedi');
-      }
-
-      // Update question with audio URL
-      const updateField = 
-        type === 'question' ? 'question_audio_url' :
-        type === 'correct' ? 'correct_answer_audio_url' :
-        'wrong_answer_audio_url';
-
-      await updateComprehensionQuestion(questionId, {
-        [updateField]: audioUrl,
-      });
-
-      onRefresh();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Ses oluşturma başarısız oldu';
-      setError(message);
-    } finally {
-      setGeneratingAudio(null);
-    }
-  };
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -2595,11 +2754,17 @@ function QuestionsModal({
               {error}
             </div>
           )}
+          {infoMessage && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded text-blue-700 text-sm">
+              {infoMessage}
+            </div>
+          )}
 
           <button
             onClick={() => {
               setShowQuestionForm(!showQuestionForm);
               setEditingQuestionId(null);
+              setInfoMessage(null);
               setQuestionFormData({
                 question_text: '',
                 option_a: '',
@@ -2763,50 +2928,10 @@ function QuestionsModal({
 
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="text-xs font-semibold text-gray-700 mb-2">Seslendirmeler:</div>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => handleGenerateAudio(question.id, 'question', question.question_text)}
-                        disabled={generatingAudio === `${question.id}-question`}
-                        className={`px-3 py-1 text-xs rounded ${
-                          question.question_audio_url
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        } disabled:opacity-50`}
-                      >
-                        {generatingAudio === `${question.id}-question` ? '⏳ Oluşturuluyor...' : 
-                         question.question_audio_url ? '✓ Soru Seslendirmesi' : '🎤 Soru Seslendirmesi Oluştur'}
-                      </button>
-                      <button
-                        onClick={() => {
-                          const correctText = question[`option_${question.correct_option.toLowerCase()}` as 'option_a' | 'option_b' | 'option_c' | 'option_d'];
-                          handleGenerateAudio(question.id, 'correct', correctText);
-                        }}
-                        disabled={generatingAudio === `${question.id}-correct`}
-                        className={`px-3 py-1 text-xs rounded ${
-                          question.correct_answer_audio_url
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        } disabled:opacity-50`}
-                      >
-                        {generatingAudio === `${question.id}-correct` ? '⏳ Oluşturuluyor...' : 
-                         question.correct_answer_audio_url ? '✓ Doğru Cevap Seslendirmesi' : '🎤 Doğru Cevap Seslendirmesi Oluştur'}
-                      </button>
-                      <button
-                        onClick={() => {
-                          const wrongOptions = ['A', 'B', 'C', 'D'].filter(opt => opt !== question.correct_option);
-                          const wrongText = question[`option_${wrongOptions[0].toLowerCase()}` as 'option_a' | 'option_b' | 'option_c' | 'option_d'];
-                          handleGenerateAudio(question.id, 'wrong', wrongText);
-                        }}
-                        disabled={generatingAudio === `${question.id}-wrong`}
-                        className={`px-3 py-1 text-xs rounded ${
-                          question.wrong_answer_audio_url
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        } disabled:opacity-50`}
-                      >
-                        {generatingAudio === `${question.id}-wrong` ? '⏳ Oluşturuluyor...' : 
-                         question.wrong_answer_audio_url ? '✓ Yanlış Cevap Seslendirmesi' : '🎤 Yanlış Cevap Seslendirmesi Oluştur'}
-                      </button>
+                    <div className="flex flex-wrap gap-3 text-xs text-gray-600">
+                      <span>{question.question_audio_url ? '✓ Soru' : '– Soru'}</span>
+                      <span>{question.correct_answer_audio_url ? '✓ Doğru cevap' : '– Doğru cevap'}</span>
+                      <span>{question.wrong_answer_audio_url ? '✓ Yanlış cevap' : '– Yanlış cevap'}</span>
                     </div>
                   </div>
                 </div>

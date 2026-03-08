@@ -70,6 +70,7 @@ export default function Step3() {
   const [childrenVoiceTextAudio, setChildrenVoiceTextAudio] = useState<string>(''); // textAudio from API
   const [isProcessingVoice, setIsProcessingVoice] = useState(false);
   const [firstSentences, setFirstSentences] = useState<string[]>([]);
+  const [firstSentencesLoaded, setFirstSentencesLoaded] = useState(false);
   const [resumeUrl, setResumeUrl] = useState<string>('');
   const [stepCompleted, setStepCompleted] = useState(false);
 
@@ -79,12 +80,13 @@ export default function Step3() {
   const paragraphs = useMemo(() => story ? getParagraphs(story.id) : [], [story?.id]);
 
   useEffect(() => {
-    if (story) {
-      getFirstThreeParagraphFirstSentences(story.id).then((sentences) => {
-        console.log('📝 getFirstThreeParagraphFirstSentences sonucu:', sentences);
-        setFirstSentences(sentences);
-      });
-    }
+    if (!story) return;
+    setFirstSentencesLoaded(false);
+    getFirstThreeParagraphFirstSentences(story.id).then((sentences) => {
+      console.log('📝 getFirstThreeParagraphFirstSentences sonucu:', sentences);
+      setFirstSentences(sentences);
+      setFirstSentencesLoaded(true);
+    });
   }, [story?.id]);
 
   // helpers to compute first sentence length per paragraph
@@ -190,6 +192,39 @@ export default function Step3() {
     });
   };
 
+  const playStoryAnalysisAudio = async (): Promise<boolean> => {
+    if (!audioRef.current || !story) return false;
+
+    return new Promise((resolve) => {
+      const el = audioRef.current!;
+      const audioPath = getAssetUrl(`audios/level1/step3/story-${story.id}-analysis.mp3`);
+
+      const cleanup = () => {
+        el.onended = null;
+        el.onerror = null;
+      };
+
+      el.src = audioPath;
+      el.playbackRate = getPlaybackRate();
+      setMascotState('speaking');
+
+      el.onended = () => {
+        cleanup();
+        resolve(true);
+      };
+
+      el.onerror = () => {
+        cleanup();
+        resolve(false);
+      };
+
+      el.play().catch(() => {
+        cleanup();
+        resolve(false);
+      });
+    });
+  };
+
   const runDostAnalysis = async () => {
     if (!story) return;
     
@@ -237,8 +272,19 @@ export default function Step3() {
           setMascotState('listening');
           setPhase('student');
         } catch {
+          const playedStaticStoryAudio = await playStoryAnalysisAudio();
           setMascotState('listening');
           setPhase('student');
+          if (!playedStaticStoryAudio) {
+            console.warn('API sesi oynatılamadı, story fallback sesi de bulunamadı.');
+          }
+        }
+      } else if (!text) {
+        const playedStaticStoryAudio = await playStoryAnalysisAudio();
+        setMascotState('listening');
+        setPhase('student');
+        if (!playedStaticStoryAudio) {
+          console.warn('API yanıtı yok, story fallback sesi de bulunamadı.');
         }
       } else {
         setMascotState('listening');
@@ -248,6 +294,7 @@ export default function Step3() {
       console.error('❌ DOST analysis hatası:', e);
       const fallback = 'Metnin ilk cümlelerinden yola çıkarak, karıncaların yaşamı, yapısı ve beslenmesi hakkında bilgi verildiğini tahmin ediyorum.';
       setAnalysisText(fallback);
+      await playStoryAnalysisAudio().catch(() => false);
       setMascotState('listening');
       setPhase('student');
     } finally {
@@ -424,6 +471,12 @@ export default function Step3() {
     }
   };
 
+  // Paragraf verisi olmayan hikayelerde adımı atlayıp devam et (örn. 6. hikaye)
+  const handleSkipNoParagraphs = () => {
+    setChildrenVoiceResponse('Bu hikaye için metin verisi yüklenemediği için adım atlandı.');
+    setStepCompleted(true);
+  };
+
   // Call onStepCompleted when step is completed
   useEffect(() => {
     if (stepCompleted && onStepCompleted) {
@@ -483,6 +536,22 @@ export default function Step3() {
             <img src={getStoryImageUrl(story.image)} alt={story.title} className="w-full max-w-xs mx-auto rounded-xl shadow" />
             <p className="mt-2 text-center text-lg font-semibold text-purple-800">{story.title}</p>
           </div>
+
+          {/* Bu hikaye için paragraf verisi yoksa (örn. 6. hikaye) devam et seçeneği */}
+          {firstSentencesLoaded && firstSentences.length === 0 && (
+            <div className="mb-6 p-6 bg-amber-50 border border-amber-200 rounded-xl">
+              <p className="text-amber-800 font-medium mb-2">
+                Bu hikaye için metin paragrafları henüz yüklenmemiş. Bu adımı atlayıp bir sonraki adıma geçebilirsin.
+              </p>
+              <button
+                type="button"
+                onClick={handleSkipNoParagraphs}
+                className="mt-4 bg-amber-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-amber-700 transition"
+              >
+                Devam et
+              </button>
+            </div>
+          )}
 
           <div className="bg-white rounded-xl shadow p-6">
             {/* DOST is analyzing */}

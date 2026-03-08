@@ -85,7 +85,9 @@ export type ReadingProgress = {
   current_level: number;
   current_step: number;
   completed_levels: number[];
-  created_at: string;
+  is_completed?: boolean;
+  completed_at?: string | null;
+  created_at?: string;
   updated_at: string;
 };
 
