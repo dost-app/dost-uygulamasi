@@ -38,10 +38,8 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (activeTab === 'teachers' || activeTab === 'view-student') {
-      fetchTeachers();
-    } else if (activeTab === 'students') {
-      fetchStudents();
+    if (activeTab === 'teachers' || activeTab === 'students' || activeTab === 'view-student') {
+      fetchTeachersAndStudents();
     }
   }, [activeTab]);
 
@@ -70,7 +68,7 @@ export default function AdminPanel() {
     try {
       const { data, error } = await supabase
         .from('students')
-        .select('*, users(email), teachers(first_name, last_name)')
+        .select('*, users(email), teachers(id, first_name, last_name, school_name)')
         .order('created_at', { ascending: false });
 
       if (!error) {
@@ -78,6 +76,34 @@ export default function AdminPanel() {
       }
     } catch (err) {
       console.error('Error fetching students:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTeachersAndStudents = async () => {
+    setLoading(true);
+    try {
+      const [teachersResult, studentsResult] = await Promise.all([
+        supabase
+          .from('teachers')
+          .select('*, users(email)')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('students')
+          .select('*, users(email), teachers(id, first_name, last_name, school_name)')
+          .order('created_at', { ascending: false })
+      ]);
+
+      if (!teachersResult.error) {
+        setTeachers(teachersResult.data || []);
+      }
+
+      if (!studentsResult.error) {
+        setStudents(studentsResult.data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching teachers/students:', err);
     } finally {
       setLoading(false);
     }
@@ -155,11 +181,11 @@ export default function AdminPanel() {
             <p className="text-gray-600">Yükleniyor...</p>
           </div>
         ) : activeTab === 'teachers' ? (
-          <TeachersTab teachers={teachers} />
+          <TeachersTab teachers={teachers} studentCount={students.length} />
         ) : activeTab === 'students' ? (
-          <StudentsTab students={students} />
+          <StudentsTab students={students} teacherCount={teachers.length} />
         ) : activeTab === 'view-student' ? (
-          <ViewStudentTab teachers={teachers} loading={loading} />
+          <ViewStudentTab teachers={teachers} students={students} loading={loading} />
         ) : activeTab === 'settings' ? (
           <SettingsTab />
         ) : (
@@ -170,53 +196,66 @@ export default function AdminPanel() {
   );
 }
 
-function TeachersTab({ teachers }: { teachers: any[] }) {
+function TeachersTab({ teachers, studentCount }: { teachers: any[]; studentCount: number }) {
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Ad Soyad
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Email
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Okul
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Oluşturulma Tarihi
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {teachers.map((teacher) => (
-            <tr key={teacher.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                {teacher.first_name} {teacher.last_name}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                {teacher.users?.email}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                {teacher.school_name || '-'}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                {new Date(teacher.created_at).toLocaleDateString('tr-TR')}
-              </td>
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white rounded-lg shadow p-4 border border-purple-100">
+          <p className="text-sm text-gray-500">Toplam öğretmen</p>
+          <p className="text-2xl font-bold text-purple-800">{teachers.length}</p>
+        </div>
+        <div className="bg-white rounded-lg shadow p-4 border border-blue-100">
+          <p className="text-sm text-gray-500">Toplam öğrenci</p>
+          <p className="text-2xl font-bold text-blue-800">{studentCount}</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Ad Soyad
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Email
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Okul
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Oluşturulma Tarihi
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      {teachers.length === 0 && (
-        <div className="text-center py-8 text-gray-600">Öğretmen bulunamadı</div>
-      )}
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {teachers.map((teacher) => (
+              <tr key={teacher.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {teacher.first_name} {teacher.last_name}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  {teacher.users?.email}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  {teacher.school_name || '-'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  {new Date(teacher.created_at).toLocaleDateString('tr-TR')}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {teachers.length === 0 && (
+          <div className="text-center py-8 text-gray-600">Öğretmen bulunamadı</div>
+        )}
+      </div>
     </div>
   );
 }
 
-function StudentsTab({ students }: { students: any[] }) {
+function StudentsTab({ students, teacherCount }: { students: any[]; teacherCount: number }) {
   const [showLevelEditor, setShowLevelEditor] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<string>('');
   const [selectedStory, setSelectedStory] = useState<string>('');
@@ -403,6 +442,17 @@ function StudentsTab({ students }: { students: any[] }) {
 
   return (
     <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white rounded-lg shadow p-4 border border-blue-100">
+          <p className="text-sm text-gray-500">Toplam öğrenci</p>
+          <p className="text-2xl font-bold text-blue-800">{students.length}</p>
+        </div>
+        <div className="bg-white rounded-lg shadow p-4 border border-purple-100">
+          <p className="text-sm text-gray-500">Toplam öğretmen</p>
+          <p className="text-2xl font-bold text-purple-800">{teacherCount}</p>
+        </div>
+      </div>
+
       <button
         onClick={() => setShowLevelEditor(!showLevelEditor)}
         className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
@@ -698,7 +748,7 @@ function StudentsTab({ students }: { students: any[] }) {
 const NO_SCHOOL_LABEL = 'Okul belirtilmemiş';
 
 /** Okula göre gruplanmış öğretmen/öğrenci listesi + okul/öğretmen/öğrenci filtreleri */
-function ViewStudentTab({ teachers, loading }: { teachers: any[]; loading: boolean }) {
+function ViewStudentTab({ teachers, students, loading }: { teachers: any[]; students: any[]; loading: boolean }) {
   const [expandedTeacherId, setExpandedTeacherId] = useState<string | null>(null);
   const [teacherStudents, setTeacherStudents] = useState<Record<string, any[]>>({});
   const [loadingStudents, setLoadingStudents] = useState<string | null>(null);
@@ -716,6 +766,12 @@ function ViewStudentTab({ teachers, loading }: { teachers: any[]; loading: boole
     new Set(teachers.map((t: any) => (t.school_name && String(t.school_name).trim()) || NO_SCHOOL_LABEL))
   ).sort((a, b) => (a === NO_SCHOOL_LABEL ? 1 : b === NO_SCHOOL_LABEL ? -1 : a.localeCompare(b)));
 
+  const studentCountsBySchool = students.reduce<Record<string, number>>((acc, student: any) => {
+    const school = (student.teachers?.school_name && String(student.teachers.school_name).trim()) || NO_SCHOOL_LABEL;
+    acc[school] = (acc[school] || 0) + 1;
+    return acc;
+  }, {});
+
   const teachersBySchool = schoolNames.reduce<Record<string, any[]>>((acc, school) => {
     acc[school] = teachers.filter(
       (t: any) => ((t.school_name && String(t.school_name).trim()) || NO_SCHOOL_LABEL) === school
@@ -729,6 +785,11 @@ function ViewStudentTab({ teachers, loading }: { teachers: any[]; loading: boole
       : teachers.filter(
           (t: any) => ((t.school_name && String(t.school_name).trim()) || NO_SCHOOL_LABEL) === filterSchool
         );
+
+  const visibleTeacherIds =
+    filterTeacher === 'all'
+      ? teachersFilteredBySchool.map((t: any) => t.id)
+      : teachersFilteredBySchool.filter((t: any) => t.id === filterTeacher).map((t: any) => t.id);
 
   const handleToggleTeacher = async (teacherId: string) => {
     if (expandedTeacherId === teacherId) {
@@ -766,8 +827,31 @@ function ViewStudentTab({ teachers, loading }: { teachers: any[]; loading: boole
     if (!filterStudentSearch.trim()) return true;
     const q = filterStudentSearch.trim().toLowerCase();
     const full = `${(student.first_name || '')} ${(student.last_name || '')}`.toLowerCase();
-    return full.includes(q);
+    return full.includes(q) || (student.users?.email || '').toLowerCase().includes(q);
   };
+
+  useEffect(() => {
+    if (sortByLastActivity || visibleTeacherIds.length === 0) return;
+    if (!filterStudentSearch.trim() && filterTeacher === 'all') return;
+
+    const missingTeacherIds = visibleTeacherIds.filter((teacherId) => !teacherStudents[teacherId]);
+    if (missingTeacherIds.length === 0) return;
+
+    (async () => {
+      try {
+        await Promise.all(
+          missingTeacherIds.map(async (teacherId) => {
+            const { data, error } = await getTeacherStudents(teacherId);
+            if (!error) {
+              setTeacherStudents((prev) => ({ ...prev, [teacherId]: data || [] }));
+            }
+          })
+        );
+      } catch (err) {
+        console.error('Error preloading teacher students for filters:', err);
+      }
+    })();
+  }, [sortByLastActivity, filterStudentSearch, filterTeacher, visibleTeacherIds.join(','), teacherStudents]);
 
   useEffect(() => {
     if (filterTeacher === 'all') return;
@@ -868,7 +952,7 @@ function ViewStudentTab({ teachers, loading }: { teachers: any[]; loading: boole
             >
               <option value="all">Tümü</option>
               {schoolNames.map((s) => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s} value={s}>{s} ({studentCountsBySchool[s] || 0})</option>
               ))}
             </select>
           </div>
@@ -1030,10 +1114,17 @@ function ViewStudentTab({ teachers, loading }: { teachers: any[]; loading: boole
                   return (
                     <div key={school} className="bg-white">
                       <div className="px-6 py-3 bg-slate-100 border-b border-slate-200">
-                        <h3 className="text-base font-semibold text-slate-800">🏫 {school}</h3>
+                        <h3 className="text-base font-semibold text-slate-800">🏫 {school} ({studentCountsBySchool[school] || 0} ogrenci)</h3>
                       </div>
                       <ul className="divide-y divide-gray-100">
-                        {visibleTeachers.map((teacher: any) => (
+                        {visibleTeachers.map((teacher: any) => {
+                          const matchingStudents = (teacherStudents[teacher.id] || []).filter((s: any) => studentMatchesSearch(s));
+                          const forceOpen = filterStudentSearch.trim().length > 0 || filterTeacher === teacher.id;
+                          const showTeacher = !filterStudentSearch.trim() || loadingStudents === teacher.id || matchingStudents.length > 0 || !teacherStudents[teacher.id];
+
+                          if (!showTeacher) return null;
+
+                          return (
                           <li key={teacher.id}>
                             <button
                               type="button"
@@ -1044,18 +1135,16 @@ function ViewStudentTab({ teachers, loading }: { teachers: any[]; loading: boole
                                 {teacher.first_name} {teacher.last_name}
                               </span>
                               <span className="text-gray-400">
-                                {expandedTeacherId === teacher.id ? '▼' : '▶'}
+                                {expandedTeacherId === teacher.id || forceOpen ? '▼' : '▶'}
                               </span>
                             </button>
-                            {expandedTeacherId === teacher.id && (
+                            {(expandedTeacherId === teacher.id || forceOpen) && (
                               <div className="bg-gray-50 px-6 pb-4">
                                 {loadingStudents === teacher.id ? (
                                   <p className="py-3 text-gray-500 text-sm">Öğrenciler yükleniyor...</p>
                                 ) : (
                                   <ul className="space-y-1">
-                                    {(teacherStudents[teacher.id] || [])
-                                      .filter((s: any) => studentMatchesSearch(s))
-                                      .map((student: any) => (
+                                    {matchingStudents.map((student: any) => (
                                       <li key={student.id}>
                                         <button
                                           type="button"
@@ -1066,7 +1155,7 @@ function ViewStudentTab({ teachers, loading }: { teachers: any[]; loading: boole
                                         </button>
                                       </li>
                                     ))}
-                                    {(teacherStudents[teacher.id] || []).filter((s: any) => studentMatchesSearch(s)).length === 0 &&
+                                    {matchingStudents.length === 0 &&
                                       !loadingStudents && (
                                         <p className="py-2 text-gray-500 text-sm">
                                           {filterStudentSearch.trim()
@@ -1079,7 +1168,7 @@ function ViewStudentTab({ teachers, loading }: { teachers: any[]; loading: boole
                               </div>
                             )}
                           </li>
-                        ))}
+                        )})}
                       </ul>
                     </div>
                   );
