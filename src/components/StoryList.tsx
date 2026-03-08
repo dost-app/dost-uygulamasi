@@ -95,8 +95,8 @@ export default function StoryList({ stories }: { stories: Story[] }) {
                 className="flex gap-4 overflow-x-auto pb-4 px-12 scroll-smooth [&::-webkit-scrollbar]:hidden scrollbar-hide"
             >
                 {stories.map((story) => {
-                    // Check if story should be locked (either from DB or sequential lock)
-                    const shouldBeLocked = story.locked || isStoryLocked(story.id);
+                    // Story locks are student-specific; ignore the global DB locked flag here.
+                    const shouldBeLocked = isStoryLocked(story.id);
                     
                     return shouldBeLocked ? (
                         <div

@@ -1277,7 +1277,9 @@ function StudentReadOnlyDetail({
   const isStoryUnlocked = (storyId: number) => {
     if (storyId === 1) return true;
     const prev = progressList.find((p: any) => p.story_id === storyId - 1);
-    return prev?.is_completed === true;
+    return prev?.is_completed === true || (
+      Array.isArray(prev?.completed_levels) && prev.completed_levels.includes(5)
+    );
   };
 
   if (loading) {
@@ -2263,7 +2265,6 @@ function StoriesTab() {
     title: '',
     description: '',
     image: '',
-    locked: false,
   });
   const [error, setError] = useState('');
   const [selectedStoryForQuestions, setSelectedStoryForQuestions] = useState<number | null>(null);
@@ -2332,19 +2333,17 @@ function StoriesTab() {
           title: formData.title,
           description: formData.description,
           image: formData.image,
-          locked: formData.locked,
         });
       } else {
         await createStory(
           parseInt(formData.id),
           formData.title,
           formData.description,
-          formData.image,
-          formData.locked
+          formData.image
         );
       }
 
-      setFormData({ id: '', title: '', description: '', image: '', locked: false });
+      setFormData({ id: '', title: '', description: '', image: '' });
       setShowForm(false);
       setEditingId(null);
       await fetchStories();
@@ -2360,7 +2359,6 @@ function StoriesTab() {
       title: story.title,
       description: story.description || '',
       image: story.image || '',
-      locked: story.locked || false,
     });
     setEditingId(story.id);
     setShowForm(true);
@@ -2425,7 +2423,7 @@ function StoriesTab() {
           onClick={() => {
             setShowForm(!showForm);
             setEditingId(null);
-            setFormData({ id: '', title: '', description: '', image: '', locked: false });
+            setFormData({ id: '', title: '', description: '', image: '' });
             setError('');
           }}
           className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
@@ -2456,6 +2454,9 @@ function StoriesTab() {
           <h3 className="text-lg font-bold text-purple-800">
             {editingId ? 'Hikayeyi Düzenle' : 'Yeni Hikaye Ekle'}
           </h3>
+          <p className="text-sm text-gray-600">
+            Hikaye kilitleri burada global olarak yönetilmez; kilit durumu her ogrencinin ilerlemesine gore hesaplanir.
+          </p>
 
           {!editingId && (
             <div>
@@ -2503,17 +2504,6 @@ function StoriesTab() {
           />
         </div>
 
-        <div>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={formData.locked}
-                onChange={(e) => setFormData({ ...formData, locked: e.target.checked })}
-              />
-              <span className="text-sm font-medium text-gray-700">Kilitli</span>
-            </label>
-          </div>
-
           <button
             type="submit"
             className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
@@ -2536,11 +2526,6 @@ function StoriesTab() {
             <div className="p-4">
               <div className="flex justify-between items-start mb-2">
                 <h3 className="text-lg font-bold text-purple-800 flex-1">{story.title}</h3>
-                {story.locked && (
-                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
-                    Kilitli
-                  </span>
-                )}
               </div>
               <p className="text-gray-600 text-sm mb-3">{story.description}</p>
               <div className="flex flex-col gap-2">
