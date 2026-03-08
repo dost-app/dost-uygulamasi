@@ -16,7 +16,7 @@ interface QuestionData {
   question: string;
   options: string[];
   correctIndex: number;
-  questionNumber: number; // UI için 1-5 arası numara
+  questionNumber: number; // UI için sıra numarası
   originalQuestionOrder: number; // Ses dosyası için orijinal question_order
   questionAudioUrl?: string | null;
   correctAnswerAudioUrl?: string | null;
@@ -75,7 +75,7 @@ export default function L5Step1() {
     };
   }, []);
 
-  // Load questions from Supabase, fallback to static data, then select random 5
+  // Load all questions from Supabase, fallback to static data
   useEffect(() => {
     const loadQuestions = async () => {
       setLoadingQuestions(true);
@@ -105,31 +105,13 @@ export default function L5Step1() {
           }));
         }
 
-        // Random 5 soru seç (eğer 5'ten fazla varsa)
-        if (allQuestions.length > 5) {
-          const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
-          const selected = shuffled.slice(0, 5);
-          // Seçilen soruları questionNumber'a göre sırala
-          selected.sort((a, b) => (a.questionNumber || 0) - (b.questionNumber || 0));
-          // QuestionNumber'ları 1-5 olarak yeniden numaralandır (UI için)
-          // Ama originalQuestionOrder'ı koru (ses dosyası için)
-          const renumbered = selected.map((q, idx) => ({
-            ...q,
-            questionNumber: idx + 1, // UI için 1-5
-            originalQuestionOrder: q.originalQuestionOrder, // Ses dosyası için orijinal
-          }));
-          console.log('Setting questions (random 5):', renumbered);
-          setQuestions(renumbered);
-        } else {
-          // 5 veya daha az soru varsa hepsini kullan
-          const questionsWithNumbers = allQuestions.map((q, idx) => ({
-            ...q,
-            questionNumber: q.questionNumber || idx + 1,
-            originalQuestionOrder: q.originalQuestionOrder || q.questionNumber || idx + 1,
-          }));
-          console.log('Setting questions (all):', questionsWithNumbers);
-          setQuestions(questionsWithNumbers);
-        }
+        const questionsWithNumbers = allQuestions.map((q, idx) => ({
+          ...q,
+          questionNumber: q.questionNumber || idx + 1,
+          originalQuestionOrder: q.originalQuestionOrder || q.questionNumber || idx + 1,
+        }));
+        console.log('Setting questions (all):', questionsWithNumbers);
+        setQuestions(questionsWithNumbers);
       } catch (err) {
         console.error('Error loading questions:', err);
         // Fallback to static questions
@@ -142,28 +124,13 @@ export default function L5Step1() {
           originalQuestionOrder: idx + 1, // Ses dosyası için orijinal order
         }));
         
-        // Random 5 soru seç
-        if (allQuestions.length > 5) {
-          const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
-          const selected = shuffled.slice(0, 5);
-          selected.sort((a, b) => (a.questionNumber || 0) - (b.questionNumber || 0));
-          const renumbered = selected.map((q, idx) => ({
-            ...q,
-            questionNumber: idx + 1, // UI için 1-5
-            originalQuestionOrder: q.originalQuestionOrder, // Ses dosyası için orijinal
-          }));
-          console.log('Setting questions (error fallback, random 5):', renumbered);
-          setQuestions(renumbered);
-        } else {
-          // Eğer questionNumber yoksa ekle
-          const questionsWithNumbers = allQuestions.map((q, idx) => ({
-            ...q,
-            questionNumber: q.questionNumber || idx + 1,
-            originalQuestionOrder: q.originalQuestionOrder || q.questionNumber || idx + 1,
-          }));
-          console.log('Setting questions (error fallback, all):', questionsWithNumbers);
-          setQuestions(questionsWithNumbers);
-        }
+        const questionsWithNumbers = allQuestions.map((q, idx) => ({
+          ...q,
+          questionNumber: q.questionNumber || idx + 1,
+          originalQuestionOrder: q.originalQuestionOrder || q.questionNumber || idx + 1,
+        }));
+        console.log('Setting questions (error fallback, all):', questionsWithNumbers);
+        setQuestions(questionsWithNumbers);
       } finally {
         setLoadingQuestions(false);
       }

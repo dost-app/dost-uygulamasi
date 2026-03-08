@@ -17,6 +17,7 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "generate:level4-step2-audios": "node scripts/generate-level4-step2-audios.js",
+    "generate:level4-schema-audios": "npx tsx scripts/generate-level4-schema-audios.ts",
     "update:questions": "node scripts/update-comprehension-questions.js",
     "seed:paragraphs": "npx tsx scripts/seed-story-paragraphs.ts",
     "generate:story-audios": "npx tsx scripts/generate-story-audios.ts"
