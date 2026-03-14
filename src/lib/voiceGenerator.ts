@@ -53,52 +53,46 @@ export async function generateVoice(
 }
 
 /**
- * Convert base64 audio to blob and upload to Supabase Storage
+ * Save base64 audio to public/audios/sorular/ via Vite dev server middleware.
+ * Falls back to browser download if the dev endpoint is unavailable (production).
  */
-export async function uploadAudioToSupabase(
+export async function saveAudioLocally(
   base64Audio: string,
-  fileName: string,
-  folder: string = 'question-audios'
+  fileName: string
 ): Promise<string | null> {
+  const base64Data = base64Audio.includes('data:')
+    ? base64Audio.split(',')[1]
+    : base64Audio;
+
   try {
-    const { supabase } = await import('./supabase');
-    
-    // Convert base64 to blob
-    const base64Data = base64Audio.includes('data:') 
-      ? base64Audio.split(',')[1] 
-      : base64Audio;
-    
-    const byteCharacters = atob(base64Data);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    const res = await fetch('/api/save-audio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileName, base64Audio: base64Data }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return data.url;
     }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: 'audio/mpeg' });
-
-    // Upload to Supabase Storage
-    const filePath = `${folder}/${fileName}`;
-    const { data, error } = await supabase.storage
-      .from('audios')
-      .upload(filePath, blob, {
-        contentType: 'audio/mpeg',
-        upsert: true,
-      });
-
-    if (error) {
-      console.error('Error uploading audio to Supabase:', error);
-      return null;
-    }
-
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('audios')
-      .getPublicUrl(filePath);
-
-    return urlData.publicUrl;
-  } catch (error) {
-    console.error('Error in uploadAudioToSupabase:', error);
-    return null;
+  } catch {
+    // Dev server endpoint not available, fall back to download
   }
+
+  // Fallback: trigger browser download so user can place the file manually
+  const byteCharacters = atob(base64Data);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const blob = new Blob([new Uint8Array(byteNumbers)], { type: 'audio/mpeg' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  return `/audios/sorular/${fileName}`;
 }
 

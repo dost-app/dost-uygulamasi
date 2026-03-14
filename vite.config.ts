@@ -4,7 +4,8 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa';
 import tailwindcss from '@tailwindcss/vite';
 import { execSync } from 'child_process';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
+import { join } from 'path';
 
 // Get version from package.json
 const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'));
@@ -26,6 +27,41 @@ export default defineConfig({
     'import.meta.env.VITE_GIT_COMMIT': JSON.stringify(gitCommit),
   },
   plugins: [
+    {
+      name: 'save-audio-middleware',
+      configureServer(server) {
+        server.middlewares.use('/api/save-audio', (req, res) => {
+          if (req.method !== 'POST') {
+            res.statusCode = 405;
+            res.end(JSON.stringify({ error: 'Method not allowed' }));
+            return;
+          }
+          let body = '';
+          req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+          req.on('end', () => {
+            try {
+              const { fileName, base64Audio } = JSON.parse(body);
+              if (!fileName || !base64Audio) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: 'fileName and base64Audio required' }));
+                return;
+              }
+              const dir = join(process.cwd(), 'public', 'audios', 'sorular');
+              if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+              const filePath = join(dir, fileName);
+              const buffer = Buffer.from(base64Audio, 'base64');
+              writeFileSync(filePath, buffer);
+              const publicUrl = `/audios/sorular/${fileName}`;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: true, url: publicUrl }));
+            } catch (err: any) {
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+        });
+      },
+    },
     react(),
     tailwindcss(),
     VitePWA({

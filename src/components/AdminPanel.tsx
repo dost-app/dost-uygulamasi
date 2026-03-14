@@ -20,7 +20,7 @@ import {
   type ComprehensionQuestion
 } from '../lib/supabase';
 import { getParagraphs } from '../data/stories';
-import { generateVoice, uploadAudioToSupabase } from '../lib/voiceGenerator';
+import { generateVoice, saveAudioLocally } from '../lib/voiceGenerator';
 import type { Teacher, Student } from '../lib/supabase-types';
 import { signOut } from '../lib/auth';
 import { clearUser } from '../store/userSlice';
@@ -2700,32 +2700,37 @@ function QuestionsModal({
   });
   const [error, setError] = useState('');
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [audioGenerating, setAudioGenerating] = useState(false);
 
-  /** Yeni eklenen soru için soru metni, doğru ve yanlış cevap seslerini oluşturur ve Supabase'e yükler. */
-  const generateAudiosForNewQuestion = async (
-    questionId: string,
-    formData: { question_text: string; option_a: string; option_b: string; option_c: string; option_d: string; correct_option: 'A' | 'B' | 'C' | 'D' }
-  ): Promise<{ question_audio_url: string; correct_answer_audio_url: string; wrong_answer_audio_url: string }> => {
+  const generateAndSaveQuestionAudios = async (
+    qOrder: number,
+    formData: typeof questionFormData
+  ) => {
     const optKey = formData.correct_option.toLowerCase() as 'a' | 'b' | 'c' | 'd';
     const correctOptionText = formData[`option_${optKey}` as keyof typeof formData] as string;
-    const correctText = `Tebrikler, doğru cevap. ${formData.correct_option} şıkkı, ${correctOptionText}`;
-    const wrongText = `Yanlış cevap. Doğru cevap ${formData.correct_option} şıkkı, ${correctOptionText} olacaktı.`;
 
-    const gen = async (text: string, type: 'question' | 'correct' | 'wrong') => {
-      const result = await generateVoice(text);
-      if (!result.success || !result.audioBase64) throw new Error(result.error || 'Ses oluşturulamadı');
-      const fileName = `story-${storyId}-question-${questionId}-${type}.mp3`;
-      const url = await uploadAudioToSupabase(result.audioBase64, fileName);
-      if (!url) throw new Error('Ses yüklenemedi');
-      return url;
-    };
+    const items: { text: string; fileName: string }[] = [
+      { text: formData.question_text, fileName: `question-${storyId}-q${qOrder}.mp3` },
+      { text: `A. ${formData.option_a}`, fileName: `option-${storyId}-q${qOrder}-A.mp3` },
+      { text: `B. ${formData.option_b}`, fileName: `option-${storyId}-q${qOrder}-B.mp3` },
+      { text: `C. ${formData.option_c}`, fileName: `option-${storyId}-q${qOrder}-C.mp3` },
+      { text: `D. ${formData.option_d}`, fileName: `option-${storyId}-q${qOrder}-D.mp3` },
+      { text: `Tebrikler, doğru cevap. ${formData.correct_option}. ${correctOptionText}`, fileName: `correct-${storyId}-q${qOrder}.mp3` },
+      { text: `Yanlış cevap. Doğru cevap ${formData.correct_option}. ${correctOptionText} olacaktı.`, fileName: `wrong-${storyId}-q${qOrder}.mp3` },
+    ];
 
-    const [question_audio_url, correct_answer_audio_url, wrong_answer_audio_url] = await Promise.all([
-      gen(formData.question_text, 'question'),
-      gen(correctText, 'correct'),
-      gen(wrongText, 'wrong'),
-    ]);
-    return { question_audio_url, correct_answer_audio_url, wrong_answer_audio_url };
+    let saved = 0;
+    for (const item of items) {
+      setInfoMessage(`Ses oluşturuluyor (${saved + 1}/${items.length}): ${item.fileName}`);
+      const result = await generateVoice(item.text);
+      if (!result.success || !result.audioBase64) {
+        console.error('Ses oluşturulamadı:', item.fileName, result.error);
+        continue;
+      }
+      await saveAudioLocally(result.audioBase64, item.fileName);
+      saved++;
+    }
+    return saved;
   };
 
   const handleQuestionSubmit = async (e: React.FormEvent) => {
@@ -2751,14 +2756,16 @@ function QuestionsModal({
         if (createErr) throw createErr;
 
         if (data?.id) {
-          setInfoMessage('Sesler oluşturuluyor...');
+          setAudioGenerating(true);
+          setInfoMessage('Ses dosyaları oluşturuluyor...');
           try {
-            const urls = await generateAudiosForNewQuestion(data.id, questionFormData);
-            await updateComprehensionQuestion(data.id, urls);
-            setInfoMessage('Sesler oluşturuldu.');
+            const saved = await generateAndSaveQuestionAudios(questionFormData.question_order, questionFormData);
+            setInfoMessage(`${saved}/7 ses dosyası public/audios/sorular/ klasörüne kaydedildi.`);
           } catch (audioErr) {
             const msg = audioErr instanceof Error ? audioErr.message : 'Bilinmeyen hata';
-            setInfoMessage(`Sesler oluşturulamadı: ${msg}`);
+            setInfoMessage(`Ses oluşturulamadı: ${msg}`);
+          } finally {
+            setAudioGenerating(false);
           }
         }
       }
@@ -2943,10 +2950,17 @@ function QuestionsModal({
 
               <button
                 type="submit"
-                className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                disabled={audioGenerating}
+                className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white rounded-lg transition-colors"
               >
-                {editingQuestionId ? 'Güncelle' : 'Ekle'}
+                {audioGenerating ? 'Sesler oluşturuluyor...' : editingQuestionId ? 'Güncelle' : 'Ekle'}
               </button>
+
+              {infoMessage && (
+                <div className="text-sm text-blue-700 bg-blue-50 p-2 rounded mt-2">
+                  {infoMessage}
+                </div>
+              )}
             </form>
           )}
 

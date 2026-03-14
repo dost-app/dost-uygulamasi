@@ -414,6 +414,43 @@ const ALL_QUESTIONS = {
       options: ['Renginin kırmızı olması', 'Şeklinin ve iç yapısının tanelere benzemesi', 'Ağacının uzun olması', 'Çiçeklerinin güzel kokması'],
       correctIndex: 1
     }
+  ],
+  12: [ // Ekonominin Kalbi (Marmara Bölgesi)
+    {
+      question: 'Marmara Bölgesi\'nin iklimi metinde nasıl tanımlanmıştır?',
+      options: ['Tamamen karasal iklimdir', 'Geçiş iklimidir; güneyde Akdeniz, kuzeyde Karadeniz iklimi görülür', 'Her yeri soğuk ve kurak bir iklime sahiptir', 'Sadece tropikal iklim özellikleri taşır'],
+      correctIndex: 1
+    },
+    {
+      question: 'Metne göre Marmara Bölgesi\'nin bitki örtüsü aşağıdakilerden hangisinde doğru verilmiştir?',
+      options: ['Yalnızca bozkır', 'Yalnızca maki', 'Hem maki hem orman', 'Sadece çayır ve otlak'],
+      correctIndex: 2
+    },
+    {
+      question: 'Marmara Bölgesi\'nin yeryüzü şekilleri ile ilgili hangisi doğrudur?',
+      options: ['Çok dağlık ve engebeli bir bölgedir', 'Sadece derin vadilerden oluşur', 'Platolar ve ovalar daha çok yer kaplar, düzlük bir bölgedir', 'Yüksek dağlar bölgenin tamamını kaplar'],
+      correctIndex: 2
+    },
+    {
+      question: 'Metne göre Marmara Bölgesi\'ndeki temel ekonomik faaliyetler nelerdir?',
+      options: ['Hayvancılık ve ormancılık', 'Sanayi ve turizm', 'Balıkçılık ve madencilik', 'Sadece tarım'],
+      correctIndex: 1
+    },
+    {
+      question: 'Marmara Bölgesi\'nin nüfusu ve yerleşme özellikleri ile ilgili hangisi doğrudur?',
+      options: ['En az nüfusa sahip bölgemizdir', 'İnsanlar genellikle kırsal alanlarda yaşar', 'Yaklaşık 27 milyon kişi yaşar ve kentsel yerleşim yaygındır', 'Nüfus yalnızca kıyılarda toplanmıştır'],
+      correctIndex: 2
+    },
+    {
+      question: 'Marmara Bölgesi\'nin küçük bir bölge olmasına rağmen en kalabalık bölge olması, hangi durumla açıklanabilir?',
+      options: ['İkliminin çok soğuk olması', 'İş imkânlarının fazla olması ve diğer bölgelerden göç alması', 'Tarım alanlarının çok geniş olması', 'Deprem riskinin az olması'],
+      correctIndex: 1
+    },
+    {
+      question: 'Metinde bu bölgeye "Ekonominin Kalbi" denilmesinin temel sebebi ne olabilir?',
+      options: ['Bölgede sadece tarım yapılması', 'Bölgenin Türkiye\'nin en büyük bölgesi olması', 'Sanayi, turizm ve iş imkânlarının çok gelişmiş olması', 'Bölgede hiç doğal afet yaşanmaması'],
+      correctIndex: 2
+    }
   ]
 };
 
@@ -424,13 +461,24 @@ function indexToLetter(index) {
 
 // Ana fonksiyon
 async function main() {
-  console.log('🎵 Tüm Okuduğunu Anlama Soruları Ses Dosyası Oluşturucu');
+  const targetStoryId = process.argv[2] ? parseInt(process.argv[2]) : null;
+
+  console.log('🎵 Okuduğunu Anlama Soruları Ses Dosyası Oluşturucu');
   console.log('='.repeat(60));
+
+  const storiesToProcess = targetStoryId
+    ? { [targetStoryId]: ALL_QUESTIONS[targetStoryId] }
+    : ALL_QUESTIONS;
+
+  if (targetStoryId && !ALL_QUESTIONS[targetStoryId]) {
+    console.error(`❌ Hikaye ${targetStoryId} bulunamadı!`);
+    process.exit(1);
+  }
   
-  const totalQuestions = Object.values(ALL_QUESTIONS).reduce((sum, qs) => sum + qs.length, 0);
-  const totalFiles = totalQuestions * 7; // Her soru için 7 dosya (soru + 4 şık + doğru + yanlış)
+  const totalQuestions = Object.values(storiesToProcess).reduce((sum, qs) => sum + qs.length, 0);
+  const totalFiles = totalQuestions * 7;
   
-  console.log(`📚 Toplam ${Object.keys(ALL_QUESTIONS).length} hikaye`);
+  console.log(targetStoryId ? `📚 Hikaye ${targetStoryId} işlenecek` : `📚 Toplam ${Object.keys(storiesToProcess).length} hikaye`);
   console.log(`❓ Toplam ${totalQuestions} soru`);
   console.log(`📁 Toplam ${totalFiles} ses dosyası oluşturulacak`);
   console.log('='.repeat(60));
@@ -441,7 +489,7 @@ async function main() {
   let totalErrors = 0;
 
   // Her hikaye için
-  for (const [storyIdStr, questions] of Object.entries(ALL_QUESTIONS)) {
+  for (const [storyIdStr, questions] of Object.entries(storiesToProcess)) {
     const storyId = parseInt(storyIdStr);
     console.log(`\n📖 Hikaye ${storyId} işleniyor... (${questions.length} soru)`);
     console.log('-'.repeat(60));

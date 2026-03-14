@@ -113,7 +113,7 @@ async function generateQuestionAudios(storyId, questionId, questionData) {
     for (const option of options) {
       console.log(`\n📝 Soru ${questionId} - Şık ${option.key} seslendiriliyor...`);
       try {
-        const optionText = `${option.key} şıkkı, ${option.text}`;
+        const optionText = `${option.key}. ${option.text}`;
         const optionAudio = await generateAudio(optionText);
         const optionPath = path.join(outputDir, `option-${storyId}-${questionId}-${option.key}.mp3`);
         saveAudioFile(optionAudio, optionPath);
@@ -128,7 +128,7 @@ async function generateQuestionAudios(storyId, questionId, questionData) {
     console.log(`\n📝 Soru ${questionId} - Doğru cevap seslendirmesi oluşturuluyor...`);
     try {
       const correctOption = options.find(opt => opt.key === questionData.correct_option);
-      const correctText = `Tebrikler, doğru cevap. ${correctOption.key} şıkkı, ${correctOption.text}`;
+      const correctText = `Tebrikler, doğru cevap. ${correctOption.key}. ${correctOption.text}`;
       const correctAudio = await generateAudio(correctText);
       const correctPath = path.join(outputDir, `correct-${storyId}-${questionId}.mp3`);
       saveAudioFile(correctAudio, correctPath);
@@ -142,7 +142,7 @@ async function generateQuestionAudios(storyId, questionId, questionData) {
     console.log(`\n📝 Soru ${questionId} - Yanlış cevap seslendirmesi oluşturuluyor...`);
     try {
       const correctOption = options.find(opt => opt.key === questionData.correct_option);
-      const wrongText = `Yanlış cevap. Doğru cevap ${correctOption.key} şıkkı, ${correctOption.text} olacaktı.`;
+      const wrongText = `Yanlış cevap. Doğru cevap ${correctOption.key}. ${correctOption.text} olacaktı.`;
       const wrongAudio = await generateAudio(wrongText);
       const wrongPath = path.join(outputDir, `wrong-${storyId}-${questionId}.mp3`);
       saveAudioFile(wrongAudio, wrongPath);
