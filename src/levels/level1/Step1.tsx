@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import axios from 'axios';
-import { getApiBase } from '../../lib/api';
 import { analyzeStoryImage, submitChildrenVoice } from '../../lib/level1-api';
 import { getRecordingDurationSync } from '../../components/SidebarSettings';
 import { motion } from 'framer-motion';
@@ -10,7 +8,7 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
 import { useStepContext } from '../../contexts/StepContext';
 import siraSendeAudio from '../../assets/audios/sira-sende-mikrofon.mp3';
-import { useAudioPlaybackRate, applyPlaybackRate } from '../../hooks/useAudioPlaybackRate';
+import { useAudioPlaybackRate } from '../../hooks/useAudioPlaybackRate';
 import { getPlaybackRate } from '../../components/SidebarSettings';
 import { getStoryById, logVoiceInteraction, uploadStudentAudio } from '../../lib/supabase';
 import { getStoryImageUrl, getAssetUrl } from '../../lib/image-utils';
@@ -30,6 +28,12 @@ export default function Step1() {
   const [audioDuration, setAudioDuration] = useState(0);
   const [hasPlayedSiraSende, setHasPlayedSiraSende] = useState(false);
   const [story, setStory] = useState<{ id: number; title: string; description: string; image: string } | null>(null);
+
+  // Guards to prevent re-running critical operations
+  const imageAnalysisStartedRef = useRef(false);
+  const stepCompletedNotifiedRef = useRef(false);
+  const audioListenerCleanupRef = useRef<(() => void) | null>(null);
+  const mountedRef = useRef(true);
 
   const currentStudent = useSelector((state: RootState) => state.user.student);
   const { sessionId, onStepCompleted, storyId, setFooterVisible } = useStepContext();
@@ -81,13 +85,15 @@ export default function Step1() {
   // Use getStoryImageUrl to ensure the image URL works both locally and in production
   const displayedImage = story ? getStoryImageUrl(story.image) : '';
 
+  // Track the intro ended listener so it can be cleaned up
+  const introEndedListenerRef = useRef<(() => void) | null>(null);
+
   // Play intro audio when component mounts (before showing Başla button)
   useEffect(() => {
-    if (introPlayed) return; // Already played
+    if (introPlayed) return;
     
     const playIntroAudio = async () => {
       if (!audioRef.current) {
-        // If no audio element, just mark as played
         setIntroPlayed(true);
         return;
       }
@@ -101,18 +107,22 @@ export default function Step1() {
           setMascotState('idle');
           setIntroPlayed(true);
           audioRef.current?.removeEventListener('ended', handleEnded);
+          introEndedListenerRef.current = null;
         };
         
+        // Remove previous listener if exists
+        if (introEndedListenerRef.current) {
+          audioRef.current.removeEventListener('ended', introEndedListenerRef.current);
+        }
+        introEndedListenerRef.current = handleEnded;
         audioRef.current.addEventListener('ended', handleEnded);
         await audioRef.current.play();
       } catch (err) {
         console.error('Intro audio play error:', err);
-        // If audio fails, still show the button
         setIntroPlayed(true);
       }
     };
     
-    // Small delay to ensure audio element is ready
     const timer = setTimeout(playIntroAudio, 300);
     
     return () => {
@@ -120,11 +130,11 @@ export default function Step1() {
     };
   }, [stepAudio, introPlayed]);
 
-  // When user clicks "Başla", start the image analysis
+  // When user clicks "Başla", start the image analysis (guarded against re-runs)
   useEffect(() => {
-    if (!started || imageAnalysisText) return;
+    if (!started || imageAnalysisText || imageAnalysisStartedRef.current) return;
     
-    // Start image analysis
+    imageAnalysisStartedRef.current = true;
     handleImageAnalysis();
   }, [started, imageAnalysisText]);
 
@@ -144,6 +154,7 @@ export default function Step1() {
   }, [mascotState, imageAnalysisText, childrenVoiceResponse, hasPlayedSiraSende]);
 
   useEffect(() => {
+    mountedRef.current = true;
     const stopAll = () => {
       if (audioRef.current) {
         try {
@@ -152,7 +163,19 @@ export default function Step1() {
       }
     };
     window.addEventListener('STOP_ALL_AUDIO' as any, stopAll);
-    return () => window.removeEventListener('STOP_ALL_AUDIO' as any, stopAll);
+    return () => {
+      mountedRef.current = false;
+      window.removeEventListener('STOP_ALL_AUDIO' as any, stopAll);
+      // Clean up any remaining audio listeners on unmount
+      if (audioListenerCleanupRef.current) {
+        audioListenerCleanupRef.current();
+        audioListenerCleanupRef.current = null;
+      }
+      if (introEndedListenerRef.current && audioRef.current) {
+        audioRef.current.removeEventListener('ended', introEndedListenerRef.current);
+        introEndedListenerRef.current = null;
+      }
+    };
   }, []);
 
 
@@ -160,12 +183,12 @@ export default function Step1() {
     if (!story) return;
     setIsAnalyzing(true);
     try {
-      const u = (await import('../../lib/user')).getUser();
       const { getFirstThreeParagraphFirstSentences, getFullText } = await import('../../data/stories');
       const ilkUcParagraf = await getFirstThreeParagraphFirstSentences(story.id);
       const metin = await getFullText(story.id);
 
-      // Get full URL for the image that works both locally and in production
+      if (!mountedRef.current) return;
+
       const imageUrl = getStoryImageUrl(story.image);
 
       const logContext = currentStudent ? { sessionId, studentId: currentStudent.id, storyId, level: 1, step: 1 } : undefined;
@@ -179,6 +202,8 @@ export default function Step1() {
         metin,
       }, { logContext });
 
+      if (!mountedRef.current) return;
+
       const analysisText =
         response.imageExplanation ||
         response.message ||
@@ -189,68 +214,126 @@ export default function Step1() {
       setImageAnalysisText(analysisText);
       setResumeUrl(response.resumeUrl);
 
+      // Remove intro audio ended listener before playing new audio
+      // to prevent stale listener from resetting mascotState
+      if (introEndedListenerRef.current && audioRef.current) {
+        audioRef.current.removeEventListener('ended', introEndedListenerRef.current);
+        introEndedListenerRef.current = null;
+      }
+
       if (response?.audioBase64) {
         try {
           await playAudioFromBase64(response.audioBase64);
         } catch {
-          setMascotState('listening');
+          if (mountedRef.current) setMascotState('listening');
         }
       } else {
         setMascotState('listening');
       }
     } catch (e) {
+      console.error('Image analysis error:', e);
+      if (!mountedRef.current) return;
       const fallbackText =
         'Bu görselde çalışkan karıncaları görüyoruz. Karıncalar birlikte çalışarak büyük işler başarırlar. Onlar bizim için çok önemli örneklerdir.';
       setImageAnalysisText(fallbackText);
       setMascotState('listening');
     } finally {
-      setIsAnalyzing(false);
+      if (mountedRef.current) setIsAnalyzing(false);
     }
   };
 
-  // Base64 sesi çal (ortak audioRef üstünden)
+  // Base64 sesi çal (ortak audioRef üstünden) - with proper listener cleanup
   const playAudioFromBase64 = async (base64: string) => {
     if (!audioRef.current || !base64) return;
-    const tryMime = async (mime: string) => {
-      const src = base64.trim().startsWith('data:') ? base64.trim() : `data:${mime};base64,${base64.trim()}`;
-      audioRef.current!.src = src;
-      audioRef.current!.playbackRate = getPlaybackRate();
-      setMascotState('speaking');
 
+    // Clean up previous audio listeners before setting new ones
+    if (audioListenerCleanupRef.current) {
+      audioListenerCleanupRef.current();
+      audioListenerCleanupRef.current = null;
+    }
+
+    const tryMime = async (mime: string) => {
+      if (!audioRef.current) return;
+
+      // Convert base64 to Blob URL to reduce memory pressure vs huge data: URIs
+      let src: string;
+      let blobUrl: string | null = null;
+      const trimmed = base64.trim();
+      if (trimmed.startsWith('data:')) {
+        src = trimmed;
+      } else {
+        try {
+          const byteChars = atob(trimmed);
+          const byteArray = new Uint8Array(byteChars.length);
+          for (let i = 0; i < byteChars.length; i++) {
+            byteArray[i] = byteChars.charCodeAt(i);
+          }
+          const blob = new Blob([byteArray], { type: mime });
+          blobUrl = URL.createObjectURL(blob);
+          src = blobUrl;
+        } catch {
+          src = `data:${mime};base64,${trimmed}`;
+        }
+      }
+
+      audioRef.current.src = src;
+      audioRef.current.playbackRate = getPlaybackRate();
+      setMascotState('speaking');
       setAudioProgress(0);
       setAudioDuration(0);
 
       const onLoadedMetadata = () => {
-        setAudioDuration(audioRef.current?.duration ?? 0);
+        if (mountedRef.current) setAudioDuration(audioRef.current?.duration ?? 0);
       };
       const onTimeUpdate = () => {
-        setAudioProgress(audioRef.current?.currentTime ?? 0);
+        if (mountedRef.current) setAudioProgress(audioRef.current?.currentTime ?? 0);
       };
       const onEnded = () => {
-        setMascotState('listening');
-        setAudioProgress(0);
-        setAudioDuration(0);
+        if (mountedRef.current) {
+          setMascotState('listening');
+          setAudioProgress(0);
+          setAudioDuration(0);
+        }
+        cleanup();
+      };
+
+      const cleanup = () => {
         audioRef.current?.removeEventListener('loadedmetadata', onLoadedMetadata);
         audioRef.current?.removeEventListener('timeupdate', onTimeUpdate);
         audioRef.current?.removeEventListener('ended', onEnded);
+        if (blobUrl) {
+          URL.revokeObjectURL(blobUrl);
+          blobUrl = null;
+        }
+        if (audioListenerCleanupRef.current === cleanup) {
+          audioListenerCleanupRef.current = null;
+        }
       };
 
-      audioRef.current?.addEventListener('loadedmetadata', onLoadedMetadata);
-      audioRef.current?.addEventListener('timeupdate', onTimeUpdate);
-      audioRef.current?.addEventListener('ended', onEnded);
+      audioRef.current.addEventListener('loadedmetadata', onLoadedMetadata);
+      audioRef.current.addEventListener('timeupdate', onTimeUpdate);
+      audioRef.current.addEventListener('ended', onEnded);
+      audioListenerCleanupRef.current = cleanup;
 
-      await audioRef.current!.play();
+      await audioRef.current.play();
     };
 
     try {
       await tryMime('audio/mpeg');
     } catch {
+      // Clean up failed attempt's listeners before trying another MIME
+      if (audioListenerCleanupRef.current) {
+        audioListenerCleanupRef.current();
+        audioListenerCleanupRef.current = null;
+      }
       try {
         await tryMime('audio/webm;codecs=opus');
       } catch (e) {
-        setMascotState('listening');
-        setAudioProgress(0);
-        setAudioDuration(0);
+        if (mountedRef.current) {
+          setMascotState('listening');
+          setAudioProgress(0);
+          setAudioDuration(0);
+        }
         throw e;
       }
     }
@@ -272,10 +355,11 @@ export default function Step1() {
         { logContext }
       );
 
+      if (!mountedRef.current) return;
+
       const responseText = response.respodKidVoice || response.message || response.text || response.response || 'Çok güzel gözlemler! Karıncaları gerçekten iyi incelemişsin.';
       setChildrenVoiceResponse(responseText);
 
-      // Öğrencinin sesini ve API yanıtını kaydet
       if (currentStudent) {
         const audioUrl = await uploadStudentAudio(audioBlob, currentStudent.id, storyId, 1, 1).catch(() => null);
         logVoiceInteraction(sessionId, currentStudent.id, storyId, 1, 1, {
@@ -285,27 +369,32 @@ export default function Step1() {
         }).catch(console.error);
       }
 
+      if (!mountedRef.current) return;
+
       if (response.audioBase64) {
         try {
           await playAudioFromBase64(response.audioBase64);
         } catch {
-          setMascotState('listening');
+          if (mountedRef.current) setMascotState('listening');
         }
       } else {
         setMascotState('listening');
       }
     } catch (e) {
+      console.error('Voice submit error:', e);
+      if (!mountedRef.current) return;
       const fallbackText = 'Çok güzel konuştun! Karıncaları iyi gözlemlediğin anlaşılıyor. (Çevrimdışı mod)';
       setChildrenVoiceResponse(fallbackText);
       setMascotState('listening');
     } finally {
-      setIsProcessingVoice(false);
+      if (mountedRef.current) setIsProcessingVoice(false);
     }
   };
 
-  // Mark step as completed when both image analysis and voice response are done
+  // Mark step as completed when both image analysis and voice response are done (once only)
   useEffect(() => {
-    if (imageAnalysisText && childrenVoiceResponse && onStepCompleted) {
+    if (imageAnalysisText && childrenVoiceResponse && onStepCompleted && !stepCompletedNotifiedRef.current) {
+      stepCompletedNotifiedRef.current = true;
       onStepCompleted({
         imageAnalysisText,
         childrenVoiceResponse,

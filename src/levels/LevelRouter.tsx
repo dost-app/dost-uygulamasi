@@ -1,5 +1,5 @@
 // React 19: no default import required
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import StepLayout from './components/StepLayout';
@@ -370,7 +370,8 @@ export default function LevelRouter() {
   };
 
   // Function to mark step as completed (called by step components)
-  const handleStepCompleted = async (completionData?: any) => {
+  // Memoized to prevent context consumers from re-rendering on every LevelRouter render
+  const handleStepCompleted = useCallback(async (completionData?: any) => {
     // Hikaye tamamlandıysa (L5 Step3) mutlaka completeStory çağır – sessionId olmasa da sonraki hikaye kilidi açılsın
     if (student && completionData?.storyCompleted && level === 5 && step === 3) {
       await completeStory(student.id, storyId);
@@ -402,7 +403,7 @@ export default function LevelRouter() {
     } catch (err) {
       console.error('Error marking step completed:', err);
     }
-  };
+  }, [student, sessionId, storyId, level, step]);
 
   const handleLevel1Complete = async () => {
     if (!student) return;

@@ -351,6 +351,10 @@ export default function VoiceRecorder({
       if (keepAliveRef.current) clearInterval(keepAliveRef.current);
       if (autoSubmitTimerRef.current) clearTimeout(autoSubmitTimerRef.current);
       if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+      // Stop any active recording and release microphone on unmount
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try { mediaRecorderRef.current.stop(); } catch {}
+      }
     };
   }, []);
 
@@ -369,6 +373,7 @@ export default function VoiceRecorder({
       
       <div className="recording-controls">
         <button
+          type="button"
           className={`record-button ${isRecording ? 'recording' : ''} ${testAudioActive ? 'test-mode' : ''}`}
           onClick={isRecording ? stopRecording : startRecording}
           disabled={isButtonDisabled}

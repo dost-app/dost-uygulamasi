@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { createContext, useContext, ReactNode, useState, useEffect, useMemo, useCallback } from 'react';
 
 interface StepContextType {
   sessionId: string | null;
@@ -35,8 +35,16 @@ export function StepProvider({
     setFooterVisible(initialFooterVisible);
   }, [level, step, initialFooterVisible]);
 
+  const stableSetFooterVisible = useCallback((v: boolean) => {
+    setFooterVisible(v);
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    sessionId, storyId, level, step, onStepCompleted, footerVisible, setFooterVisible: stableSetFooterVisible,
+  }), [sessionId, storyId, level, step, onStepCompleted, footerVisible, stableSetFooterVisible]);
+
   return (
-    <StepContext.Provider value={{ sessionId, storyId, level, step, onStepCompleted, footerVisible, setFooterVisible }}>
+    <StepContext.Provider value={contextValue}>
       {children}
     </StepContext.Provider>
   );
