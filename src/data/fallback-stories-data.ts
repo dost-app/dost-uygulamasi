@@ -465,42 +465,148 @@ export const FALLBACK_STORIES: Record<number, Paragraph[]> = {
     [
       { text: 'Acaba leylekler nasıl yaşar? ' },
       { text: 'Leylekler, sulak alanlarda yaşar.', bold: true },
-      { text: ' Özellikle sulak otlakları tercih eder. Bu kuşlar, sıcak yerleri sever. Bu nedenle kışları sıcak yerlere göç eder. Göç yollarının başlangıcı ile sonu çok uzaktır. Leylekler buna rağmen rahatlıkla uzun mesafe uçabilir.' }
+      { text: ' Özellikle sulak otlakları tercih eder. ' },
+      { text: 'Bu kuşlar, sıcak yerleri sever. Bu nedenle kışları sıcak yerlere göç eder.', bold: true },
+      { text: ' Göç yollarının başlangıcı ile sonu çok uzaktır. Leylekler buna rağmen rahatlıkla uzun mesafe uçabilir.' }
     ],
     [
-      { text: 'Şimdi birlikte onların nasıl göründüğüne bakalım. Bu canlılar iri kuşlardır. Boyları çok uzundur. Yaklaşık olarak senin boyuna yakındır! ' },
+      { text: 'Şimdi birlikte onların nasıl göründüğüne bakalım. ' },
+      { text: 'Bu canlılar iri kuşlardır.', bold: true },
+      { text: ' ' },
+      { text: 'Boyları çok uzundur.', bold: true },
+      { text: ' Yaklaşık olarak senin boyuna yakındır! ' },
       { text: 'Leylekler uzun bacaklıdır.', bold: true },
-      { text: ' Uzun ve düz gagaları vardır. Genellikle tüyleri beyazdır. Kanatları onların en belirgin özelliğidir. Çünkü kanatları çok güçlüdür. Kanatlarının tüyleri ise siyahtır. Kanatlarını açarak uçtuklarında gökyüzünde âdeta süzülürler.' }
+      { text: ' ' },
+      { text: 'Uzun ve düz gagaları vardır.', bold: true },
+      { text: ' ' },
+      { text: 'Genellikle tüyleri beyazdır.', bold: true },
+      { text: ' Kanatları onların en belirgin özelliğidir. Çünkü ' },
+      { text: 'kanatları çok güçlüdür.', bold: true },
+      { text: ' ' },
+      { text: 'Kanatlarının tüyleri ise siyahtır.', bold: true },
+      { text: ' Kanatlarını açarak uçtuklarında gökyüzünde âdeta süzülürler.' }
     ],
     [
-      { text: 'Sırada nasıl beslendikleri var. Bir leylek, gagasıyla avını hemen yakalar. Leylekler, genelde su canlılarını yer. Onlar özellikle balık ve yılanı çok sever. Ayrıca kurbağa ve böcekleri de yer.' }
+      { text: 'Sırada nasıl beslendikleri var. ' },
+      { text: 'Bir leylek, gagasıyla avını hemen yakalar.', bold: true },
+      { text: ' ' },
+      { text: 'Leylekler, genelde su canlılarını yer.', bold: true },
+      { text: ' ' },
+      { text: 'Onlar özellikle balık ve yılanı çok sever.', bold: true },
+      { text: ' ' },
+      { text: 'Ayrıca kurbağa ve böcekleri de yer.', bold: true }
     ],
     [
-      { text: 'Nasıl çoğaldıklarını merak ediyor musun? Haydi, öğrenelim! Anne leylek her yıl yumurtlar. Bir defada dört yumurta yumurtlar. Birkaç hafta sonra yavru leylekler yumurtadan çıkar. Anne leylekler çevreden yiyecek toplar. Onları küçük parçalara bölüp yavrularına verir. Böylece yavrularını besler.' }
+      { text: 'Nasıl çoğaldıklarını merak ediyor musun? Haydi, öğrenelim! ' },
+      { text: 'Anne leylek her yıl yumurtlar.', bold: true },
+      { text: ' ' },
+      { text: 'Bir defada dört yumurta yumurtlar.', bold: true },
+      { text: ' Birkaç hafta sonra yavru leylekler yumurtadan çıkar. Anne leylekler çevreden yiyecek toplar. Onları küçük parçalara bölüp yavrularına verir. Böylece yavrularını besler.' }
     ],
     [
       { text: 'Peki, leyleklerin çevreye etkisi nasıldır? Bu canlılar doğanın önemli parçasıdır. ' },
       { text: 'Leylekler, sulak alanlardaki dengeyi sağlar.', bold: true },
-      { text: ' Böcekleri yiyerek tarım alanlarını korur. Ama bazen leylekler yuvalarını elektrik tellerine yapar. Bu, elektrik tellerine zarar verebilir. Bu kocaman kuşu sevdin mi?' }
+      { text: ' ' },
+      { text: 'Böcekleri yiyerek tarım alanlarını korur.', bold: true },
+      { text: ' Ama ' },
+      { text: 'bazen leylekler yuvalarını elektrik tellerine yapar. Bu, elektrik tellerine zarar verebilir.', bold: true },
+      { text: ' Bu kocaman kuşu sevdin mi?' }
     ]
   ],
   14: [
     [{ text: 'Hey! Sence robotlar ne işe yarar? Neye benzer? Nasıl üretilir? Haydi, bu soruların yanıtlarını keşfedelim.' }],
-    [{ text: 'Robotların ne işe yaradığı ile başlayalım. Robotlar, insanlara farklı alanlarda yardımcı olan makinelerdir. Robotlar çok fazla iş yapar. Eğlence, eğitim, araştırma gibi amaçlar için kullanılır. Bazıları çok basit işleri yapar. Mesela evini temizler. Meyve sıkar. Bazıları ise daha karmaşık işleri yapar, mesela birini ameliyat eder! Ayrıca pek çok makinenin üretimine destek olur. Örneğin uçak, araba ve bilgisayar üretilirken robot dostlarımız kullanılır. Kısaca pek çok konuda dostumuzdur metal dostlar!' }],
-    [{ text: 'Şimdi de sırada nasıl göründükleri var. Robotların şekil ve boyutları değişkendir. Ne işe yaradığına göre değişir. Kimi insan şeklindedir, kimi bir kutuya benzer. Bazıları da yuvarlak görünür.' }],
-    [{ text: 'Robotların nasıl çalıştığını merak ediyor musun? Bazıları prizlere bağlı çalışır. Bazıları ise şarjlıdır. Yani onu çalıştırmak için şarj etmen gerekir. Robotların hareket etme biçimlerini belirlemek için yazılımlar yüklenir. Genellikle robotları çalıştırmak için üstündeki bir tuşa basmak yeterlidir. Ayrıca bazıları yapay zekâ desteğiyle çalışır. Örneğin sürücüsüz araçlar yapay zekâyla çalışır.' }],
-    [{ text: 'Acaba bir robot nasıl üretilir? Robotlar, uzman ekipler tarafından fabrikalarda üretilir. Üretim süreçleri karmaşıktır. Önce robotun ne amaçla kullanılacağı belirlenir. Daha sonra şekli, boyutu, tasarımı belirlenir ve üretime geçilir.' }],
-    [{ text: 'Peki, robotların hayatımıza ne gibi etkileri olabilir? Robotlar, hayatımızı kolaylaştırır. Onlar sayesinde zor işleri kolaylıkla yaparız. Ancak robotlarla ilgili bazı endişeler de vardır. Robotlar, insanların işlerini alabilir. Bu yüzden işsizlik olabilir.' }]
+    [
+      { text: 'Robotların ne işe yaradığı ile başlayalım. ' },
+      { text: 'Robotlar, insanlara farklı alanlarda yardımcı olan makinelerdir.', bold: true },
+      { text: ' Robotlar çok fazla iş yapar. ' },
+      { text: 'Eğlence, eğitim, araştırma gibi amaçlar için kullanılır.', bold: true },
+      { text: ' ' },
+      { text: 'Bazıları çok basit işleri yapar. Mesela evini temizler. Meyve sıkar.', bold: true },
+      { text: ' ' },
+      { text: 'Bazıları ise daha karmaşık işleri yapar, mesela birini ameliyat eder!', bold: true },
+      { text: ' Ayrıca ' },
+      { text: 'pek çok makinenin üretimine destek olur. Örneğin uçak, araba ve bilgisayar üretilirken robot dostlarımız kullanılır.', bold: true },
+      { text: ' Kısaca pek çok konuda dostumuzdur metal dostlar!' }
+    ],
+    [
+      { text: 'Şimdi de sırada nasıl göründükleri var. ' },
+      { text: 'Robotların şekil ve boyutları değişkendir.', bold: true },
+      { text: ' Ne işe yaradığına göre değişir. ' },
+      { text: 'Kimi insan şeklindedir, kimi bir kutuya benzer.', bold: true },
+      { text: ' ' },
+      { text: 'Bazıları da yuvarlak görünür.', bold: true }
+    ],
+    [
+      { text: 'Robotların nasıl çalıştığını merak ediyor musun? ' },
+      { text: 'Bazıları prizlere bağlı çalışır.', bold: true },
+      { text: ' ' },
+      { text: 'Bazıları ise şarjlıdır. Yani onu çalıştırmak için şarj etmen gerekir.', bold: true },
+      { text: ' ' },
+      { text: 'Robotların hareket etme biçimlerini belirlemek için yazılımlar yüklenir.', bold: true },
+      { text: ' Genellikle ' },
+      { text: 'robotları çalıştırmak için üstündeki bir tuşa basmak yeterlidir.', bold: true },
+      { text: ' Ayrıca ' },
+      { text: 'bazıları yapay zekâ desteğiyle çalışır. Örneğin sürücüsüz araçlar yapay zekâyla çalışır.', bold: true }
+    ],
+    [
+      { text: 'Acaba bir robot nasıl üretilir? ' },
+      { text: 'Robotlar, uzman ekipler tarafından fabrikalarda üretilir.', bold: true },
+      { text: ' ' },
+      { text: 'Üretim süreçleri karmaşıktır.', bold: true },
+      { text: ' Önce ' },
+      { text: 'robotun ne amaçla kullanılacağı belirlenir.', bold: true },
+      { text: ' ' },
+      { text: 'Daha sonra şekli, boyutu, tasarımı belirlenir ve üretime geçilir.', bold: true }
+    ],
+    [
+      { text: 'Peki, robotların hayatımıza ne gibi etkileri olabilir? ' },
+      { text: 'Robotlar, hayatımızı kolaylaştırır. Onlar sayesinde zor işleri kolaylıkla yaparız.', bold: true },
+      { text: ' Ancak robotlarla ilgili bazı endişeler de vardır. ' },
+      { text: 'Robotlar, insanların işlerini alabilir. Bu yüzden işsizlik olabilir.', bold: true }
+    ]
   ],
   15: [
     [{ text: 'Hey! Sen daha önce hiç avcı bir bitki gördün mü? Bu küçük avcıların ismi, sinekkapan bitkisi! Sevimli ama sinekler için tehlikeli. Küçük avcılar hakkında bir şeyler öğrenmeye ne dersin!' }],
-    [{ text: 'Öncelikle sana sinekkapan bitkisinin yaşam koşullarından bahsedeyim. Sinekkapanlar bataklık ve nemli yerlerde yetişir. Genellikle Amerika\'da bulunur. Bu bitki, güneş ışığı ve topraktan aldığı su ile büyür. Sinekkapan bitkisi, etçil bir bitki türüdür. Yani, sinek ve karınca gibi böcekleri yakalayarak beslenir. Sinekkapanlar, gerekli besin ihtiyaçlarını bu yolla karşılar.' }],
-    [{ text: 'Şimdi ise sırada nasıl göründükleri var. Bu bitkilerin rengi yeşildir. Sinekkapan bitkisi, tıpkı bir ağza benzer. Yaprakları, ağzını açmış gibi görünür. Ağzın içi ise kırmızı renktedir. Ağızda tıpkı diş gibi küçük tüyler bulunur. Bu tüyler, özel bir sıvı salgılar. Kokusuyla böcekleri kendine çeker. Yani, sinekkapanın ağzı böcekler için bir çeşit tuzaktır.' }],
-    [{ text: 'Peki, nasıl çoğaldıklarını merak ettin mi? Sinekkapan bitkisi, ya köklerinden çıkan yavru bitkilerle ya da çiçeklerinden oluşan tohumlarla çoğalır. Kökten çıkan yavrular annesi gibi büyüyüp kocaman olur. Tohumlar ise toprağa ekilince zamanla yeni sinekkapanlar büyür.' }],
+    [
+      { text: 'Öncelikle sana sinekkapan bitkisinin yaşam koşullarından bahsedeyim. ' },
+      { text: 'Sinekkapanlar bataklık ve nemli yerlerde yetişir.', bold: true },
+      { text: ' ' },
+      { text: 'Genellikle Amerika\'da bulunur.', bold: true },
+      { text: ' Bu bitki, güneş ışığı ve topraktan aldığı su ile büyür. ' },
+      { text: 'Sinekkapan bitkisi, etçil bir bitki türüdür.', bold: true },
+      { text: ' Yani, ' },
+      { text: 'sinek ve karınca gibi böcekleri yakalayarak beslenir.', bold: true },
+      { text: ' Sinekkapanlar, gerekli besin ihtiyaçlarını bu yolla karşılar.' }
+    ],
+    [
+      { text: 'Şimdi ise sırada nasıl göründükleri var. ' },
+      { text: 'Bu bitkilerin rengi yeşildir.', bold: true },
+      { text: ' ' },
+      { text: 'Sinekkapan bitkisi, tıpkı bir ağza benzer.', bold: true },
+      { text: ' ' },
+      { text: 'Yaprakları, ağzını açmış gibi görünür.', bold: true },
+      { text: ' ' },
+      { text: 'Ağzın içi ise kırmızı renktedir.', bold: true },
+      { text: ' ' },
+      { text: 'Ağızda tıpkı diş gibi küçük tüyler bulunur.', bold: true },
+      { text: ' ' },
+      { text: 'Bu tüyler, özel bir sıvı salgılar. Kokusuyla böcekleri kendine çeker.', bold: true },
+      { text: ' Yani, sinekkapanın ağzı böcekler için bir çeşit tuzaktır.' }
+    ],
+    [
+      { text: 'Peki, nasıl çoğaldıklarını merak ettin mi? ' },
+      { text: 'Sinekkapan bitkisi, ya köklerinden çıkan yavru bitkilerle ya da çiçeklerinden oluşan tohumlarla çoğalır.', bold: true },
+      { text: ' ' },
+      { text: 'Kökten çıkan yavrular annesi gibi büyüyüp kocaman olur.', bold: true },
+      { text: ' ' },
+      { text: 'Tohumlar ise toprağa ekilince zamanla yeni sinekkapanlar büyür.', bold: true }
+    ],
     [
       { text: 'Sinekkapan bitkisinin çevreye olan etkilerini hiç düşündün mü? Bu bitki, çevreye hem yararlı hem de zararlı olabilir. ' },
       { text: 'Yararı böcekleri avlayarak ekolojik dengeyi sağlamasıdır.', bold: true },
-      { text: ' Zararı ise bazı böcekleri yediği için onların neslini tehlikeye atmasıdır. İşte böyle! Bir gün bir sinekkapanı görürsen, ona dikkatle bak ama dokunmamaya özen göster!' }
+      { text: ' ' },
+      { text: 'Zararı ise bazı böcekleri yediği için onların neslini tehlikeye atmasıdır.', bold: true },
+      { text: ' İşte böyle! Bir gün bir sinekkapanı görürsen, ona dikkatle bak ama dokunmamaya özen göster!' }
     ]
   ],
   16: [
@@ -508,87 +614,281 @@ export const FALLBACK_STORIES: Record<number, Paragraph[]> = {
     [
       { text: 'Öncelikle bölgenin ikliminden bahsedelim. Bölgede ' },
       { text: 'Akdeniz iklimi görülür.', bold: true },
-      { text: ' Yani, yazları sıcak ve kuraktır. Kışları ise ılık ve yağışlı geçer. En yağışlı mevsim kıştır. Bu yağışlar, sel denen su taşkınlarına neden olabilir. Ayrıca bölge fay hatları üzerindedir. Bu nedenle burada sık sık deprem olur.' }
+      { text: ' Yani, ' },
+      { text: 'yazları sıcak ve kuraktır. Kışları ise ılık ve yağışlı geçer.', bold: true },
+      { text: ' ' },
+      { text: 'En yağışlı mevsim kıştır. Bu yağışlar, sel denen su taşkınlarına neden olabilir.', bold: true },
+      { text: ' Ayrıca ' },
+      { text: 'bölge fay hatları üzerindedir.', bold: true },
+      { text: ' Bu nedenle ' },
+      { text: 'burada sık sık deprem olur.', bold: true }
     ],
-    [{ text: 'Şimdi de sıra bitki örtüsünde. Ege Bölgesi\'nin bitki örtüsünde en çok makiler görülür. Makiler kısa boylu çalılardır. Funda, yabani zeytin ve böğürtlen bu bitkilerden bazılarıdır. Bölgenin yüksek yerlerinde ise ormanlar yaygındır. Bu bölgede incir, üzüm, haşhaş gibi birçok bitki yetişir.' }],
-    [{ text: 'Bölgenin yeryüzü şekillerine bakalım mı? Yaygın olarak ovalar ve dağlar vardır. Ayrıca platolar da bulunur. Güzel sahillere sahip bir denizi vardır. Denizden uzaklaştıkça yükselti artar. Bölgenin toprağı ise kireçli topraktır.' }],
     [
-      { text: 'Sırada ekonomik faaliyetler var. Bölgenin ekonomik faaliyetleri çok çeşitlidir. Burada insanlar ' },
-      { text: 'tarım, hayvancılık, balıkçılık', bold: true },
-      { text: ' ile uğraşır. Ayrıca ' },
-      { text: 'sanayi ve turizm', bold: true },
-      { text: ' de yaygındır. Tarihi ve doğal güzellikleri olduğu için turizm açısından önemlidir.' }
+      { text: 'Şimdi de sıra bitki örtüsünde. ' },
+      { text: 'Ege Bölgesi\'nin bitki örtüsünde en çok makiler görülür. Makiler kısa boylu çalılardır.', bold: true },
+      { text: ' ' },
+      { text: 'Funda, yabani zeytin ve böğürtlen bu bitkilerden bazılarıdır.', bold: true },
+      { text: ' ' },
+      { text: 'Bölgenin yüksek yerlerinde ise ormanlar yaygındır.', bold: true },
+      { text: ' Bu bölgede incir, üzüm, haşhaş gibi birçok bitki yetişir.' }
     ],
-    [{ text: 'Ege Bölgesi\'nde yaklaşık 10 milyon insan yaşar. Bölgede yaşayan insanlar genellikle kıyı şehirlerine yerleşmiştir. Su kaynaklarının yetersiz olmasından dolayı toplu yerleşimler görülür. Ege Bölgesi\'nin insanları oldukça sıcakkanlıdır.' }]
+    [
+      { text: 'Bölgenin yeryüzü şekillerine bakalım mı? ' },
+      { text: 'Yaygın olarak ovalar ve dağlar vardır.', bold: true },
+      { text: ' Ayrıca ' },
+      { text: 'platolar da bulunur.', bold: true },
+      { text: ' ' },
+      { text: 'Güzel sahillere sahip bir denizi vardır.', bold: true },
+      { text: ' ' },
+      { text: 'Denizden uzaklaştıkça yükselti artar.', bold: true },
+      { text: ' ' },
+      { text: 'Bölgenin toprağı ise kireçli topraktır.', bold: true }
+    ],
+    [
+      { text: 'Sırada ekonomik faaliyetler var. Bölgenin ekonomik faaliyetleri çok çeşitlidir. ' },
+      { text: 'Burada insanlar tarım, hayvancılık, balıkçılık ile uğraşır.', bold: true },
+      { text: ' Ayrıca ' },
+      { text: 'sanayi ve turizm de yaygındır.', bold: true },
+      { text: ' ' },
+      { text: 'Tarihi ve doğal güzellikleri olduğu için turizm açısından önemlidir.', bold: true }
+    ],
+    [
+      { text: 'Ege Bölgesi\'nde yaklaşık 10 milyon insan yaşar.', bold: true },
+      { text: ' ' },
+      { text: 'Bölgede yaşayan insanlar genellikle kıyı şehirlerine yerleşmiştir.', bold: true },
+      { text: ' Su kaynaklarının yetersiz olmasından dolayı ' },
+      { text: 'toplu yerleşimler görülür.', bold: true },
+      { text: ' Ege Bölgesi\'nin insanları oldukça sıcakkanlıdır.' }
+    ]
   ],
   17: [
     [{ text: 'Hey, sana bir bilmecem var: "Daldan dala atlarım. Kuyruğumla sarkanım." Cevabı ne sence? "Uaa Uaa!" Tabi ki akrobat maymunlardan bahsedeceğiz.' }],
     [
       { text: 'Maymunların yaşayışlarıyla başlayalım. Bu hayvanların pek çok türü vardır. Örneğin; goril, orangutan, şempanze. ' },
       { text: 'Maymunlar genellikle ormanlarda yaşar.', bold: true },
-      { text: ' Bazıları ise bozkırda ve çölde yaşayabilir. Ağaçlık alanlar maymunlar için önemlidir. Çünkü maymunlar ağaçlara çok iyi tırmanır. Orada uyur ve yemeklerini yerler. Ağaçlar, onların evidir. Aileleriyle aynı ağaçları paylaşır.' }
+      { text: ' ' },
+      { text: 'Bazıları ise bozkırda ve çölde yaşayabilir.', bold: true },
+      { text: ' ' },
+      { text: 'Ağaçlık alanlar maymunlar için önemlidir. Çünkü maymunlar ağaçlara çok iyi tırmanır. Orada uyur ve yemeklerini yerler. Ağaçlar, onların evidir.', bold: true },
+      { text: ' Aileleriyle aynı ağaçları paylaşır.' }
     ],
     [
       { text: 'Sence bir maymunun fiziksel özellikleri nasıldır? ' },
       { text: 'Maymunların kuyrukları upuzundur.', bold: true },
-      { text: ' İki uzun bacağı vardır. İki de uzun kolu vardır. Bu canlılar, kuyruklarını da âdeta bir kol gibi kullanır. Bu sayede ağaçların üstünde dans eder gibi hareket eder. Hareketleri tıpkı bir akrobat gibidir!' }
+      { text: ' ' },
+      { text: 'İki uzun bacağı vardır.', bold: true },
+      { text: ' ' },
+      { text: 'İki de uzun kolu vardır.', bold: true },
+      { text: ' Bu canlılar, kuyruklarını da âdeta bir kol gibi kullanır. Bu sayede ağaçların üstünde dans eder gibi hareket eder. ' },
+      { text: 'Hareketleri tıpkı bir akrobat gibidir!', bold: true }
     ],
-    [{ text: 'Peki, maymunlar nasıl beslenir? Maymunlar hem etçil hem otçul hayvanlardır. Yani otçul beslenen maymunlar çiçek, meyve, yaprak yer. Etçil beslenen maymunlar ise yılan ve yengeç yer. Tabi ki de onların en sevdiği meyve muzdur!' }],
-    [{ text: 'Şimdi de çoğalmalarından bahsedelim. Maymunlar doğurarak çoğalır. Anne maymunlar ortalama 250 gün boyunca hamile kalır. Bebek maymun doğduktan sonra anne maymun bebeğini emzirir ve korur.' }],
-    [{ text: 'Sence maymunların çevreye ne gibi etkileri vardır? Maymunların doğaya ve insanlara birçok faydası vardır. Onlar ormanda tohumları yayar. Ayrıca onlar bazı böcekleri yer. Bazen de ormanların akrobatları tarım alanlarına zarar verebilir. Özellikle bazı meyve ağaçlarını tahrip eder. Bazen buğday, arpa gibi bitkilere de zarar verirler. Sence biz maymunları nerde görebiliriz?' }]
+    [
+      { text: 'Peki, maymunlar nasıl beslenir? ' },
+      { text: 'Maymunlar hem etçil hem otçul hayvanlardır.', bold: true },
+      { text: ' Yani ' },
+      { text: 'otçul beslenen maymunlar çiçek, meyve, yaprak yer.', bold: true },
+      { text: ' ' },
+      { text: 'Etçil beslenen maymunlar ise yılan ve yengeç yer.', bold: true },
+      { text: ' Tabi ki de ' },
+      { text: 'onların en sevdiği meyve muzdur!', bold: true }
+    ],
+    [
+      { text: 'Şimdi de çoğalmalarından bahsedelim. ' },
+      { text: 'Maymunlar doğurarak çoğalır.', bold: true },
+      { text: ' ' },
+      { text: 'Anne maymunlar ortalama 250 gün boyunca hamile kalır.', bold: true },
+      { text: ' ' },
+      { text: 'Bebek maymun doğduktan sonra anne maymun bebeğini emzirir ve korur.', bold: true }
+    ],
+    [
+      { text: 'Sence maymunların çevreye ne gibi etkileri vardır? ' },
+      { text: 'Maymunların doğaya ve insanlara birçok faydası vardır.', bold: true },
+      { text: ' ' },
+      { text: 'Onlar ormanda tohumları yayar.', bold: true },
+      { text: ' Ayrıca ' },
+      { text: 'onlar bazı böcekleri yer.', bold: true },
+      { text: ' Bazen de ' },
+      { text: 'ormanların akrobatları tarım alanlarına zarar verebilir.', bold: true },
+      { text: ' ' },
+      { text: 'Özellikle bazı meyve ağaçlarını tahrip eder.', bold: true },
+      { text: ' Bazen ' },
+      { text: 'buğday, arpa gibi bitkilere de zarar verirler.', bold: true },
+      { text: ' Sence biz maymunları nerde görebiliriz?' }
+    ]
   ],
   18: [
     [{ text: 'Merhaba dostum! Hiç hayal ettiğin bir oyuncağı anında gerçeğe dönüştürmek istedin mi? İşte bunun için sana harika bir cihaz: Üç boyutlu yazıcı! Hadi bu yazıcıları yakından tanıyalım.' }],
-    [{ text: 'Üç boyutlu yazıcılar farklı amaçlarla kullanılır. Eğlence için oyuncaklar, figürler ve oyun parçaları üretilebilir. Sağlık alanında, kırık dişlerin yerine protezler hazırlanabilir. Mimarlıkta, evlerin ve köprülerin küçük modelleri yapılabilir. Eğitimde ise iskelet modelleri, deney malzemeleri gibi eşyalar yapılabilir.' }],
-    [{ text: 'Peki, sen daha önce hiç üç boyutlu yazıcı gördün mü? Üç boyutlu yazıcılar genellikle dikdörtgen ya da kare şeklinde olur. Küçük olanları bir masa üzerine sığabilirken, büyük olanlar için büyük odalar gereklidir.' }],
-    [{ text: 'Peki, bu makine nasıl çalışır? Yapmak istediğin nesneyi bilgisayardan tasarla. Yazıcıyı çalıştır. Ardından tasarımı yazıcıya gönder. Tasarımın gerçeğe dönüşmesini bekle. İşte bu kadar kolay! Ama unutma, yazıcı çalışırken dikkatli olunmalıdır. Ellerimizi hareketli parçalardan uzak tutmalıyız.' }],
-    [{ text: 'Şimdi de üç boyutlu yazıcıların üretiminden bahsedelim. Üç boyutlu yazıcıların önce gövdesi üretilir. Sonra motorlar, kablolar ve yazdırma kafası gibi parçalar eklenir. Sonra test edilir. Doğru çalışıyorsa paketlenip satışa sunulur.' }],
-    [{ text: 'Üç boyutlu yazıcıların hayatımıza ne gibi etkileri olabilir? Geri dönüştürülebilir malzemeler kullanarak üretim yapar. Böylece doğa korunmuş olur. Ancak üç boyutlu yazıcıyı dikkatli kullanmazsak aşırı ısınır ve yangına neden olabilir. Üç boyutlu yazıcılar sayesinde hayallerimiz gerçekleşir! Peki, sen ne tasarlamak isterdin?' }]
+    [
+      { text: 'Üç boyutlu yazıcılar farklı amaçlarla kullanılır. ' },
+      { text: 'Eğlence için oyuncaklar, figürler ve oyun parçaları üretilebilir.', bold: true },
+      { text: ' ' },
+      { text: 'Sağlık alanında, kırık dişlerin yerine protezler hazırlanabilir.', bold: true },
+      { text: ' ' },
+      { text: 'Mimarlıkta, evlerin ve köprülerin küçük modelleri yapılabilir.', bold: true },
+      { text: ' ' },
+      { text: 'Eğitimde ise iskelet modelleri, deney malzemeleri gibi eşyalar yapılabilir.', bold: true }
+    ],
+    [
+      { text: 'Peki, sen daha önce hiç üç boyutlu yazıcı gördün mü? ' },
+      { text: 'Üç boyutlu yazıcılar genellikle dikdörtgen ya da kare şeklinde olur.', bold: true },
+      { text: ' ' },
+      { text: 'Küçük olanları bir masa üzerine sığabilirken, büyük olanlar için büyük odalar gereklidir.', bold: true }
+    ],
+    [
+      { text: 'Peki, bu makine nasıl çalışır? ' },
+      { text: 'Yapmak istediğin nesneyi bilgisayardan tasarla.', bold: true },
+      { text: ' ' },
+      { text: 'Yazıcıyı çalıştır.', bold: true },
+      { text: ' Ardından ' },
+      { text: 'tasarımı yazıcıya gönder. Tasarımın gerçeğe dönüşmesini bekle.', bold: true },
+      { text: ' İşte bu kadar kolay! Ama unutma, yazıcı çalışırken dikkatli olunmalıdır. Ellerimizi hareketli parçalardan uzak tutmalıyız.' }
+    ],
+    [
+      { text: 'Şimdi de üç boyutlu yazıcıların üretiminden bahsedelim. ' },
+      { text: 'Üç boyutlu yazıcıların önce gövdesi üretilir.', bold: true },
+      { text: ' ' },
+      { text: 'Sonra motorlar, kablolar ve yazdırma kafası gibi parçalar eklenir.', bold: true },
+      { text: ' ' },
+      { text: 'Sonra test edilir.', bold: true },
+      { text: ' ' },
+      { text: 'Doğru çalışıyorsa paketlenip satışa sunulur.', bold: true }
+    ],
+    [
+      { text: 'Üç boyutlu yazıcıların hayatımıza ne gibi etkileri olabilir? ' },
+      { text: 'Geri dönüştürülebilir malzemeler kullanarak üretim yapar. Böylece doğa korunmuş olur.', bold: true },
+      { text: ' Ancak ' },
+      { text: 'üç boyutlu yazıcıyı dikkatli kullanmazsak aşırı ısınır ve yangına neden olabilir.', bold: true },
+      { text: ' Üç boyutlu yazıcılar sayesinde hayallerimiz gerçekleşir! Peki, sen ne tasarlamak isterdin?' }
+    ]
   ],
   19: [
     [{ text: 'Görürüz pazarda markette, yenir reçeli afiyetle! Elimize aldığımızda üzerinde bir sürü küçük delikleri vardır. Bahsettiğim bu meyve sana tanıdık geldi mi? Evet, doğru bildin. Çilek! Haydi, çilekleri yakından tanıyalım.' }],
     [
-      { text: 'Çileğin yaşam koşulları nasıldır acaba? Çilek bitkisi, ülkemizde birçok yerde yetişmektedir. Ama en fazla ' },
-      { text: 'Akdeniz bölgesinde', bold: true },
-      { text: ' yetişir. İl olarak ise ilk sırada Mersin gelir. Çilek güneşi sever ancak çok sıcaktan hoşlanmaz. Nemli havalar yetişmesi için uygundur.' }
+      { text: 'Çileğin yaşam koşulları nasıldır acaba? Çilek bitkisi, ' },
+      { text: 'ülkemizde birçok yerde yetişmektedir. Ama en fazla Akdeniz bölgesinde yetişir.', bold: true },
+      { text: ' ' },
+      { text: 'İl olarak ise ilk sırada Mersin gelir.', bold: true },
+      { text: ' ' },
+      { text: 'Çilek güneşi sever ancak çok sıcaktan hoşlanmaz.', bold: true },
+      { text: ' ' },
+      { text: 'Nemli havalar yetişmesi için uygundur.', bold: true }
     ],
     [
       { text: 'Çilek, sanki bir kalbe benziyor değil mi? Çilekler, kırmızı ve parlak görünür. Üzerinde minik delikler bulunur. Bu deliklere aken denir. Çileğin tepesinde küçük, yeşil yapraklar bulunur. Bu meyveler ' },
       { text: 'nefis bir kokuya sahiptir.', bold: true },
       { text: ' Çileklerin; yumuşak, sulu ve lezzetli bir iç yapısı vardır.' }
     ],
-    [{ text: 'Şimdi de nasıl çoğaldığına bakalım. Çilekler, ilginç bir şekilde çoğalır. Çilekten bir parça alınır. Alınan bu parça toprağa gömülür. Zamanla kök salan bu parça yeni çileklerin büyümesini sağlar. Doğanın dışında evde de çilek yetiştirebilirsin. Nasıl mı? Biraz derin bir saksı seçmen gerekli. Saksıyı seçtikten sonra gübreli bir toprak bulup ve saksıya koymalısın. Ardından toprağa çilek tohumunu ekip üstüne biraz daha toprak eklemelisin. Son olarak haftada iki kez sulamayı unutma. Böylelikle küçük, tatlı çileklerin olacak.' }],
-    [{ text: 'Çileğin ne gibi etkileri olduğunu biliyor musun? Çilek, kalp damar sağlığını destekler. C vitamini bakımından zengindir. Ayrıca kanser hücresinin oluşmasını önler. Aman dikkat edelim, çok yersek karnımız ağrıyabilir. Hatta çilek, bazı insanlar için alerjiye bile sebep olabilir.' }]
+    [
+      { text: 'Şimdi de nasıl çoğaldığına bakalım. Çilekler, ilginç bir şekilde çoğalır. ' },
+      { text: 'Çilekten bir parça alınır. Alınan bu parça toprağa gömülür.', bold: true },
+      { text: ' ' },
+      { text: 'Zamanla kök salan bu parça yeni çileklerin büyümesini sağlar.', bold: true },
+      { text: ' Doğanın dışında evde de çilek yetiştirebilirsin. Nasıl mı? Biraz derin bir saksı seçmen gerekli. Saksıyı seçtikten sonra gübreli bir toprak bulup ve saksıya koymalısın. Ardından toprağa çilek tohumunu ekip üstüne biraz daha toprak eklemelisin. Son olarak haftada iki kez sulamayı unutma. Böylelikle küçük, tatlı çileklerin olacak.' }
+    ],
+    [
+      { text: 'Çileğin ne gibi etkileri olduğunu biliyor musun? ' },
+      { text: 'Çilek, kalp damar sağlığını destekler.', bold: true },
+      { text: ' ' },
+      { text: 'C vitamini bakımından zengindir.', bold: true },
+      { text: ' Ayrıca ' },
+      { text: 'kanser hücresinin oluşmasını önler.', bold: true },
+      { text: ' Aman dikkat edelim, ' },
+      { text: 'çok yersek karnımız ağrıyabilir.', bold: true },
+      { text: ' Hatta ' },
+      { text: 'çilek, bazı insanlar için alerjiye bile sebep olabilir.', bold: true }
+    ]
   ],
   20: [
     [{ text: 'Hey! Kemerini sıkı bağla! Ülkemizin kuzeyine gidiyoruz. Burası çayın başkentidir. Denizi hırçın dalgalarıyla bilinir. Fındık diyarı ve yemyeşil güzellikleriyle dikkat çeker. Samsun\'dan Giresun\'a oradan Trabzon\'a ve Artvin\'e... Bugün Karadeniz Bölgesi\'ni keşfedeceğiz. Hazır mısın?' }],
     [
-      { text: 'Bölgenin iklimiyle başlayalım. Bölge, ' },
-      { text: 'Karadeniz iklimine sahiptir.', bold: true },
-      { text: ' Her mevsim yağışlıdır. Bu nedenle bölge çok yeşildir. Yazları serin kışları ise ılık geçer. Çok yağış olduğu için sel ve heyelan gibi doğa olayları yaşanır.' }
+      { text: 'Bölgenin iklimiyle başlayalım. ' },
+      { text: 'Bölge, Karadeniz iklimine sahiptir.', bold: true },
+      { text: ' ' },
+      { text: 'Her mevsim yağışlıdır. Bu nedenle bölge çok yeşildir.', bold: true },
+      { text: ' ' },
+      { text: 'Yazları serin kışları ise ılık geçer.', bold: true },
+      { text: ' ' },
+      { text: 'Çok yağış olduğu için sel ve heyelan gibi doğa olayları yaşanır.', bold: true }
     ],
     [{ text: 'Sırada bitki örtüsü var. Bölgenin bitki örtüsü ormandır. Karadeniz Bölgesi yemyeşil çam, kayın, gürgen ağaçlarıyla doludur. Bunun yanı sıra bölgede; fındık, mısır ve çay gibi tarım ürünleri de yetişir.' }],
-    [{ text: 'Karadeniz Bölgesi\'nin yeryüzü şekilleri çok ilginçtir. Bölge, dağlık ve engebeli bir araziye sahiptir. Bu durum tarımda makine kullanımını engeller. Bölgenin kuzeyinde Karadeniz Dağları vardır. Güneyinde ise Kuzey Anadolu Dağları uzanır. Bu dağlar arasında dar ve uzun vadiler bulunur. Bu vadilerde akarsular akar. Şelaleler, yaylalar ve dereler Karadeniz\'i âdeta süsler. Karadeniz hırçın deniziyle bilinir. Dalgalar insanlar için tehlikeli olabilir. Yüzerken çok dikkatli olmalısın.' }],
-    [{ text: 'Şimdi de sırada ekonomik faaliyetler var. Karadeniz, tarım ve balıkçılıkla geçinir. Özellikle çay ve fındık üretimi ülke ekonomisine katkı sağlar. Ayrıca bu bölgemizde bakır ve altın gibi madenler çıkartılır. Aynı zamanda turizm sektörü de bölgede önemli bir gelir kaynağıdır.' }],
-    [{ text: 'Karadeniz\'in köyleri ve şehirleri sıcakkanlı insanlarla doludur. Burada genellikle dağınık yerleşmeler görülür. Yaklaşık 8 milyon insan bu bölgede yaşar.' }]
+    [
+      { text: 'Karadeniz Bölgesi\'nin yeryüzü şekilleri çok ilginçtir. ' },
+      { text: 'Bölge, dağlık ve engebeli bir araziye sahiptir.', bold: true },
+      { text: ' Bu durum tarımda makine kullanımını engeller. ' },
+      { text: 'Bölgenin kuzeyinde Karadeniz Dağları vardır. Güneyinde ise Kuzey Anadolu Dağları uzanır.', bold: true },
+      { text: ' ' },
+      { text: 'Bu dağlar arasında dar ve uzun vadiler bulunur. Bu vadilerde akarsular akar.', bold: true },
+      { text: ' ' },
+      { text: 'Şelaleler, yaylalar ve dereler Karadeniz\'i âdeta süsler.', bold: true },
+      { text: ' Karadeniz hırçın deniziyle bilinir. Dalgalar insanlar için tehlikeli olabilir. Yüzerken çok dikkatli olmalısın.' }
+    ],
+    [
+      { text: 'Şimdi de sırada ekonomik faaliyetler var. ' },
+      { text: 'Karadeniz, tarım ve balıkçılıkla geçinir.', bold: true },
+      { text: ' Özellikle ' },
+      { text: 'çay ve fındık üretimi ülke ekonomisine katkı sağlar.', bold: true },
+      { text: ' Ayrıca ' },
+      { text: 'bu bölgemizde bakır ve altın gibi madenler çıkartılır.', bold: true },
+      { text: ' Aynı zamanda ' },
+      { text: 'turizm sektörü de bölgede önemli bir gelir kaynağıdır.', bold: true }
+    ],
+    [
+      { text: 'Karadeniz\'in köyleri ve şehirleri sıcakkanlı insanlarla doludur. Burada ' },
+      { text: 'genellikle dağınık yerleşmeler görülür.', bold: true },
+      { text: ' ' },
+      { text: 'Yaklaşık 8 milyon insan bu bölgede yaşar.', bold: true }
+    ]
   ],
   21: [
     [{ text: 'Sekiz tane kolun olsaydı nasıl olurdu? Daha önce hiç sekiz kollu bir canlı gördün mü? Eğer görmediysen ahtapotlarla tanış! İşte şimdi ahtapotların gizemli dünyasına girme vakti.' }],
     [
       { text: 'Ahtapotların yaşayışlarıyla başlayalım. ' },
       { text: 'Ahtapotlar tuzlu sularda, yani okyanus ve denizlerde yaşarlar.', bold: true },
-      { text: ' Genellikle sıcak ve ılıman denizleri severler. Derin suları tercih eder.' }
+      { text: ' Genellikle ' },
+      { text: 'sıcak ve ılıman denizleri severler.', bold: true },
+      { text: ' ' },
+      { text: 'Derin suları tercih eder.', bold: true }
     ],
-    [{ text: 'Ahtapotlar hızlı büyür. Ancak yaşam süreleri kısadır. Bir ahtapot yaklaşık üç yıl yaşar. Ahtapotlar oldukça akıllıdır. Avcılarından çok iyi saklanır. Kendilerini korumak için düşmanlarına zehirli bir mürekkep fırlatır.' }],
+    [
+      { text: 'Ahtapotlar hızlı büyür.', bold: true },
+      { text: ' Ancak yaşam süreleri kısadır. ' },
+      { text: 'Bir ahtapot yaklaşık üç yıl yaşar.', bold: true },
+      { text: ' ' },
+      { text: 'Ahtapotlar oldukça akıllıdır. Avcılarından çok iyi saklanır.', bold: true },
+      { text: ' Kendilerini korumak için düşmanlarına zehirli bir mürekkep fırlatır.' }
+    ],
     [
       { text: 'Ahtapotların nasıl göründüklerini merak ettin mi? ' },
       { text: 'Ahtapotların sekiz kolu vardır.', bold: true },
-      { text: ' Bir ahtapotun yumuşacık bir gövdesi olur. Kocaman iki gözü vardır. Bu canlılar etrafı çok iyi görür. Ağzı, kollarının ortasında yer alır. Ayrıca ahtapotlar oldukça esnektir. Sana çok gizemli bir bilgi vereyim: Onlar renk değiştirebilir!' }
+      { text: ' ' },
+      { text: 'Bir ahtapotun yumuşacık bir gövdesi olur.', bold: true },
+      { text: ' ' },
+      { text: 'Kocaman iki gözü vardır.', bold: true },
+      { text: ' Bu canlılar etrafı çok iyi görür. ' },
+      { text: 'Ağzı, kollarının ortasında yer alır.', bold: true },
+      { text: ' Ayrıca ' },
+      { text: 'ahtapotlar oldukça esnektir.', bold: true },
+      { text: ' Sana çok gizemli bir bilgi vereyim: ' },
+      { text: 'Onlar renk değiştirebilir!', bold: true }
     ],
-    [{ text: 'Haydi, şimdi de nasıl beslendiklerini öğrenelim. Ahtapotlar, lezzetli yemekleri bulmak için derin sularda dolaşır. Bu canlılar, küçük balıklar ve karideslerle beslenir. En sevdiği yemek, deniztarağı ve deniz salyangozudur.' }],
-    [{ text: 'Sıradaysa nasıl çoğaldıkları var. Ahtapotlar yumurtlayarak çoğalır. Anne ahtapot, yumurtlamak için uygun bir alan seçer. Anne ahtapot yumurtladıktan sonra ölür.' }],
     [
-      { text: 'Ahtapotların çevreye etkilerine bakalım. Ahtapotlar, ekosisteme katkı sağlar. Onların besin değeri yüksektir. Bu nedenle insanlar, ahtapotları güçlenmek için yiyebilir. Biliyor musun, tüm ahtapotlar zehirlidir. Ancak bazı zehirler ölümcüldür. Örneğin mavi ahtapotlar ölümcül zehir taşır. ' },
+      { text: 'Haydi, şimdi de nasıl beslendiklerini öğrenelim. Ahtapotlar, lezzetli yemekleri bulmak için derin sularda dolaşır. ' },
+      { text: 'Bu canlılar, küçük balıklar ve karideslerle beslenir.', bold: true },
+      { text: ' ' },
+      { text: 'En sevdiği yemek, deniztarağı ve deniz salyangozudur.', bold: true }
+    ],
+    [
+      { text: 'Sıradaysa nasıl çoğaldıkları var. ' },
+      { text: 'Ahtapotlar yumurtlayarak çoğalır.', bold: true },
+      { text: ' Anne ahtapot, yumurtlamak için uygun bir alan seçer. ' },
+      { text: 'Anne ahtapot yumurtladıktan sonra ölür.', bold: true }
+    ],
+    [
+      { text: 'Ahtapotların çevreye etkilerine bakalım. ' },
+      { text: 'Ahtapotlar, ekosisteme katkı sağlar.', bold: true },
+      { text: ' ' },
+      { text: 'Onların besin değeri yüksektir. Bu nedenle insanlar, ahtapotları güçlenmek için yiyebilir.', bold: true },
+      { text: ' Biliyor musun, tüm ahtapotlar zehirlidir. Ancak bazı zehirler ölümcüldür. Örneğin mavi ahtapotlar ölümcül zehir taşır. ' },
       { text: 'İnsanlar zehirli olanı yerse ölebilir.', bold: true },
       { text: ' Okyanusların en zeki hayvanını öğrendik. Onları sevdin mi?' }
     ]
@@ -598,38 +898,166 @@ export const FALLBACK_STORIES: Record<number, Paragraph[]> = {
     [
       { text: 'Tabletlerin kullanım amaçlarıyla başlayalım. ' },
       { text: 'Tabletler, bilgisayarların küçültülmüş hâli gibidir.', bold: true },
-      { text: ' Bu cihazla internete girersin, fotoğraf veya video çekersin. Müzik dinlersin. Araştırma yaparsın. Oyun oynarsın. Hatta bir oyun bile tasarlarsın. Ödevini yapmak için de tableti kullanırsın. Acaba başka hangi amaçlar için kullanılır düşün bakalım.' }
+      { text: ' ' },
+      { text: 'Bu cihazla internete girersin, fotoğraf veya video çekersin.', bold: true },
+      { text: ' ' },
+      { text: 'Müzik dinlersin.', bold: true },
+      { text: ' ' },
+      { text: 'Araştırma yaparsın.', bold: true },
+      { text: ' ' },
+      { text: 'Oyun oynarsın. Hatta bir oyun bile tasarlarsın.', bold: true },
+      { text: ' ' },
+      { text: 'Ödevini yapmak için de tableti kullanırsın.', bold: true },
+      { text: ' Acaba başka hangi amaçlar için kullanılır düşün bakalım.' }
     ],
-    [{ text: 'Haydi, tabletlerin görünümüne bakalım. Tabletler, ince ve dikdörtgen şeklinde, ön yüzü tamamen dokunmatik ekrandan oluşan taşınabilir bilgisayarlardır. Genellikle hafif oldukları için elde tutulabilir. Kenarlarında ses tuşları, açma-kapama düğmesi ve şarj girişi bulunur. Arka yüzlerinde ise bazen kamera ve marka logosu yer alır. Bazı modellerde ön tarafta da kamera bulunur. Ekran boyutları modeline göre değişir ancak hepsi parlak ve renkli görüntüler sunar.' }],
-    [{ text: 'Sırada nasıl çalıştığı var. Tabletler bataryayla çalışır. Batarya bittikçe tablet şarja takılır. E tabi ki, şarja takmak için elektrik enerjisi kullanılır. Bu cihazlar dokunmatik olur. Özel bir kalem veya klavyeyle de kullanılabilir.' }],
-    [{ text: 'Şimdi de nasıl üretildiğine bakalım. Tabletler, fabrikada üretilir. İlk olarak tasarım aşaması vardır. Sonra tasarlananları birleştirme gelir. En son performans testi yapılır. Böylelikle bir tablet ortaya çıkar.' }],
-    [{ text: 'Acaba tabletler hayatımızı nasıl etkiler? Tabletler, hem öğrenmemizi hem eğlenmemizi sağlar. Hayatımızı kolaylaştırır. Ancak uzun süre kullanırsak gözlerimiz bozulabilir. Ayrıca çok fazla vakit kaybına yol açabilir. Bu nedenle tabletleri dikkatli ve kontrollü kullanmak önemlidir.' }]
+    [
+      { text: 'Haydi, tabletlerin görünümüne bakalım. ' },
+      { text: 'Tabletler, ince ve dikdörtgen şeklinde, ön yüzü tamamen dokunmatik ekrandan oluşan taşınabilir bilgisayarlardır.', bold: true },
+      { text: ' Genellikle hafif oldukları için elde tutulabilir. ' },
+      { text: 'Kenarlarında ses tuşları, açma-kapama düğmesi ve şarj girişi bulunur.', bold: true },
+      { text: ' ' },
+      { text: 'Arka yüzlerinde ise bazen kamera ve marka logosu yer alır.', bold: true },
+      { text: ' ' },
+      { text: 'Bazı modellerde ön tarafta da kamera bulunur.', bold: true },
+      { text: ' Ekran boyutları modeline göre değişir ancak hepsi parlak ve renkli görüntüler sunar.' }
+    ],
+    [
+      { text: 'Sırada nasıl çalıştığı var. ' },
+      { text: 'Tabletler bataryayla çalışır.', bold: true },
+      { text: ' ' },
+      { text: 'Batarya bittikçe tablet şarja takılır.', bold: true },
+      { text: ' E tabi ki, ' },
+      { text: 'şarja takmak için elektrik enerjisi kullanılır.', bold: true },
+      { text: ' ' },
+      { text: 'Bu cihazlar dokunmatik olur.', bold: true },
+      { text: ' ' },
+      { text: 'Özel bir kalem veya klavyeyle de kullanılabilir.', bold: true }
+    ],
+    [
+      { text: 'Şimdi de nasıl üretildiğine bakalım. ' },
+      { text: 'Tabletler, fabrikada üretilir.', bold: true },
+      { text: ' ' },
+      { text: 'İlk olarak tasarım aşaması vardır.', bold: true },
+      { text: ' ' },
+      { text: 'Sonra tasarlananları birleştirme gelir. En son performans testi yapılır.', bold: true },
+      { text: ' Böylelikle bir tablet ortaya çıkar.' }
+    ],
+    [
+      { text: 'Acaba tabletler hayatımızı nasıl etkiler? ' },
+      { text: 'Tabletler, hem öğrenmemizi hem eğlenmemizi sağlar.', bold: true },
+      { text: ' Hayatımızı kolaylaştırır. ' },
+      { text: 'Ancak uzun süre kullanırsak gözlerimiz bozulabilir.', bold: true },
+      { text: ' Ayrıca ' },
+      { text: 'çok fazla vakit kaybına yol açabilir.', bold: true },
+      { text: ' Bu nedenle tabletleri dikkatli ve kontrollü kullanmak önemlidir.' }
+    ]
   ],
   23: [
     [{ text: 'Hey, sana bir bilmecem var: "Yeşil sandığı açtım. Siyah boncuğu saçtım." Cevabı biliyor musun? Yazları yenilen bir meyve desem? Hani siyah çekirdekleri olan bir meyve! Bilmecemizin cevabı karpuz. Haydi, karpuz bitkisini tanımaya başlayalım.' }],
     [
       { text: 'Öncelikle yaşam koşullarına bakalım. ' },
       { text: 'Karpuz, dünyada en çok Çin\'de yetişir.', bold: true },
-      { text: ' Ülkemizde ise birçok bölgede yetişir. Özellikle de Adana ilimiz karpuzuyla meşhurdur. Karpuz, toprağın üzerinde yayılarak büyür. Kökleri toprak altında derinlere uzanır. Bu meyve, sıcak iklimi ve suyu çok sever.' }
+      { text: ' ' },
+      { text: 'Ülkemizde ise birçok bölgede yetişir. Özellikle de Adana ilimiz karpuzuyla meşhurdur.', bold: true },
+      { text: ' ' },
+      { text: 'Karpuz, toprağın üzerinde yayılarak büyür.', bold: true },
+      { text: ' ' },
+      { text: 'Kökleri toprak altında derinlere uzanır.', bold: true },
+      { text: ' ' },
+      { text: 'Bu meyve, sıcak iklimi ve suyu çok sever.', bold: true }
     ],
-    [{ text: 'Şimdi de fiziksel özelliklerine bakalım. Karpuz bitkisi, sarmaşık benzeri bir bitkidir. Geniş yaprakları vardır ve sarı renkte çiçekler açar. Çiçekten sonra minik karpuzlar oluşur. Zamanla büyüyüp olgunlaşarak kocaman bir lezzet topuna dönüşür. Karpuz oval ya da yuvarlak bir şekildedir. Bir karpuz; kabuk, meyve ve çekirdekten oluşur. Karpuzun dış kabuğu yeşil renktedir. Kabuğunda sarımsı çizgileri olabilir. İç kısmı ise kıpkırmızıdır. İçi âdeta lezzetli bir sudur. Aman yerken dikkat edin çekirdekler boğazınıza kaçmasın!' }],
-    [{ text: 'Çekirdek demişken haydi gel, çoğalmalarına bakalım. Karpuz, çekirdeklerinin ekilmesiyle çoğalır. Ekim ilkbaharda yapılır. Hem tarlada hem de evde karpuz yetiştirebilirsin. Yeter ki onu 10 günde bir sula. Tabi ki, bir de bol bol güneş görmesini sağlamalısın.' }],
-    [{ text: 'Karpuzun etkilerine bakalım. Bu lezzetli suyun faydaları saymakla bitmez. Karpuz bağırsaklarımızın iyi çalışmasını sağlar. Böbreklerimizin dostudur. Kalp sağlığımız için iyi bir besindir. Birçok vitamin içerir. Ayrıca cildi de nemlendirir. Ancak onu fazla tüketirsen karnın ağrıyabilir.' }]
+    [
+      { text: 'Şimdi de fiziksel özelliklerine bakalım. ' },
+      { text: 'Karpuz bitkisi, sarmaşık benzeri bir bitkidir.', bold: true },
+      { text: ' ' },
+      { text: 'Geniş yaprakları vardır ve sarı renkte çiçekler açar. Çiçekten sonra minik karpuzlar oluşur.', bold: true },
+      { text: ' Zamanla büyüyüp olgunlaşarak kocaman bir lezzet topuna dönüşür. ' },
+      { text: 'Karpuz oval ya da yuvarlak bir şekildedir.', bold: true },
+      { text: ' ' },
+      { text: 'Bir karpuz; kabuk, meyve ve çekirdekten oluşur.', bold: true },
+      { text: ' ' },
+      { text: 'Karpuzun dış kabuğu yeşil renktedir.', bold: true },
+      { text: ' ' },
+      { text: 'Kabuğunda sarımsı çizgileri olabilir.', bold: true },
+      { text: ' ' },
+      { text: 'İç kısmı ise kıpkırmızıdır.', bold: true },
+      { text: ' İçi âdeta lezzetli bir sudur. Aman yerken dikkat edin çekirdekler boğazınıza kaçmasın!' }
+    ],
+    [
+      { text: 'Çekirdek demişken haydi gel, çoğalmalarına bakalım. ' },
+      { text: 'Karpuz, çekirdeklerinin ekilmesiyle çoğalır.', bold: true },
+      { text: ' ' },
+      { text: 'Ekim ilkbaharda yapılır.', bold: true },
+      { text: ' ' },
+      { text: 'Hem tarlada hem de evde karpuz yetiştirebilirsin. Yeter ki onu 10 günde bir sula. Tabi ki, bir de bol bol güneş görmesini sağlamalısın.', bold: true }
+    ],
+    [
+      { text: 'Karpuzun etkilerine bakalım. Bu lezzetli suyun faydaları saymakla bitmez. ' },
+      { text: 'Karpuz bağırsaklarımızın iyi çalışmasını sağlar.', bold: true },
+      { text: ' ' },
+      { text: 'Böbreklerimizin dostudur.', bold: true },
+      { text: ' ' },
+      { text: 'Kalp sağlığımız için iyi bir besindir.', bold: true },
+      { text: ' ' },
+      { text: 'Birçok vitamin içerir.', bold: true },
+      { text: ' Ayrıca ' },
+      { text: 'cildi de nemlendirir.', bold: true },
+      { text: ' ' },
+      { text: 'Ancak onu fazla tüketirsen karnın ağrıyabilir.', bold: true }
+    ]
   ],
   24: [
     [{ text: 'Daha önce hiç Güneydoğu Anadolu Bölgesi\'ni duymuş muydun? Peki ya kebap, lahmacun ve baklava desem? Saydığımız leziz yiyecekler işte bu bölgeye ait. Şimdi birlikte lezzet diyarı Güneydoğu Anadolu\'yu keşfedelim!' }],
     [
       { text: 'Öncelikle bu bölgenin iklimine bakalım. ' },
       { text: 'Bu bölgede karasal iklim görülür.', bold: true },
-      { text: ' Yazlar oldukça kurak ve sıcaktır. Hatta sıcaklık 45 dereceyi bile geçer. Kışları ise ılıktır. Yağışlar çok azdır. Bölgede görülen doğal afet ise depremdir. Deprem, yeryüzünün sarsılmasıdır. Bölgede ormanlar çok az olduğu için heyelan yani toprak kayması da çok görülür.' }
+      { text: ' ' },
+      { text: 'Yazlar oldukça kurak ve sıcaktır.', bold: true },
+      { text: ' Hatta sıcaklık 45 dereceyi bile geçer. ' },
+      { text: 'Kışları ise ılıktır.', bold: true },
+      { text: ' ' },
+      { text: 'Yağışlar çok azdır.', bold: true },
+      { text: ' ' },
+      { text: 'Bölgede görülen doğal afet ise depremdir.', bold: true },
+      { text: ' Deprem, yeryüzünün sarsılmasıdır. ' },
+      { text: 'Bölgede ormanlar çok az olduğu için heyelan yani toprak kayması da çok görülür.', bold: true }
     ],
-    [{ text: 'Sırada bölgenin bitki örtüsü var. Bitki örtüsü bozkırdır. Bozkırlar kurak otlardan oluşan alanlara denir. Ülkemizde en az orman burada görülür. Bölgenin en ünlü tarım ürünü Antep fıstığıdır. Ayrıca zeytin, incir, kırmızı mercimek ve karpuz da yetişir.' }],
-    [{ text: 'Güneydoğu Anadolu\'nun yeryüzü şekillerine bakalım mı? Bölgenin yükseltisi azdır. Bazı yerlerinde dağlar görülür. Bölgede verimli ovalar da bulunur. Bu ovalarda birçok bitki yetişir. Fırat ve Dicle adlı iki akarsu da bu bölgeden geçer.' }],
     [
-      { text: 'Şimdi sırada bu bölgenin ekonomik faaliyetleri var. Buradaki insanlar gelirini genellikle tarımdan sağlar. Bununla birlikte sanayi ve turizmden de gelir elde edilir. Bölgenin önemli bir özelliği daha var. ' },
+      { text: 'Sırada bölgenin bitki örtüsü var. ' },
+      { text: 'Bitki örtüsü bozkırdır.', bold: true },
+      { text: ' Bozkırlar kurak otlardan oluşan alanlara denir. ' },
+      { text: 'Ülkemizde en az orman burada görülür.', bold: true },
+      { text: ' ' },
+      { text: 'Bölgenin en ünlü tarım ürünü Antep fıstığıdır.', bold: true },
+      { text: ' Ayrıca ' },
+      { text: 'zeytin, incir, kırmızı mercimek ve karpuz da yetişir.', bold: true }
+    ],
+    [
+      { text: 'Güneydoğu Anadolu\'nun yeryüzü şekillerine bakalım mı? ' },
+      { text: 'Bölgenin yükseltisi azdır.', bold: true },
+      { text: ' ' },
+      { text: 'Bazı yerlerinde dağlar görülür.', bold: true },
+      { text: ' ' },
+      { text: 'Bölgede verimli ovalar da bulunur.', bold: true },
+      { text: ' Bu ovalarda birçok bitki yetişir. ' },
+      { text: 'Fırat ve Dicle adlı iki akarsu da bu bölgeden geçer.', bold: true }
+    ],
+    [
+      { text: 'Şimdi sırada bu bölgenin ekonomik faaliyetleri var. ' },
+      { text: 'Buradaki insanlar gelirini genellikle tarımdan sağlar.', bold: true },
+      { text: ' ' },
+      { text: 'Bununla birlikte sanayi ve turizmden de gelir elde edilir.', bold: true },
+      { text: ' Bölgenin önemli bir özelliği daha var. ' },
       { text: 'Güneydoğu Anadolu, ülkemizde petrolün çıkarıldığı tek bölgedir.', bold: true },
       { text: ' Bu durum ekonomiye katkı sağlar.' }
     ],
-    [{ text: 'Güneydoğu Anadolu\'da nüfus genellikle şehirlerde yoğunlaşmıştır; Gaziantep, Şanlıurfa ve Diyarbakır gibi büyük şehirler kalabalıktır. Köylerde ise nüfus daha azdır ve yerleşmeler toplu köy tipi şeklindedir. İnsanlar, su kaynaklarına yakın, tarıma elverişli ovalar ve akarsu kenarlarında yaşamayı tercih eder.' }]
+    [
+      { text: 'Güneydoğu Anadolu\'da ' },
+      { text: 'nüfus genellikle şehirlerde yoğunlaşmıştır; Gaziantep, Şanlıurfa ve Diyarbakır gibi büyük şehirler kalabalıktır.', bold: true },
+      { text: ' ' },
+      { text: 'Köylerde ise nüfus daha azdır ve yerleşmeler toplu köy tipi şeklindedir.', bold: true },
+      { text: ' ' },
+      { text: 'İnsanlar, su kaynaklarına yakın, tarıma elverişli ovalar ve akarsu kenarlarında yaşamayı tercih eder.', bold: true }
+    ]
   ]
 };

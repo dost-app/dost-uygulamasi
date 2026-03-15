@@ -652,6 +652,636 @@ export const SCHEMAS: Record<number, Schema> = {
         ]
       }
     ]
+  },
+  13: {
+    storyId: 13,
+    title: 'Uzun Bacaklı Gezgin Kuş Metni Şematik Düzenleyicisi',
+    sections: [
+      {
+        id: 1,
+        title: '1. Yaşayışları',
+        items: [
+          'Leylekler, sulak alanlarda yaşar.',
+          'Bu kuşlar, sıcak yerleri sever. Bu nedenle kışları sıcak yerlere göç eder.'
+        ]
+      },
+      {
+        id: 2,
+        title: '2. Fiziksel Özellikleri',
+        items: [
+          'Bu canlılar iri kuşlardır.',
+          'Boyları çok uzundur.',
+          'Leylekler uzun bacaklıdır.',
+          'Uzun ve düz gagaları vardır.',
+          'Genellikle tüyleri beyazdır.',
+          'Kanatları çok güçlüdür.',
+          'Kanatlarının tüyleri ise siyahtır.'
+        ]
+      },
+      {
+        id: 3,
+        title: '3. Beslenmeleri',
+        items: [
+          'Bir leylek, gagasıyla avını hemen yakalar.',
+          'Leylekler, genelde su canlılarını yer.',
+          'Onlar özellikle balık ve yılanı çok sever.',
+          'Ayrıca kurbağa ve böcekleri de yer.'
+        ]
+      },
+      {
+        id: 4,
+        title: '4. Çoğalmaları',
+        items: [
+          'Anne leylek her yıl yumurtlar.',
+          'Bir defada dört yumurta yumurtlar.'
+        ]
+      },
+      {
+        id: 5,
+        title: '5. Çevreye Etkileri',
+        items: [
+          'Leylekler, sulak alanlardaki dengeyi sağlar.',
+          'Böcekleri yiyerek tarım alanlarını korur.',
+          'Bazen leylekler yuvalarını elektrik tellerine yapar. Bu, elektrik tellerine zarar verebilir.'
+        ]
+      }
+    ]
+  },
+  14: {
+    storyId: 14,
+    title: 'Metal Dostlar Metni Şematik Düzenleyicisi',
+    sections: [
+      {
+        id: 1,
+        title: '1. Kullanım Amaçları',
+        items: [
+          'Robotlar, insanlara farklı alanlarda yardımcı olan makinelerdir.',
+          'Eğlence, eğitim, araştırma gibi amaçlar için kullanılır.',
+          'Bazıları çok basit işleri yapar. Mesela evini temizler. Meyve sıkar.',
+          'Bazıları ise daha karmaşık işleri yapar, mesela birini ameliyat eder!',
+          'Pek çok makinenin üretimine destek olur. Örneğin uçak, araba ve bilgisayar üretilirken robot dostlarımız kullanılır.'
+        ]
+      },
+      {
+        id: 2,
+        title: '2. Fiziksel Özellikleri',
+        items: [
+          'Robotların şekil ve boyutları değişkendir.',
+          'Kimi insan şeklindedir, kimi bir kutuya benzer.',
+          'Bazıları da yuvarlak görünür.'
+        ]
+      },
+      {
+        id: 3,
+        title: '3. Çalışma Biçimleri',
+        items: [
+          'Bazıları prizlere bağlı çalışır.',
+          'Bazıları ise şarjlıdır. Yani onu çalıştırmak için şarj etmen gerekir.',
+          'Robotların hareket etme biçimlerini belirlemek için yazılımlar yüklenir.',
+          'Robotları çalıştırmak için üstündeki bir tuşa basmak yeterlidir.',
+          'Bazıları yapay zekâ desteğiyle çalışır. Örneğin sürücüsüz araçlar yapay zekâyla çalışır.'
+        ]
+      },
+      {
+        id: 4,
+        title: '4. Üretimleri',
+        items: [
+          'Robotlar, uzman ekipler tarafından fabrikalarda üretilir.',
+          'Üretim süreçleri karmaşıktır.',
+          'Robotun ne amaçla kullanılacağı belirlenir.',
+          'Daha sonra şekli, boyutu, tasarımı belirlenir ve üretime geçilir.'
+        ]
+      },
+      {
+        id: 5,
+        title: '5. Hayatımıza Etkileri',
+        items: [
+          'Robotlar, hayatımızı kolaylaştırır. Onlar sayesinde zor işleri kolaylıkla yaparız.',
+          'Robotlar, insanların işlerini alabilir. Bu yüzden işsizlik olabilir.'
+        ]
+      }
+    ]
+  },
+  15: {
+    storyId: 15,
+    title: 'Küçük Avcılar Metni Şematik Düzenleyicisi',
+    sections: [
+      {
+        id: 1,
+        title: '1. Yaşam Koşulları',
+        items: [
+          'Sinekkapanlar bataklık ve nemli yerlerde yetişir.',
+          'Genellikle Amerika\'da bulunur.',
+          'Sinekkapan bitkisi, etçil bir bitki türüdür.',
+          'Sinek ve karınca gibi böcekleri yakalayarak beslenir.'
+        ]
+      },
+      {
+        id: 2,
+        title: '2. Fiziksel Özellikleri',
+        items: [
+          'Bu bitkilerin rengi yeşildir.',
+          'Sinekkapan bitkisi, tıpkı bir ağza benzer.',
+          'Yaprakları, ağzını açmış gibi görünür.',
+          'Ağzın içi ise kırmızı renktedir.',
+          'Ağızda tıpkı diş gibi küçük tüyler bulunur.',
+          'Bu tüyler, özel bir sıvı salgılar. Kokusuyla böcekleri kendine çeker.'
+        ]
+      },
+      {
+        id: 3,
+        title: '3. Çoğalmaları',
+        items: [
+          'Sinekkapan bitkisi, ya köklerinden çıkan yavru bitkilerle ya da çiçeklerinden oluşan tohumlarla çoğalır.',
+          'Kökten çıkan yavrular annesi gibi büyüyüp kocaman olur.',
+          'Tohumlar ise toprağa ekilince zamanla yeni sinekkapanlar büyür.'
+        ]
+      },
+      {
+        id: 4,
+        title: '4. Etkileri',
+        items: [
+          'Yararı böcekleri avlayarak ekolojik dengeyi sağlamasıdır.',
+          'Zararı ise bazı böcekleri yediği için onların neslini tehlikeye atmasıdır.'
+        ]
+      }
+    ]
+  },
+  16: {
+    storyId: 16,
+    title: 'Güzel Sahiller Diyarı Metni Şematik Düzenleyicisi',
+    sections: [
+      {
+        id: 1,
+        title: '1. İklim Özellikleri',
+        items: [
+          'Bölgede Akdeniz iklimi görülür.',
+          'Yazları sıcak ve kuraktır. Kışları ise ılık ve yağışlı geçer.',
+          'En yağışlı mevsim kıştır. Bu yağışlar, sel denen su taşkınlarına neden olabilir.',
+          'Bölge fay hatları üzerindedir.',
+          'Burada sık sık deprem olur.'
+        ]
+      },
+      {
+        id: 2,
+        title: '2. Bitki Örtüsü',
+        items: [
+          'Ege Bölgesi\'nin bitki örtüsünde en çok makiler görülür. Makiler kısa boylu çalılardır.',
+          'Funda, yabani zeytin ve böğürtlen bu bitkilerden bazılarıdır.',
+          'Bölgenin yüksek yerlerinde ise ormanlar yaygındır.'
+        ]
+      },
+      {
+        id: 3,
+        title: '3. Yeryüzü Özellikleri',
+        items: [
+          'Yaygın olarak ovalar ve dağlar vardır. Platolar da bulunur.',
+          'Güzel sahillere sahip bir denizi vardır.',
+          'Denizden uzaklaştıkça yükselti artar.',
+          'Bölgenin toprağı ise kireçli topraktır.'
+        ]
+      },
+      {
+        id: 4,
+        title: '4. Ekonomik Faaliyetler',
+        items: [
+          'Burada insanlar tarım, hayvancılık ve balıkçılıkla uğraşır.',
+          'Sanayi ve turizm de yaygındır.',
+          'Tarihi ve doğal güzellikleri olduğu için turizm açısından önemlidir.'
+        ]
+      },
+      {
+        id: 5,
+        title: '5. Nüfus ve Yerleşme',
+        items: [
+          'Ege Bölgesi\'nde yaklaşık 10 milyon insan yaşar.',
+          'Bölgede yaşayan insanlar genellikle kıyı şehirlerine yerleşmiştir.',
+          'Toplu yerleşimler görülür.'
+        ]
+      }
+    ]
+  },
+  17: {
+    storyId: 17,
+    title: 'Ormanların Akrobatı Metni Şematik Düzenleyicisi',
+    sections: [
+      {
+        id: 1,
+        title: '1. Yaşayışları',
+        items: [
+          'Maymunlar genellikle ormanlarda yaşar.',
+          'Bazıları ise bozkırda ve çölde yaşayabilir.',
+          'Ağaçlık alanlar maymunlar için önemlidir. Çünkü maymunlar ağaçlara çok iyi tırmanır. Orada uyur ve yemeklerini yerler. Ağaçlar, onların evidir.'
+        ]
+      },
+      {
+        id: 2,
+        title: '2. Fiziksel Özellikleri',
+        items: [
+          'Maymunların kuyrukları upuzundur.',
+          'İki uzun bacağı vardır.',
+          'İki de uzun kolu vardır.',
+          'Hareketleri tıpkı bir akrobat gibidir!'
+        ]
+      },
+      {
+        id: 3,
+        title: '3. Beslenmeleri',
+        items: [
+          'Maymunlar hem etçil hem otçul hayvanlardır.',
+          'Otçul beslenen maymunlar çiçek, meyve, yaprak yer.',
+          'Etçil beslenen maymunlar ise yılan ve yengeç yer.',
+          'Onların en sevdiği meyve muzdur!'
+        ]
+      },
+      {
+        id: 4,
+        title: '4. Çoğalmaları',
+        items: [
+          'Maymunlar doğurarak çoğalır.',
+          'Anne maymunlar ortalama 250 gün boyunca hamile kalır.',
+          'Bebek maymun doğduktan sonra anne maymun bebeğini emzirir ve korur.'
+        ]
+      },
+      {
+        id: 5,
+        title: '5. Çevreye Etkileri',
+        items: [
+          'Maymunların doğaya ve insanlara birçok faydası vardır.',
+          'Onlar ormanda tohumları yayar.',
+          'Onlar bazı böcekleri yer.',
+          'Ormanların akrobatları tarım alanlarına zarar verebilir.',
+          'Özellikle bazı meyve ağaçlarını tahrip eder. Buğday, arpa gibi bitkilere de zarar verirler.'
+        ]
+      }
+    ]
+  },
+  18: {
+    storyId: 18,
+    title: 'Hayal Et, Gerçekleştir Metni Şematik Düzenleyicisi',
+    sections: [
+      {
+        id: 1,
+        title: '1. Kullanım Amaçları',
+        items: [
+          'Eğlence için oyuncaklar, figürler ve oyun parçaları üretilebilir.',
+          'Sağlık alanında, kırık dişlerin yerine protezler hazırlanabilir.',
+          'Mimarlıkta, evlerin ve köprülerin küçük modelleri yapılabilir.',
+          'Eğitimde ise iskelet modelleri, deney malzemeleri gibi eşyalar yapılabilir.'
+        ]
+      },
+      {
+        id: 2,
+        title: '2. Fiziksel Özellikleri',
+        items: [
+          'Üç boyutlu yazıcılar genellikle dikdörtgen ya da kare şeklinde olur.',
+          'Küçük olanları bir masa üzerine sığabilirken, büyük olanlar için büyük odalar gereklidir.'
+        ]
+      },
+      {
+        id: 3,
+        title: '3. Çalışma Biçimleri',
+        items: [
+          'Yapmak istediğin nesneyi bilgisayardan tasarla.',
+          'Yazıcıyı çalıştır.',
+          'Tasarımı yazıcıya gönder. Tasarımın gerçeğe dönüşmesini bekle.'
+        ]
+      },
+      {
+        id: 4,
+        title: '4. Üretimleri',
+        items: [
+          'Üç boyutlu yazıcıların önce gövdesi üretilir.',
+          'Sonra motorlar, kablolar ve yazdırma kafası gibi parçalar eklenir.',
+          'Sonra test edilir.',
+          'Doğru çalışıyorsa paketlenip satışa sunulur.'
+        ]
+      },
+      {
+        id: 5,
+        title: '5. Hayatımıza Etkileri',
+        items: [
+          'Geri dönüştürülebilir malzemeler kullanarak üretim yapar. Böylece doğa korunmuş olur.',
+          'Üç boyutlu yazıcıyı dikkatli kullanmazsak aşırı ısınır ve yangına neden olabilir.'
+        ]
+      }
+    ]
+  },
+  19: {
+    storyId: 19,
+    title: 'Kırmızı Lezzetli Kalpler Metni Şematik Düzenleyicisi',
+    sections: [
+      {
+        id: 1,
+        title: '1. Yaşam Koşulları',
+        items: [
+          'Ülkemizde birçok yerde yetişmektedir. Ama en fazla Akdeniz bölgesinde yetişir.',
+          'İl olarak ise ilk sırada Mersin gelir.',
+          'Çilek güneşi sever ancak çok sıcaktan hoşlanmaz.',
+          'Nemli havalar yetişmesi için uygundur.'
+        ]
+      },
+      {
+        id: 2,
+        title: '2. Fiziksel Özellikleri',
+        items: [
+          'Çilekler, kırmızı ve parlak görünür.',
+          'Üzerinde minik delikler bulunur. Bu deliklere aken denir.',
+          'Çileğin tepesinde küçük, yeşil yapraklar bulunur.',
+          'Bu meyveler nefis bir kokuya sahiptir.',
+          'Çileklerin; yumuşak, sulu ve lezzetli bir iç yapısı vardır.'
+        ]
+      },
+      {
+        id: 3,
+        title: '3. Çoğalmaları',
+        items: [
+          'Çilekten bir parça alınır. Alınan bu parça toprağa gömülür.',
+          'Zamanla kök salan bu parça yeni çileklerin büyümesini sağlar.'
+        ]
+      },
+      {
+        id: 4,
+        title: '4. Etkileri',
+        items: [
+          'Çilek, kalp damar sağlığını destekler.',
+          'C vitamini bakımından zengindir.',
+          'Kanser hücresinin oluşmasını önler.',
+          'Çok yersek karnımız ağrıyabilir.',
+          'Çilek, bazı insanlar için alerjiye bile sebep olabilir.'
+        ]
+      }
+    ]
+  },
+  20: {
+    storyId: 20,
+    title: 'Hırçın Dalgalar Metni Şematik Düzenleyicisi',
+    sections: [
+      {
+        id: 1,
+        title: '1. İklim Özellikleri',
+        items: [
+          'Bölge, Karadeniz iklimine sahiptir. Her mevsim yağışlıdır. Bu nedenle bölge çok yeşildir.',
+          'Yazları serin kışları ise ılık geçer.',
+          'Çok yağış olduğu için sel ve heyelan gibi doğa olayları yaşanır.'
+        ]
+      },
+      {
+        id: 2,
+        title: '2. Bitki Örtüsü',
+        items: [
+          'Bölgenin bitki örtüsü ormandır. Karadeniz Bölgesi yemyeşil çam, kayın, gürgen ağaçlarıyla doludur.',
+          'Bölgede; fındık, mısır ve çay gibi tarım ürünleri de yetişir.'
+        ]
+      },
+      {
+        id: 3,
+        title: '3. Yeryüzü Özellikleri',
+        items: [
+          'Bölge, dağlık ve engebeli bir araziye sahiptir.',
+          'Bölgenin kuzeyinde Karadeniz Dağları vardır. Güneyinde ise Kuzey Anadolu Dağları uzanır.',
+          'Bu dağlar arasında dar ve uzun vadiler bulunur. Bu vadilerde akarsular akar.',
+          'Şelaleler, yaylalar ve dereler Karadeniz\'i âdeta süsler.'
+        ]
+      },
+      {
+        id: 4,
+        title: '4. Ekonomik Faaliyetler',
+        items: [
+          'Karadeniz, tarım ve balıkçılıkla geçinir.',
+          'Çay ve fındık üretimi ülke ekonomisine katkı sağlar.',
+          'Bu bölgemizde bakır ve altın gibi madenler çıkartılır.',
+          'Turizm sektörü de bölgede önemli bir gelir kaynağıdır.'
+        ]
+      },
+      {
+        id: 5,
+        title: '5. Nüfus ve Yerleşme',
+        items: [
+          'Genellikle dağınık yerleşmeler görülür.',
+          'Yaklaşık 8 milyon insan bu bölgede yaşar.'
+        ]
+      }
+    ]
+  },
+  21: {
+    storyId: 21,
+    title: 'Sekiz Kollu Balon Kafa Metni Şematik Düzenleyicisi',
+    sections: [
+      {
+        id: 1,
+        title: '1. Yaşayışları',
+        items: [
+          'Ahtapotlar tuzlu sularda, yani okyanus ve denizlerde yaşarlar.',
+          'Sıcak ve ılıman denizleri severler.',
+          'Derin suları tercih eder.',
+          'Ahtapotlar hızlı büyür.',
+          'Bir ahtapot yaklaşık üç yıl yaşar.',
+          'Ahtapotlar oldukça akıllıdır. Avcılarından çok iyi saklanır.'
+        ]
+      },
+      {
+        id: 2,
+        title: '2. Fiziksel Özellikleri',
+        items: [
+          'Ahtapotların sekiz kolu vardır.',
+          'Bir ahtapotun yumuşacık bir gövdesi olur.',
+          'Kocaman iki gözü vardır.',
+          'Ağzı, kollarının ortasında yer alır.',
+          'Ahtapotlar oldukça esnektir.',
+          'Onlar renk değiştirebilir!'
+        ]
+      },
+      {
+        id: 3,
+        title: '3. Beslenmeleri',
+        items: [
+          'Bu canlılar, küçük balıklar ve karideslerle beslenir.',
+          'En sevdiği yemek, deniztarağı ve deniz salyangozudur.'
+        ]
+      },
+      {
+        id: 4,
+        title: '4. Çoğalmaları',
+        items: [
+          'Ahtapotlar yumurtlayarak çoğalır.',
+          'Anne ahtapot yumurtladıktan sonra ölür.'
+        ]
+      },
+      {
+        id: 5,
+        title: '5. Çevreye Etkileri',
+        items: [
+          'Ahtapotlar, ekosisteme katkı sağlar.',
+          'Onların besin değeri yüksektir. Bu nedenle insanlar, ahtapotları güçlenmek için yiyebilir.',
+          'İnsanlar zehirli olanı yerse ölebilir.'
+        ]
+      }
+    ]
+  },
+  22: {
+    storyId: 22,
+    title: 'Dokundukça Başlayan Maceralar Metni Şematik Düzenleyicisi',
+    sections: [
+      {
+        id: 1,
+        title: '1. Kullanım Amaçları',
+        items: [
+          'Tabletler, bilgisayarların küçültülmüş hâli gibidir.',
+          'Bu cihazla internete girersin, fotoğraf veya video çekersin.',
+          'Müzik dinlersin.',
+          'Araştırma yaparsın.',
+          'Oyun oynarsın. Hatta bir oyun bile tasarlarsın.',
+          'Ödevini yapmak için de tableti kullanırsın.'
+        ]
+      },
+      {
+        id: 2,
+        title: '2. Fiziksel Özellikleri',
+        items: [
+          'Tabletler, ince ve dikdörtgen şeklinde, ön yüzü tamamen dokunmatik ekrandan oluşan taşınabilir bilgisayarlardır.',
+          'Kenarlarında ses tuşları, açma-kapama düğmesi ve şarj girişi bulunur.',
+          'Arka yüzlerinde ise bazen kamera ve marka logosu yer alır.',
+          'Bazı modellerde ön tarafta da kamera bulunur.'
+        ]
+      },
+      {
+        id: 3,
+        title: '3. Çalışma Biçimleri',
+        items: [
+          'Tabletler bataryayla çalışır.',
+          'Batarya bittikçe tablet şarja takılır.',
+          'Şarja takmak için elektrik enerjisi kullanılır.',
+          'Bu cihazlar dokunmatik olur.',
+          'Özel bir kalem veya klavyeyle de kullanılabilir.'
+        ]
+      },
+      {
+        id: 4,
+        title: '4. Üretimleri',
+        items: [
+          'Tabletler, fabrikada üretilir.',
+          'İlk olarak tasarım aşaması vardır.',
+          'Sonra tasarlananları birleştirme gelir. En son performans testi yapılır.'
+        ]
+      },
+      {
+        id: 5,
+        title: '5. Hayatımıza Etkileri',
+        items: [
+          'Tabletler, hem öğrenmemizi hem eğlenmemizi sağlar.',
+          'Ancak uzun süre kullanırsak gözlerimiz bozulabilir.',
+          'Çok fazla vakit kaybına yol açabilir.'
+        ]
+      }
+    ]
+  },
+  23: {
+    storyId: 23,
+    title: 'Yaz Meyvelerinin Kralı Metni Şematik Düzenleyicisi',
+    sections: [
+      {
+        id: 1,
+        title: '1. Yaşam Koşulları',
+        items: [
+          'Karpuz, dünyada en çok Çin\'de yetişir.',
+          'Ülkemizde ise birçok bölgede yetişir. Özellikle de Adana ilimiz karpuzuyla meşhurdur.',
+          'Karpuz, toprağın üzerinde yayılarak büyür.',
+          'Kökleri toprak altında derinlere uzanır.',
+          'Bu meyve, sıcak iklimi ve suyu çok sever.'
+        ]
+      },
+      {
+        id: 2,
+        title: '2. Fiziksel Özellikleri',
+        items: [
+          'Karpuz bitkisi, sarmaşık benzeri bir bitkidir.',
+          'Geniş yaprakları vardır ve sarı renkte çiçekler açar. Çiçekten sonra minik karpuzlar oluşur.',
+          'Karpuz oval ya da yuvarlak bir şekildedir.',
+          'Bir karpuz; kabuk, meyve ve çekirdekten oluşur.',
+          'Karpuzun dış kabuğu yeşil renktedir.',
+          'Kabuğunda sarımsı çizgileri olabilir.',
+          'İç kısmı ise kıpkırmızıdır.'
+        ]
+      },
+      {
+        id: 3,
+        title: '3. Çoğalmaları',
+        items: [
+          'Karpuz, çekirdeklerinin ekilmesiyle çoğalır.',
+          'Ekim ilkbaharda yapılır.',
+          'Hem tarlada hem de evde karpuz yetiştirebilirsin. Yeter ki onu 10 günde bir sula. Tabi ki, bir de bol bol güneş görmesini sağlamalısın.'
+        ]
+      },
+      {
+        id: 4,
+        title: '4. Etkileri',
+        items: [
+          'Karpuz bağırsaklarımızın iyi çalışmasını sağlar.',
+          'Böbreklerimizin dostudur.',
+          'Kalp sağlığımız için iyi bir besindir.',
+          'Birçok vitamin içerir.',
+          'Cildi de nemlendirir.',
+          'Ancak onu fazla tüketirsen karnın ağrıyabilir.'
+        ]
+      }
+    ]
+  },
+  24: {
+    storyId: 24,
+    title: 'Lezzet Diyarı Metni Şematik Düzenleyicisi',
+    sections: [
+      {
+        id: 1,
+        title: '1. İklim Özellikleri',
+        items: [
+          'Bu bölgede karasal iklim görülür.',
+          'Yazlar oldukça kurak ve sıcaktır.',
+          'Kışları ise ılıktır.',
+          'Yağışlar çok azdır.',
+          'Bölgede görülen doğal afet ise depremdir.',
+          'Bölgede ormanlar çok az olduğu için heyelan yani toprak kayması da çok görülür.'
+        ]
+      },
+      {
+        id: 2,
+        title: '2. Bitki Örtüsü',
+        items: [
+          'Bitki örtüsü bozkırdır.',
+          'Ülkemizde en az orman burada görülür.',
+          'Bölgenin en ünlü tarım ürünü Antep fıstığıdır.',
+          'Ayrıca zeytin, incir, kırmızı mercimek ve karpuz da yetişir.'
+        ]
+      },
+      {
+        id: 3,
+        title: '3. Yeryüzü Özellikleri',
+        items: [
+          'Bölgenin yükseltisi azdır.',
+          'Bazı yerlerinde dağlar görülür.',
+          'Bölgede verimli ovalar da bulunur.',
+          'Fırat ve Dicle adlı iki akarsu da bu bölgeden geçer.'
+        ]
+      },
+      {
+        id: 4,
+        title: '4. Ekonomik Faaliyetler',
+        items: [
+          'Buradaki insanlar gelirini genellikle tarımdan sağlar.',
+          'Bununla birlikte sanayi ve turizmden de gelir elde edilir.',
+          'Güneydoğu Anadolu, ülkemizde petrolün çıkarıldığı tek bölgedir.'
+        ]
+      },
+      {
+        id: 5,
+        title: '5. Nüfus ve Yerleşme',
+        items: [
+          'Nüfus genellikle şehirlerde yoğunlaşmıştır; Gaziantep, Şanlıurfa ve Diyarbakır gibi büyük şehirler kalabalıktır.',
+          'Köylerde ise nüfus daha azdır ve yerleşmeler toplu köy tipi şeklindedir.',
+          'İnsanlar, su kaynaklarına yakın, tarıma elverişli ovalar ve akarsu kenarlarında yaşamayı tercih eder.'
+        ]
+      }
+    ]
   }
 };
 

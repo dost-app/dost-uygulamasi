@@ -20,7 +20,19 @@ const LEVEL1_STEP3_ANALYSIS_TEXTS: Record<number, string> = {
   9: 'Bu ilk cümlelere bakınca metnin sincapların yaşayışları, fiziksel özellikleri ve beslenmeleri hakkında bilgi verdiğini düşünüyorum. Şimdi sen de metnin devamı hakkında tahmin yap.',
   10: 'Bu ilk cümlelere bakınca metnin akıllı saatlerin ne işe yaradığı, nasıl göründüğü ve nasıl çalıştığı hakkında bilgi verdiğini düşünüyorum. Hadi şimdi sen de tahminini söyle.',
   11: 'Bu ilk cümlelere bakınca metnin nar ağacının yaşam koşulları, görünüşü ve çoğalması hakkında bilgi verdiğini düşünüyorum. Şimdi sen de metnin nasıl devam edeceğini tahmin et.',
-  12: 'Bu ilk cümlelere bakınca metnin Marmara Bölgesi nin iklimi, bitki örtüsü ve yeryüzü şekilleri hakkında bilgi verdiğini düşünüyorum. Şimdi sıra sende, sen de tahminini paylaş.'
+  12: 'Bu ilk cümlelere bakınca metnin Marmara Bölgesi nin iklimi, bitki örtüsü ve yeryüzü şekilleri hakkında bilgi verdiğini düşünüyorum. Şimdi sıra sende, sen de tahminini paylaş.',
+  13: 'Bu ilk cümlelere bakınca metnin leyleklerin nasıl yaşadığı, fiziksel özellikleri ve beslenmesi hakkında bilgi verdiğini düşünüyorum. Şimdi sen de metnin devamını tahmin et.',
+  14: 'Bu ilk cümlelere bakınca metnin robotların ne işe yaradığı, nasıl göründüğü ve nasıl çalıştığı hakkında bilgi verdiğini düşünüyorum. Hadi şimdi sen de tahminini söyle.',
+  15: 'Bu ilk cümlelere bakınca metnin sinekkapan bitkisinin yaşam koşulları, görünüşü ve çoğalması hakkında bilgi verdiğini düşünüyorum. Şimdi sen de kendi tahminini paylaş.',
+  16: 'Bu ilk cümlelere bakınca metnin Ege Bölgesi nin iklimi, bitki örtüsü ve yeryüzü şekilleri hakkında bilgi verdiğini düşünüyorum. Şimdi sıra sende, sen de tahminini söyle.',
+  17: 'Bu ilk cümlelere bakınca metnin maymunların nasıl yaşadığı, fiziksel özellikleri ve beslenmesi hakkında bilgi verdiğini düşünüyorum. Hadi şimdi sen de metnin devamını tahmin et.',
+  18: 'Bu ilk cümlelere bakınca metnin üç boyutlu yazıcıların ne işe yaradığı, nasıl göründüğü ve nasıl çalıştığı hakkında bilgi verdiğini düşünüyorum. Şimdi sen de diğer cümlelere bakarak tahminini söyle.',
+  19: 'Bu ilk cümlelere bakınca metnin çileğin yaşam koşulları, görünüşü ve çoğalması hakkında bilgi verdiğini düşünüyorum. Şimdi sen de metnin nasıl devam edeceğini tahmin et.',
+  20: 'Bu ilk cümlelere bakınca metnin Karadeniz Bölgesi nin iklimi, bitki örtüsü ve yeryüzü şekilleri hakkında bilgi verdiğini düşünüyorum. Şimdi sıra sende, sen de tahminini paylaş.',
+  21: 'Bu ilk cümlelere bakınca metnin ahtapotların nasıl yaşadığı, fiziksel özellikleri ve beslenmesi hakkında bilgi verdiğini düşünüyorum. Hadi şimdi sen de devamını tahmin etmeye çalış.',
+  22: 'Bu ilk cümlelere bakınca metnin tabletlerin ne işe yaradığı, nasıl göründüğü ve nasıl çalıştığı hakkında bilgi verdiğini düşünüyorum. Şimdi sen de tahminini söyle.',
+  23: 'Bu ilk cümlelere bakınca metnin karpuzun yaşam koşulları, görünüşü ve çoğalması hakkında bilgi verdiğini düşünüyorum. Şimdi sen de metnin devamı hakkında tahmin yap.',
+  24: 'Bu ilk cümlelere bakınca metnin Güneydoğu Anadolu Bölgesi nin iklimi, bitki örtüsü ve yeryüzü şekilleri hakkında bilgi verdiğini düşünüyorum. Şimdi sıra sende, sen de tahminini söyle.'
 };
 
 function paragraphToPlain(paragraph: Paragraph): string {
