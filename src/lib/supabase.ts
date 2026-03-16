@@ -922,24 +922,34 @@ export async function isStepCompleted(
   storyId: number,
   level: number,
   step: number,
-  sessionId?: string | null
+  _sessionId?: string | null
 ): Promise<boolean> {
-  let query = supabase
+  // 1) student_progress tablosundan kontrol: öğrenci bu adımı geçmişse kesinlikle tamamlanmıştır
+  try {
+    const { data: progress } = await getStudentProgressByStory(studentId, storyId);
+    if (progress) {
+      const completedLevels: number[] = Array.isArray(progress.completed_levels) ? progress.completed_levels : [];
+      if (completedLevels.includes(level)) return true;
+      if (progress.current_level > level) return true;
+      if (progress.current_level === level && progress.current_step > step) return true;
+    }
+  } catch {
+    // student_progress okunamazsa step_completions'a düş
+  }
+
+  // 2) step_completions tablosundan kontrol (session bağımsız)
+  const { data, error } = await supabase
     .from('step_completions')
     .select('is_completed')
     .eq('student_id', studentId)
     .eq('story_id', storyId)
     .eq('level', level)
-    .eq('step', step);
+    .eq('step', step)
+    .eq('is_completed', true)
+    .limit(1);
 
-  if (sessionId) {
-    query = query.eq('session_id', sessionId);
-  }
-
-  const { data, error } = await query.single();
-
-  if (error || !data) return false;
-  return data.is_completed === true;
+  if (error || !data || data.length === 0) return false;
+  return data[0].is_completed === true;
 }
 
 // ===== API LOGS =====

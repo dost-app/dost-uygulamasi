@@ -1,5 +1,5 @@
 // React 19: no default import required
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import StepLayout from './components/StepLayout';
@@ -45,7 +45,7 @@ import { setSelectedGoal, setAnalysisResult } from '../store/level2Slice';
 
 const LEVEL_STEPS_COUNT: Record<number, number> = {
   1: 5,
-  2: 3,
+  2: 4,
   3: 3,
   4: 3,
   5: 3,
@@ -62,6 +62,7 @@ const LEVEL2_TITLES = [
   '1. Adım: Birinci okuma ve Okuma hızı belirleme',
   '2. Adım: Okuma hızı',
   '3. Adım: Okuma hedefi belirleme',
+  '4. Adım: Özet',
 ];
 
 const LEVEL3_TITLES = [
@@ -105,6 +106,8 @@ export default function LevelRouter() {
   const [stepCompleted, setStepCompleted] = useState(false);
   const [isCheckingCompletion, setIsCheckingCompletion] = useState(true);
   const [storyTitle, setStoryTitle] = useState<string>('');
+  const [warningMessage, setWarningMessage] = useState<string | null>(null);
+  const stepCompletedByCallbackRef = useRef(false);
   const appMode = getAppMode();
 
   // Fetch story title
@@ -189,10 +192,12 @@ export default function LevelRouter() {
           await markStepStarted(currentSessionId, student.id, storyId, level, step);
         }
 
-        // Check if step is completed
-        const completed = await isStepCompleted(student.id, storyId, level, step, currentSessionId);
-        if (isMounted) {
+        // Check if step is completed (student_progress + step_completions tabloları kontrol edilir)
+        const completed = await isStepCompleted(student.id, storyId, level, step);
+        if (isMounted && !stepCompletedByCallbackRef.current) {
           setStepCompleted(completed);
+          setIsCheckingCompletion(false);
+        } else if (isMounted) {
           setIsCheckingCompletion(false);
         }
       } catch (err) {
@@ -207,6 +212,11 @@ export default function LevelRouter() {
       isMounted = false;
     };
   }, [student?.id, storyId, level, step]); // sessionId'i dependency'den çıkardık
+
+  // Reset ref when step changes (handles navigate() calls from step components)
+  useEffect(() => {
+    stepCompletedByCallbackRef.current = false;
+  }, [level, step]);
 
   // Load reading goal from Supabase when entering level 3+
   // This ensures the goal persists across sessions/devices
@@ -257,6 +267,7 @@ export default function LevelRouter() {
     // Reset completion status when navigating
     setStepCompleted(false);
     setIsCheckingCompletion(true);
+    stepCompletedByCallbackRef.current = false;
   };
 
   const onPrev = () => {
@@ -271,7 +282,8 @@ export default function LevelRouter() {
 
     // In prod mode, check if step is completed
     if (appMode === 'prod' && !stepCompleted) {
-      alert('Bu adımı tamamlamadan bir sonraki adıma geçemezsiniz.');
+      setWarningMessage('Bu adımı tamamlamadan bir sonraki adıma geçemezsiniz.');
+      setTimeout(() => setWarningMessage(null), 4000);
       return;
     }
 
@@ -397,6 +409,7 @@ export default function LevelRouter() {
       );
 
       if (!error) {
+        stepCompletedByCallbackRef.current = true;
         setStepCompleted(true);
         await logStudentAction(sessionId, student.id, 'step_completed', storyId, level, step, completionData);
       }
@@ -525,6 +538,23 @@ export default function LevelRouter() {
       onStepCompleted={handleStepCompleted}
       initialFooterVisible={initialFooterVisible}
     >
+    {warningMessage && (
+      <div
+        className="fixed top-4 left-1/2 z-[9999]"
+        style={{ transform: 'translateX(-50%)', animation: 'slideIn 0.3s ease-out' }}
+      >
+        <div className="bg-amber-50 border-2 border-amber-400 text-amber-800 px-6 py-3 rounded-xl shadow-lg flex items-center gap-3">
+          <span className="text-xl">⚠️</span>
+          <span className="font-medium">{warningMessage}</span>
+          <button
+            onClick={() => setWarningMessage(null)}
+            className="ml-2 text-amber-600 hover:text-amber-800 font-bold text-lg"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+    )}
     <StepLayout
       currentStep={step}
       totalSteps={totalSteps}
