@@ -1,0 +1,45 @@
+# Supabase l5_audio_jobs kuyruğunu işler: TTS → public/audios/sorular/ → commit & push
+# Gerekli repo secrets: VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+name: L5 comprehension audio jobs
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '25,55 * * * *' # saatte 2 kez (UTC)
+
+concurrency:
+  group: l5-audio-jobs
+  cancel-in-progress: false
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Process queue (TTS + write public/audios/sorular)
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/process-l5-audio-jobs.js
+
+      - name: Commit and push new MP3s
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/audios/sorular/
+          if git diff --staged --quiet; then
+            echo "No audio file changes."
+          else
+            git commit -m "chore: L5 comprehension audio from queue"
+            git push
+          fi

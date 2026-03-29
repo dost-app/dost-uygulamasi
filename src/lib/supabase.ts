@@ -1197,6 +1197,17 @@ export async function getLatestReadingGoal(
 
 // ===== COMPREHENSION QUESTIONS =====
 
+/** Prod: Supabase Storage public URL'leri (admin TTS sonrası). Boşsa L5Step1 yerel /audios/sorular/ kullanır. */
+export type L5AudioUrls = {
+  question?: string;
+  A?: string;
+  B?: string;
+  C?: string;
+  D?: string;
+  correct?: string;
+  wrong?: string;
+};
+
 export interface ComprehensionQuestion {
   id: string;
   story_id: number;
@@ -1210,8 +1221,43 @@ export interface ComprehensionQuestion {
   question_audio_url: string | null;
   correct_answer_audio_url: string | null;
   wrong_answer_audio_url: string | null;
+  /** Storage URL manifesti (şık sesleri dahil); kolon yoksa API undefined dönebilir */
+  l5_audio_urls?: L5AudioUrls | null;
   created_at: string;
   updated_at: string;
+}
+
+/** Base64 (data: ile veya ham) MP3 → audios bucket, path örn. sorular/3/q1/question.mp3 */
+export async function uploadComprehensionAudioMp3(
+  base64Mp3: string,
+  storagePath: string
+): Promise<string | null> {
+  try {
+    const base64Data = base64Mp3.includes('data:')
+      ? base64Mp3.split(',')[1]
+      : base64Mp3;
+    const byteCharacters = atob(base64Data);
+    const byteArray = new Uint8Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteArray[i] = byteCharacters.charCodeAt(i);
+    }
+    const blob = new Blob([byteArray], { type: 'audio/mpeg' });
+
+    const { error } = await supabase.storage
+      .from('audios')
+      .upload(storagePath, blob, { contentType: 'audio/mpeg', upsert: true });
+
+    if (error) {
+      console.error('uploadComprehensionAudioMp3:', error.message);
+      return null;
+    }
+
+    const { data: urlData } = supabase.storage.from('audios').getPublicUrl(storagePath);
+    return urlData.publicUrl;
+  } catch (e) {
+    console.error('uploadComprehensionAudioMp3 error:', e);
+    return null;
+  }
 }
 
 export async function getComprehensionQuestionsByStory(storyId: number) {
@@ -1233,7 +1279,8 @@ export async function createComprehensionQuestion(
   questionOrder: number,
   questionAudioUrl?: string | null,
   correctAnswerAudioUrl?: string | null,
-  wrongAnswerAudioUrl?: string | null
+  wrongAnswerAudioUrl?: string | null,
+  l5AudioUrls?: L5AudioUrls | null
 ) {
   return supabase
     .from('comprehension_questions')
@@ -1249,6 +1296,7 @@ export async function createComprehensionQuestion(
       question_audio_url: questionAudioUrl || null,
       correct_answer_audio_url: correctAnswerAudioUrl || null,
       wrong_answer_audio_url: wrongAnswerAudioUrl || null,
+      l5_audio_urls: l5AudioUrls ?? null,
     })
     .select('id')
     .single();
@@ -1267,6 +1315,7 @@ export async function updateComprehensionQuestion(
     question_audio_url: string | null;
     correct_answer_audio_url: string | null;
     wrong_answer_audio_url: string | null;
+    l5_audio_urls: L5AudioUrls | null;
   }>
 ) {
   return supabase
@@ -1280,6 +1329,20 @@ export async function deleteComprehensionQuestion(questionId: string) {
     .from('comprehension_questions')
     .delete()
     .eq('id', questionId);
+}
+
+/** L5 ses üretimini kuyruğa alır (Supabase Storage kullanmaz). Worker: GitHub Actions + scripts/process-l5-audio-jobs.js */
+export async function enqueueL5AudioJob(
+  storyId: number,
+  questionOrder: number,
+  comprehensionQuestionId?: string | null
+) {
+  return supabase.from('l5_audio_jobs').insert({
+    story_id: storyId,
+    question_order: questionOrder,
+    comprehension_question_id: comprehensionQuestionId ?? null,
+    status: 'pending',
+  });
 }
 
 // ===== STEP COMPLETION DATA HELPERS =====

@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { getComprehensionQuestions } from '../../data/stories';
-import { getComprehensionQuestionsByStory, type ComprehensionQuestion, logStudentAction, awardPoints, saveScore } from '../../lib/supabase';
+import {
+  getComprehensionQuestionsByStory,
+  type ComprehensionQuestion,
+  type L5AudioUrls,
+  logStudentAction,
+  awardPoints,
+  saveScore,
+} from '../../lib/supabase';
 import { useStepContext } from '../../contexts/StepContext';
 import { getPlaybackRate } from '../../components/SidebarSettings';
 import { useAudioPlaybackRate } from '../../hooks/useAudioPlaybackRate';
@@ -19,6 +26,7 @@ interface QuestionData {
   questionNumber: number; // UI için sıra numarası
   originalQuestionOrder: number; // Ses dosyası için orijinal question_order
   questionAudioUrl?: string | null;
+  optionAudioUrls?: Partial<Record<'A' | 'B' | 'C' | 'D', string>> | null;
   correctAnswerAudioUrl?: string | null;
   wrongAnswerAudioUrl?: string | null;
 }
@@ -86,13 +94,24 @@ export default function L5Step1() {
         
         if (!error && supabaseQuestions && supabaseQuestions.length > 0) {
           // Convert Supabase questions to QuestionData format
-          allQuestions = supabaseQuestions.map((q: ComprehensionQuestion, idx: number) => ({
-            question: q.question_text,
-            options: [q.option_a, q.option_b, q.option_c, q.option_d],
-            correctIndex: q.correct_option === 'A' ? 0 : q.correct_option === 'B' ? 1 : q.correct_option === 'C' ? 2 : 3,
-            questionNumber: q.question_order || idx + 1,
-            originalQuestionOrder: q.question_order || idx + 1, // Ses dosyası için orijinal order
-          }));
+          allQuestions = supabaseQuestions.map((q: ComprehensionQuestion, idx: number) => {
+            const l5 = (q.l5_audio_urls ?? null) as L5AudioUrls | null;
+            const hasOptionUrls = l5 && (l5.A || l5.B || l5.C || l5.D);
+            return {
+              question: q.question_text,
+              options: [q.option_a, q.option_b, q.option_c, q.option_d],
+              correctIndex:
+                q.correct_option === 'A' ? 0 : q.correct_option === 'B' ? 1 : q.correct_option === 'C' ? 2 : 3,
+              questionNumber: q.question_order || idx + 1,
+              originalQuestionOrder: q.question_order || idx + 1,
+              questionAudioUrl: l5?.question ?? q.question_audio_url ?? null,
+              optionAudioUrls: hasOptionUrls
+                ? { A: l5!.A, B: l5!.B, C: l5!.C, D: l5!.D }
+                : null,
+              correctAnswerAudioUrl: l5?.correct ?? q.correct_answer_audio_url ?? null,
+              wrongAnswerAudioUrl: l5?.wrong ?? q.wrong_answer_audio_url ?? null,
+            };
+          });
         } else {
           // Fallback to static questions
           const staticQuestions = getComprehensionQuestions(storyId || 3);
@@ -286,7 +305,9 @@ export default function L5Step1() {
     
     setPlayingQuestionAudio(true);
     try {
-      const audioPath = `/audios/sorular/question-${storyId || 3}-q${question.originalQuestionOrder}.mp3`;
+      const audioPath =
+        question.questionAudioUrl ||
+        `/audios/sorular/question-${storyId || 3}-q${question.originalQuestionOrder}.mp3`;
       console.log('Playing question audio:', audioPath, 'for question:', question.question);
       await playAudioFile(audioPath, signal);
     } catch (err) {
@@ -304,10 +325,13 @@ export default function L5Step1() {
     }
     if (signal?.aborted) return;
     
-    const optionLetter = String.fromCharCode(65 + optionIndex); // A, B, C, D
+    const optionLetter = String.fromCharCode(65 + optionIndex) as 'A' | 'B' | 'C' | 'D';
     setPlayingOptionAudio(optionIndex);
     try {
-      const audioPath = `/audios/sorular/option-${storyId || 3}-q${question.originalQuestionOrder}-${optionLetter}.mp3`;
+      const remote = question.optionAudioUrls?.[optionLetter];
+      const audioPath =
+        remote ||
+        `/audios/sorular/option-${storyId || 3}-q${question.originalQuestionOrder}-${optionLetter}.mp3`;
       console.log('Playing option audio:', audioPath);
       await playAudioFile(audioPath, signal);
     } catch (err) {
@@ -454,16 +478,18 @@ export default function L5Step1() {
 
     if (isCorrect) {
       setFeedback('✓ Çok iyi! Cevap doğru!');
-      // Play correct answer audio - orijinal question_order kullan
-      const correctPath = `/audios/sorular/correct-${storyId || 3}-q${question.originalQuestionOrder || question.questionNumber}.mp3`;
+      const correctPath =
+        question.correctAnswerAudioUrl ||
+        `/audios/sorular/correct-${storyId || 3}-q${question.originalQuestionOrder || question.questionNumber}.mp3`;
       await playAudioFile(correctPath, controller.signal).catch(() => {
         // Fallback to success sound if audio file not found
         playSoundEffect('success');
       });
     } else {
       setFeedback(`✗ Maalesef yanlış. Doğru cevap: "${correctOptionText}"`);
-      // Play wrong answer audio - orijinal question_order kullan
-      const wrongPath = `/audios/sorular/wrong-${storyId || 3}-q${question.originalQuestionOrder || question.questionNumber}.mp3`;
+      const wrongPath =
+        question.wrongAnswerAudioUrl ||
+        `/audios/sorular/wrong-${storyId || 3}-q${question.originalQuestionOrder || question.questionNumber}.mp3`;
       await playAudioFile(wrongPath, controller.signal).catch(() => {
         // Fallback to error sound if audio file not found
         playSoundEffect('error');

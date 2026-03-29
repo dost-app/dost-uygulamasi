@@ -17,10 +17,10 @@ import {
   createComprehensionQuestion,
   updateComprehensionQuestion,
   deleteComprehensionQuestion,
-  type ComprehensionQuestion
+  enqueueL5AudioJob,
+  type ComprehensionQuestion,
 } from '../lib/supabase';
 import { getParagraphs } from '../data/stories';
-import { generateVoice, saveAudioLocally } from '../lib/voiceGenerator';
 import type { Teacher, Student } from '../lib/supabase-types';
 import { signOut } from '../lib/auth';
 import { clearUser } from '../store/userSlice';
@@ -2700,37 +2700,34 @@ function QuestionsModal({
   });
   const [error, setError] = useState('');
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
-  const [audioGenerating, setAudioGenerating] = useState(false);
+  const [queueBusy, setQueueBusy] = useState(false);
 
-  const generateAndSaveQuestionAudios = async (
-    qOrder: number,
-    formData: typeof questionFormData
-  ) => {
-    const optKey = formData.correct_option.toLowerCase() as 'a' | 'b' | 'c' | 'd';
-    const correctOptionText = formData[`option_${optKey}` as keyof typeof formData] as string;
-
-    const items: { text: string; fileName: string }[] = [
-      { text: formData.question_text, fileName: `question-${storyId}-q${qOrder}.mp3` },
-      { text: `A. ${formData.option_a}`, fileName: `option-${storyId}-q${qOrder}-A.mp3` },
-      { text: `B. ${formData.option_b}`, fileName: `option-${storyId}-q${qOrder}-B.mp3` },
-      { text: `C. ${formData.option_c}`, fileName: `option-${storyId}-q${qOrder}-C.mp3` },
-      { text: `D. ${formData.option_d}`, fileName: `option-${storyId}-q${qOrder}-D.mp3` },
-      { text: `Tebrikler, doğru cevap. ${formData.correct_option}. ${correctOptionText}`, fileName: `correct-${storyId}-q${qOrder}.mp3` },
-      { text: `Yanlış cevap. Doğru cevap ${formData.correct_option}. ${correctOptionText} olacaktı.`, fileName: `wrong-${storyId}-q${qOrder}.mp3` },
-    ];
-
-    let saved = 0;
-    for (const item of items) {
-      setInfoMessage(`Ses oluşturuluyor (${saved + 1}/${items.length}): ${item.fileName}`);
-      const result = await generateVoice(item.text);
-      if (!result.success || !result.audioBase64) {
-        console.error('Ses oluşturulamadı:', item.fileName, result.error);
-        continue;
-      }
-      await saveAudioLocally(result.audioBase64, item.fileName);
-      saved++;
+  const handleEnqueueAllQuestions = async () => {
+    if (questions.length === 0) return;
+    if (
+      !confirm(
+        `${questions.length} soru için ses üretim işi kuyruğa eklenecek (Storage kullanılmaz). Devam?`
+      )
+    ) {
+      return;
     }
-    return saved;
+    setQueueBusy(true);
+    setError('');
+    setInfoMessage(null);
+    try {
+      for (const q of questions) {
+        const { error: jobErr } = await enqueueL5AudioJob(storyId, q.question_order, q.id);
+        if (jobErr) throw new Error(jobErr.message);
+      }
+      setInfoMessage(
+        `${questions.length} iş kuyruğa eklendi. GitHub Actions (veya npm run process:l5-audio-jobs) çalışınca MP3’ler repoya yazılır; sonra deploy edin.`
+      );
+      onRefresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Kuyruk hatası');
+    } finally {
+      setQueueBusy(false);
+    }
   };
 
   const handleQuestionSubmit = async (e: React.FormEvent) => {
@@ -2741,6 +2738,18 @@ function QuestionsModal({
     try {
       if (editingQuestionId) {
         await updateComprehensionQuestion(editingQuestionId, questionFormData);
+        const { error: jobErr } = await enqueueL5AudioJob(
+          storyId,
+          questionFormData.question_order,
+          editingQuestionId
+        );
+        if (jobErr) {
+          setInfoMessage(`Soru güncellendi; kuyruk hatası: ${jobErr.message}`);
+        } else {
+          setInfoMessage(
+            'Soru güncellendi. Ses üretimi kuyruğa alındı (Supabase Storage kullanılmaz). GitHub Actions işleyip MP3’leri repoya ekler; ardından siteyi yeniden deploy edin.'
+          );
+        }
       } else {
         const { data, error: createErr } = await createComprehensionQuestion(
           storyId,
@@ -2756,16 +2765,17 @@ function QuestionsModal({
         if (createErr) throw createErr;
 
         if (data?.id) {
-          setAudioGenerating(true);
-          setInfoMessage('Ses dosyaları oluşturuluyor...');
-          try {
-            const saved = await generateAndSaveQuestionAudios(questionFormData.question_order, questionFormData);
-            setInfoMessage(`${saved}/7 ses dosyası public/audios/sorular/ klasörüne kaydedildi.`);
-          } catch (audioErr) {
-            const msg = audioErr instanceof Error ? audioErr.message : 'Bilinmeyen hata';
-            setInfoMessage(`Ses oluşturulamadı: ${msg}`);
-          } finally {
-            setAudioGenerating(false);
+          const { error: jobErr } = await enqueueL5AudioJob(
+            storyId,
+            questionFormData.question_order,
+            data.id
+          );
+          if (jobErr) {
+            setInfoMessage(`Soru kaydedildi; kuyruk hatası: ${jobErr.message}`);
+          } else {
+            setInfoMessage(
+              'Soru kaydedildi. Ses üretimi kuyruğa alındı. Birkaç dakika içinde CI işleyecek; deploy sonrası /audios/sorular/ dosyaları canlıda çalışır.'
+            );
           }
         }
       }
@@ -2841,25 +2851,44 @@ function QuestionsModal({
             </div>
           )}
 
-          <button
-            onClick={() => {
-              setShowQuestionForm(!showQuestionForm);
-              setEditingQuestionId(null);
-              setInfoMessage(null);
-              setQuestionFormData({
-                question_text: '',
-                option_a: '',
-                option_b: '',
-                option_c: '',
-                option_d: '',
-                correct_option: 'A',
-                question_order: questions.length + 1,
-              });
-            }}
-            className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
-          >
-            {showQuestionForm ? 'İptal' : '+ Yeni Soru Ekle'}
-          </button>
+          <div className="flex flex-wrap gap-2 items-center">
+            <button
+              type="button"
+              onClick={() => {
+                setShowQuestionForm(!showQuestionForm);
+                setEditingQuestionId(null);
+                setInfoMessage(null);
+                setQuestionFormData({
+                  question_text: '',
+                  option_a: '',
+                  option_b: '',
+                  option_c: '',
+                  option_d: '',
+                  correct_option: 'A',
+                  question_order: questions.length + 1,
+                });
+              }}
+              className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+            >
+              {showQuestionForm ? 'İptal' : '+ Yeni Soru Ekle'}
+            </button>
+            {questions.length > 0 && (
+              <button
+                type="button"
+                onClick={handleEnqueueAllQuestions}
+                disabled={queueBusy}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-400 text-white rounded-lg transition-colors text-sm"
+              >
+                {queueBusy ? 'Kuyruk ekleniyor...' : 'Tüm soruların sesini kuyruğa al'}
+              </button>
+            )}
+          </div>
+
+          <p className="text-xs text-gray-500">
+            Sesler Supabase Storage’a yazılmaz; kayıt sonrası iş <strong>l5_audio_jobs</strong> kuyruğuna düşer.
+            GitHub Actions (veya yerel <code className="bg-gray-100 px-1 rounded">npm run process:l5-audio-jobs</code>) MP3 üretip{' '}
+            <code className="bg-gray-100 px-1 rounded">public/audios/sorular/</code> içine commit eder.
+          </p>
 
           {showQuestionForm && (
             <form onSubmit={handleQuestionSubmit} className="bg-gray-50 rounded-lg p-4 space-y-3">
@@ -2950,10 +2979,9 @@ function QuestionsModal({
 
               <button
                 type="submit"
-                disabled={audioGenerating}
-                className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white rounded-lg transition-colors"
+                className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
               >
-                {audioGenerating ? 'Sesler oluşturuluyor...' : editingQuestionId ? 'Güncelle' : 'Ekle'}
+                {editingQuestionId ? 'Güncelle ve sesi kuyruğa al' : 'Ekle ve sesi kuyruğa al'}
               </button>
 
               {infoMessage && (
@@ -3017,9 +3045,31 @@ function QuestionsModal({
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="text-xs font-semibold text-gray-700 mb-2">Seslendirmeler:</div>
                     <div className="flex flex-wrap gap-3 text-xs text-gray-600">
-                      <span>{question.question_audio_url ? '✓ Soru' : '– Soru'}</span>
-                      <span>{question.correct_answer_audio_url ? '✓ Doğru cevap' : '– Doğru cevap'}</span>
-                      <span>{question.wrong_answer_audio_url ? '✓ Yanlış cevap' : '– Yanlış cevap'}</span>
+                      <span>
+                        {question.l5_audio_urls?.question || question.question_audio_url ? '✓ Soru' : '– Soru'}
+                      </span>
+                      <span>
+                        {question.l5_audio_urls?.A ? '✓ Şık A' : '– Şık A'}
+                      </span>
+                      <span>
+                        {question.l5_audio_urls?.B ? '✓ Şık B' : '– Şık B'}
+                      </span>
+                      <span>
+                        {question.l5_audio_urls?.C ? '✓ Şık C' : '– Şık C'}
+                      </span>
+                      <span>
+                        {question.l5_audio_urls?.D ? '✓ Şık D' : '– Şık D'}
+                      </span>
+                      <span>
+                        {question.l5_audio_urls?.correct || question.correct_answer_audio_url
+                          ? '✓ Doğru cevap'
+                          : '– Doğru cevap'}
+                      </span>
+                      <span>
+                        {question.l5_audio_urls?.wrong || question.wrong_answer_audio_url
+                          ? '✓ Yanlış cevap'
+                          : '– Yanlış cevap'}
+                      </span>
                     </div>
                   </div>
                 </div>
