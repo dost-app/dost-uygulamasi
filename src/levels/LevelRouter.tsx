@@ -420,7 +420,7 @@ export default function LevelRouter() {
 
   const handleLevel1Complete = async () => {
     if (!student) return;
-    if (isSaving) return; // Çift tıklamayı engelle
+    if (isSaving) return;
     const studentId = student.id;
     const currentStoryId = storyId;
     setIsSaving(true);
@@ -431,21 +431,19 @@ export default function LevelRouter() {
       saveScore(sessionId, studentId, currentStoryId, 1, 5, 'level_complete', points, undefined, { reason: 'Seviye 1 tamamlandı' }).catch(console.error);
       if (pointsResult.error) {
         console.error('Points error:', pointsResult.error);
-        alert(`Puan verilirken hata oluştu: ${pointsResult.error.message || 'Bilinmeyen hata'}`);
       }
       await new Promise((r) => setTimeout(r, 300));
       const progressResult = await updateStudentProgressStep(studentId, currentStoryId, 2, 1, 1);
       if (progressResult.error) {
         console.error('Progress update error:', progressResult.error);
-        alert(`İlerleme güncellenirken hata oluştu: ${progressResult.error.message || 'Bilinmeyen hata'}`);
-      } else {
-        window.dispatchEvent(new Event('progressUpdated'));
       }
-      // Her durumda 2. seviyeye yönlendir (anasayfaya düşmeyi önlemek için sabit storyId kullan)
+      // Her durumda progressUpdated tetikle — dashboard'un güncel veri okumasını sağla
+      window.dispatchEvent(new Event('progressUpdated'));
       navigate(`/level/2/intro?storyId=${currentStoryId}`);
     } catch (err: any) {
       console.error('Error completing level 1:', err);
-      alert(`Hata oluştu: ${err.message || 'Bilinmeyen hata'}. Lütfen tekrar deneyin.`);
+      // Hata olsa bile progressUpdated tetikle
+      window.dispatchEvent(new Event('progressUpdated'));
       navigate(`/level/2/intro?storyId=${currentStoryId}`);
     } finally {
       setIsSaving(false);

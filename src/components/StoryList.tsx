@@ -18,12 +18,14 @@ export default function StoryList({ stories }: { stories: Story[] }) {
     const [showPrev, setShowPrev] = useState(false);
     const [showNext, setShowNext] = useState(false);
     const location = useLocation();
-    const { getCurrentLevel, isStoryCompleted, refresh } = useReadingProgress();
+    const { getCurrentLevel, isStoryCompleted, refresh, loading } = useReadingProgress();
     
     // Refresh progress when navigating back to dashboard
+    const [progressReady, setProgressReady] = useState(false);
     useEffect(() => {
         if (location.pathname === '/') {
-            refresh();
+            setProgressReady(false);
+            refresh().finally(() => setProgressReady(true));
         }
     }, [location.pathname, refresh]);
 
@@ -90,9 +92,15 @@ export default function StoryList({ stories }: { stories: Story[] }) {
                 </button>
             )}
 
+            {(loading || !progressReady) && (
+                <div className="flex items-center justify-center py-4">
+                    <div className="w-6 h-6 border-3 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="ml-2 text-sm text-gray-500">Yükleniyor...</span>
+                </div>
+            )}
             <div
                 ref={scrollRef}
-                className="flex gap-4 overflow-x-auto pb-4 px-12 scroll-smooth [&::-webkit-scrollbar]:hidden scrollbar-hide"
+                className={`flex gap-4 overflow-x-auto pb-4 px-12 scroll-smooth [&::-webkit-scrollbar]:hidden scrollbar-hide ${(loading || !progressReady) ? 'pointer-events-none opacity-60' : ''}`}
             >
                 {stories.map((story) => {
                     // Story locks are student-specific; ignore the global DB locked flag here.
